@@ -323,9 +323,9 @@ snap = hermes.ta_feature.get_technical("BTCUSDT")`}
       />
 
       <Callout title="Feature catalog" tone="cedar">
-        View the full country-risk and financial feature inventories in{" "}
-        <code>hermes/features/</code>, and the analysis deep-dives in the repo under{" "}
-        <code>docs/analysis/fundamentals.md</code> and <code>docs/analysis/technical.md</code>.
+        The feature engine (<code>hermes/features/</code>) is currently de-scoped from the v1 core;
+        the product focus is the data engine and the finance/defense data-provider layer. See
+        <code>docs/hermes.md</code> for the current scope.
       </Callout>
       <Sparkle className="mt-8 h-10 w-10 opacity-50" color="#ff4328" strokeWidth={4} />
 

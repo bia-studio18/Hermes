@@ -2,958 +2,187 @@
 
 ### The Data Engine for Python
 
-**Fetch. Parse. Normalize. Validate. Profile. Transform. Query. Export.**
+**Profile. Normalize. Validate. Understand. Build on it. Know where it came from.**
 
-Hermes is an open source, Python native data engine designed to make working with external and existing datasets dramatically easier.
+Hermes is a **source-available** (not OSI "open source") Python-native data engine for turning
+messy external and existing datasets into clean, profiled, well-understood data — with the story
+of *where that data came from* kept alongside it.
 
-Instead of writing a different pipeline for every API, CSV, JSON response, database, or public dataset, Hermes provides one consistent system for bringing data in, understanding it, cleaning it, validating it, transforming it, and making it ready for analysis and machine learning.
+It is not another dataframe library. Hermes is the **pipeline layer** around your existing stack
+(Polars, PyArrow, DuckDB, Parquet): it brings data in, understands it, cleans and validates it, and
+makes it ready for analysis and machine learning.
 
-```python
-import hermes as hr
-
-data = hr.fetch("world_bank", dataset="gdp")
-
-data = data.parse()
-data = data.normalize()
-data = data.validate()
-
-print(data.profile())
-
-df = data.to_polars()
-```
-
-Hermes is built around a simple idea:
-
-> **Data should be as easy to work with as the models and applications built on top of it.**
+> **Status: Alpha.** This project is under active development. Everything in **Implemented**
+> below actually runs; everything else is explicitly marked **In Development** and tracked in the
+> roadmap. See [License](#license): Hermes is available under Elastic License 2.0.
 
 ---
 
-# Why Hermes?
+## Quick Start
 
-Modern data work is full of repetitive engineering.
-
-Every new source means dealing with different APIs, authentication methods, formats, schemas, naming conventions, missing values, types, timestamps, units, identifiers, duplicates, and validation rules.
-
-The result is usually the same pattern repeated across hundreds of projects:
-
-```text
-Fetch
-Clean
-Rename
-Cast
-Validate
-Deduplicate
-Normalize
-Save
-Repeat
-```
-
-Hermes turns that repeated work into reusable infrastructure.
-
-```python
-data = hr.fetch(source)
-
-data = data.parse()
-data = data.normalize()
-data = data.validate()
-
-data.profile()
-data.inspect()
-
-data.save("my_dataset")
-```
-
-The goal is not to replace Pandas, Polars, DuckDB, PyArrow, or other excellent tools.
-
-The goal is to make them easier to use together.
-
----
-
-# What Hermes Is
-
-Hermes is a general purpose data lifecycle engine.
-
-It provides a common system for:
-
-* Acquiring data
-* Parsing raw data
-* Inferring schemas
-* Defining schemas
-* Normalizing data
-* Converting types
-* Converting units
-* Aligning timestamps
-* Cleaning datasets
-* Validating data
-* Profiling datasets
-* Detecting anomalies
-* Detecting duplicates
-* Transforming data
-* Resolving entities
-* Versioning datasets
-* Tracking provenance
-* Tracking lineage
-* Querying datasets
-* Storing datasets
-* Loading datasets
-* Exporting datasets
-
-The same core system can work with completely different domains.
-
-Finance.
-
-Defense.
-
-Healthcare.
-
-Trade.
-
-Energy.
-
-Climate.
-
-Geopolitics.
-
-Research.
-
-Enterprise data.
-
-Private datasets.
-
-The core does not need to understand every domain.
-
-Domain specific knowledge can be added on top.
-
----
-
-# The Hermes Ecosystem
-
-Hermes Core provides the general data engine.
-
-Additional Hermes packages provide specialized capabilities.
-
-```text
-Hermes Core
-    |
-    + Hermes Finance
-    |
-    + Hermes Defense
-    |
-    + Hermes Healthcare
-    |
-    + Hermes Trade
-    |
-    + Hermes Energy
-    |
-    + Hermes Climate
-    |
-    + Hermes Geopolitics
-    |
-    + Hermes Corporate
-    |
-    + Hermes Entity
-    |
-    + Hermes Features
-    |
-    + Hermes Connectors
-```
-
-This allows Hermes to remain small and general while the ecosystem grows around it.
-
-A developer working with financial data should not need to install defense infrastructure.
-
-A developer working with healthcare data should not need the finance package.
-
-The core remains universal.
-
-The ecosystem becomes specialized.
-
----
-
-# The Core API
-
-Hermes is designed around a small, understandable API.
-
-| Function        | Purpose                                        |
-| --------------- | ---------------------------------------------- |
-| `fetch()`       | Retrieve data from an external source          |
-| `ingest()`      | Bring an existing dataset into Hermes          |
-| `parse()`       | Convert raw data into structured records       |
-| `normalize()`   | Convert data into a consistent representation  |
-| `validate()`    | Verify that data satisfies defined rules       |
-| `profile()`     | Analyze the structure and quality of a dataset |
-| `inspect()`     | Explore data, schema, metadata and quality     |
-| `transform()`   | Apply transformations to data                  |
-| `resolve()`     | Connect records to canonical entities          |
-| `deduplicate()` | Detect and handle duplicate records            |
-| `query()`       | Query Hermes datasets                          |
-| `save()`        | Persist datasets                               |
-| `load()`        | Load datasets                                  |
-| `export()`      | Export data to other systems                   |
-| `snapshot()`    | Create an immutable dataset version            |
-| `diff()`        | Compare dataset versions                       |
-| `metadata()`    | Retrieve dataset information                   |
-| `lineage()`     | Show how data was produced                     |
-| `provenance()`  | Show where data came from                      |
-
-The API is intentionally composable.
-
-```python
-dataset = hr.fetch("source")
-
-dataset = dataset.parse()
-dataset = dataset.normalize()
-dataset = dataset.validate()
-
-dataset.profile()
-dataset.inspect()
-
-dataset.save("dataset")
-```
-
----
-
-# Fetch Anything
-
-Hermes provides a common interface for acquiring external data.
-
-```python
-data = hr.fetch("world_bank", dataset="gdp")
-```
-
-The source can eventually be anything supported by a Hermes connector.
-
-APIs.
-
-Bulk downloads.
-
-CSV files.
-
-JSON.
-
-XML.
-
-Parquet.
-
-Databases.
-
-Data streams.
-
-Custom sources.
-
-The connector handles communication with the source.
-
-Hermes Core handles what happens after the data arrives.
-
----
-
-# Ingest Existing Data
-
-Not every dataset comes from an API.
-
-Hermes can ingest datasets that already exist.
-
-```python
-data = hr.ingest("dataset.parquet")
-```
-
-```python
-data = hr.ingest("dataset.csv")
-```
-
-```python
-data = hr.ingest("dataset.json")
-```
-
-The same Hermes lifecycle can then be applied.
-
-```python
-data.profile()
-data.validate()
-data.normalize()
-data.save("my_dataset")
-```
-
----
-
-# Parse
-
-Raw data should not immediately become a final dataset.
-
-Hermes separates acquisition from interpretation.
-
-```python
-data = hr.fetch(source)
-
-structured = data.parse()
-```
-
-Parsing deals with the representation of the source.
-
-JSON becomes records.
-
-CSV becomes records.
-
-XML becomes records.
-
-Compressed archives become usable data.
-
-Source specific parsing logic remains inside the appropriate parser.
-
----
-
-# Normalize
-
-Different sources rarely describe data in exactly the same way.
-
-One source might use:
-
-```text
-country
-```
-
-Another:
-
-```text
-country_name
-```
-
-Another:
-
-```text
-CountryName
-```
-
-Another:
-
-```text
-location
-```
-
-Hermes provides a normalization layer that can map these different representations into consistent schemas.
-
-```python
-data = data.normalize()
-```
-
-Normalization can handle:
-
-* Names
-* Types
-* Dates
-* Timezones
-* Units
-* Currencies
-* Country codes
-* Identifiers
-* Categories
-* Frequencies
-* Source specific representations
-
-The goal is simple:
-
-> **Different sources should become easier to use together.**
-
----
-
-# Validate
-
-Hermes does not assume that data is correct just because it successfully downloaded.
-
-```python
-report = data.validate()
-```
-
-Validation can check:
-
-* Required fields
-* Data types
-* Missing values
-* Invalid values
-* Duplicate records
-* Identifier validity
-* Date consistency
-* Range constraints
-* Schema compatibility
-* Referential integrity
-* Domain specific rules
-
-Validation results remain inspectable.
-
-```python
-report.valid
-report.errors
-report.warnings
-```
-
----
-
-# Profile
-
-Before working with a dataset, you should be able to understand it immediately.
-
-```python
-profile = data.profile()
-```
-
-Hermes can provide information such as:
-
-```text
-Rows
-Columns
-Types
-Missing values
-Unique values
-Duplicates
-Value ranges
-Distributions
-Date ranges
-Frequency
-Schema
-Quality checks
-```
-
-The objective is simple:
-
-> **Open a dataset and understand what you are dealing with.**
-
----
-
-# Inspect
-
-Hermes provides a higher level inspection interface for developers.
-
-```python
-data.inspect()
-```
-
-Inspection can expose:
-
-* Dataset information
-* Schema
-* Sample records
-* Metadata
-* Validation results
-* Profile
-* Quality information
-* Source
-* Lineage
-* Version
-* Entity information
-
-A dataset should not be a black box.
-
----
-
-# Transform
-
-Hermes should work with the tools developers already use.
-
-```python
-data = data.transform(my_function)
-```
-
-Complex transformations can be composed into pipelines.
-
-```python
-data = data.transform(clean_dates).transform(calculate_features).transform(remove_invalid_records)
-```
-
-Hermes does not try to become another dataframe library.
-
-Instead, it provides the pipeline layer around existing data tools.
-
----
-
-# Entity Resolution
-
-Data from different sources often refers to the same real world entity in different ways.
-
-Hermes provides an interface for connecting those records.
-
-```python
-data = data.resolve()
-```
-
-For example:
-
-```text
-Apple Inc.
-Apple Computer Inc.
-Apple Computer, Inc.
-AAPL
-US0378331005
-```
-
-can potentially be connected to a canonical entity.
-
-The actual resolution logic can come from specialized Hermes packages.
-
-This allows the same infrastructure to support:
-
-* Companies
-* Countries
-* Securities
-* Organizations
-* Locations
-* Vessels
-* Other domain specific entities
-
----
-
-# Dataset Versioning
-
-Data changes.
-
-Sources revise historical values.
-
-Schemas change.
-
-Pipelines improve.
-
-Hermes treats datasets as evolving objects.
-
-```python
-dataset.snapshot()
-```
-
-```python
-dataset.version()
-```
-
-```python
-dataset.diff("v1", "v2")
-```
-
-This makes it possible to understand what changed between dataset versions.
-
-Historical data should remain reproducible instead of silently changing underneath your application.
-
----
-
-# Provenance
-
-Every dataset should answer:
-
-> Where did this data come from?
-
-Hermes keeps provenance information alongside the dataset.
-
-For example:
-
-```python
-dataset.provenance()
-```
-
-could return:
-
-```text
-WorldBank
-parser@1.3.0
-mapper@0.9.3
-normalizer@1.4.7
-validator@3.4.8
-dataset@gdp_v2
-```
-
-A much more complex system can eventually be built on top of this.
-
-The foundation remains simple.
-
----
-
-# Lineage
-
-Hermes records how data moves through the system.
-
-For example:
-
-```text
-WorldBank
-    ↓
-Parser
-    ↓
-Mapper
-    ↓
-Normalizer
-    ↓
-Validator
-    ↓
-Entity Resolver
-    ↓
-Dataset
-```
-
-The important thing is that the final dataset is not disconnected from the process that produced it.
-
-Developers should be able to trace data back through the pipeline.
-
----
-
-# Works With Your Data Stack
-
-Hermes is designed to work with the Python data ecosystem.
-
-Potential integrations include:
-
-| Tool                        | Hermes Integration        |
-| --------------------------- | ------------------------- |
-| Pandas                      | DataFrame conversion      |
-| Polars                      | DataFrame conversion      |
-| PyArrow                     | Arrow data interchange    |
-| DuckDB                      | Analytical querying       |
-| NumPy                       | Numerical processing      |
-| Parquet                     | Dataset storage           |
-| SQL databases               | Data ingestion and export |
-| Machine learning frameworks | ML ready datasets         |
-
-Hermes should make existing tools work together rather than force developers into a proprietary data model.
-
----
-
-# Connectors
-
-Hermes connectors provide access to external sources.
-
-A connector should primarily answer:
-
-> How do I get this source's data?
-
-Hermes Core handles the rest.
-
-A connector can provide:
-
-* Authentication
-* Requests
-* Pagination
-* Rate limiting
-* Retries
-* Source specific parsing
-* Source metadata
-
-Connectors can be independently developed and distributed.
-
-This allows the ecosystem to grow without constantly changing Hermes Core.
-
----
-
-# Domain Packages
-
-Hermes Core provides the infrastructure.
-
-Domain packages provide knowledge.
-
-For example:
-
-### Hermes Finance
-
-Financial datasets, securities, companies, economic indicators, market data, financial statements and financial features.
-
-### Hermes Defense
-
-Defense expenditure, conflicts, military organizations, equipment, arms transfers, security events and defense indicators.
-
-### Hermes Healthcare
-
-Healthcare statistics, diseases, organizations, hospitals, medicines and public health datasets.
-
-### Hermes Trade
-
-Trade flows, commodities, customs information, ports, countries and supply chain datasets.
-
-The same core engine can power all of them.
-
----
-
-# Feature Engineering
-
-Hermes can also provide reusable feature engineering through specialized packages.
-
-For example:
-
-```python
-features = finance.features(data)
-```
-
-or:
-
-```python
-features = defense.features(data)
-```
-
-Features should have explicit definitions and dependencies.
-
-This makes them reusable across research, analytics and machine learning systems.
-
----
-
-# Designed for Developers
-
-Hermes should feel natural in Python.
-
-```python
-import hermes as hr
-
-dataset = hr.fetch("source")
-
-dataset = dataset.parse().normalize().validate()
-
-dataset.profile()
-
-df = dataset.to_polars()
-```
-
-No giant framework is required to get started.
-
-No forced cloud account.
-
-No mandatory hosted service.
-
-No requirement to use a proprietary storage system.
-
-Hermes Core is open source.
-
----
-
-# Local First
-
-Hermes is designed to work locally.
-
-A developer should be able to:
-
-```text
+```bash
 pip install hermes-plt
 ```
 
-and start working with data immediately.
+```python
+import hermes as hr
+import polars as pl
 
-Local files can be used.
+df = pl.read_csv("gdp.csv")
 
-Local storage can be used.
+# Full statistical profile: types, nulls, uniques, ranges, means, distributions
+report = hr.profile(df)
+print("rows:", report.row_count, "· columns:", report.column_count)
+print("date range:", report.date_range)
+print("duplicates:", report.quality.duplicate_count)
+for col in report.columns[:3]:
+    print(col.name, "|", col.dtype, "| nulls:", col.null_count, "| unique:", col.unique_count)
 
-DuckDB can be used.
+# Quick glance without a full scan
+info = hr.inspect(df)
+print("rows:", info.row_count, "· columns:", info.column_count)
+print("types:", info.columns)
 
-Parquet can be used.
+# You can also profile straight from a file
+hr.profile(path="gdp.csv")
 
-Polars can be used.
+# Wrap your data in the Hermes Dataset
+ds = hr.Dataset(name="gdp", data_ref="gdp.csv", data=df)
+ds.profile()
+ds.inspect()
 
-A database can be added when the project needs one.
+# Interoperate with your stack
+polars_df  = ds.to_polars()   # polars.DataFrame
+arrow_tbl  = ds.to_arrow()    # pyarrow.Table
+pandas_df  = ds.to_pandas()   # pandas.DataFrame
 
-Cloud infrastructure should be an extension of Hermes, not a requirement for using it.
+# Persist it (writes out/gdp.parquet)
+ds.save("out", format="parquet")  # parquet / csv / json
+csv_bytes = ds.export("csv")      # raw bytes for your own storage
+```
 
----
-
-# Built for Growth
-
-Hermes starts small.
-
-A single developer can use it for a single dataset.
-
-A research team can use it for hundreds of datasets.
-
-A company can build internal data pipelines around it.
-
-Larger deployments can eventually introduce:
-
-* Remote datasets
-* Distributed processing
-* Object storage
-* Dataset catalogs
-* Continuous ingestion
-* Hosted APIs
-* Large scale querying
-* Team access
-* Enterprise controls
-
-The same core concepts remain intact.
-
----
-
-# What Hermes Is Not
-
-Hermes Core is not trying to be:
-
-* A replacement for Pandas
-* A replacement for Polars
-* A replacement for DuckDB
-* A data warehouse
-* A machine learning framework
-* A dashboarding platform
-* An intelligence application
-* A knowledge graph by itself
-  
-Hermes exists to sit between **data sources and the applications that depend on that data**.
+```bash
+# Or from the terminal
+hermes profile_data gdp.csv
+```
 
 ---
 
-# Philosophy
+## Implemented Today
 
-### Data should be composable
+| Capability | Notes |
+| --- | --- |
+| `hr.profile(df / path)` | Column-by-column stats: dtype, nulls, unique values, min/max, mean, median, std, top values; plus completeness, duplicate and anomaly counts, date range, frequency |
+| `hr.inspect(df)` | Fast glance: row/column counts and column types |
+| `hr.get_freqs`, `hr.date_ranges`, `hr.anomaly_count` | Frequency detection, temporal range detection, IQR anomaly counts |
+| `hr.Dataset` | The Hermes core object (see below) |
+| `Dataset.load()`, `.inspect()`, `.profile()` | Load from parquet/csv/json and analyze |
+| `Dataset.to_polars()/to_arrow()/to_pandas()` | Interchange with the Python data stack |
+| `Dataset.save()` / `.export()` | Persist (parquet/csv/json) or export to another system |
+| `Dataset.metadata_info/ provenance_info / lineage_info / schema_info` | The beginning of Hermes' provenance story |
+| `hr.configure / get_config` | Logging and configuration |
+| Error taxonomy | `HermesError`, `ParseError`, `SchemaError`, `NormalizationError`, `ValidationError`, `StorageError`, `QueryError`, `AcquisitionError` and more |
+| CLI | `hermes version`, `hermes info`, `hermes profile_data <path>` |
+| Connectors (10, experimental) | Binance, Finnhub, FRED, IMF, SEC EDGAR, World Bank, YFinance, OpenSanctions, GDELT, public datasets — currently internal, being ported onto the engine (see roadmap) |
+| Tests | 200+ unit tests covering connectors, scheduler, features, and the data API |
 
-A dataset from one source should be usable alongside a dataset from another source.
+### The Dataset object
 
-### Data should be inspectable
+`Dataset` is the center of Hermes. It holds your data and its metadata together, so a dataset is
+never just a file — it is a file **plus its story**:
 
-Developers should know what they received before building on it.
+```python
+ds = hr.Dataset(name="gdp", data_ref="gs/imports-1985-2024.csv", data=df)
+ds.profile()
+ds.schema_info     # schema reference
+ds.lineage_info    # steps that produced the data
+ds.provenance_info # where the data came from
+```
 
-### Data should be reproducible
-
-The same pipeline should be understandable and repeatable.
-
-### Data should be traceable
-
-Every important dataset should have a clear origin.
-
-### Data should be interoperable
-
-Hermes should work with the ecosystem instead of locking developers into Hermes.
-
-### Data infrastructure should be reusable
-
-The same ingestion, validation and transformation infrastructure should work across domains.
-
----
-
-# Roadmap
-
-## Phase 1
-
-Hermes Core foundation.
-
-* Fetch
-* Ingest
-* Parse
-* Normalize
-* Validate
-* Profile
-* Inspect
-* Transform
-* Export
-* Dataset abstraction
-* Connector system
-* Schema system
-
-## Phase 2
-
-Reliable data infrastructure.
-
-* Dataset storage
-* Dataset versions
-* Snapshots
-* Provenance
-* Lineage
-* Better validation
-* Better profiling
-* Caching
-* Query interface
-
-## Phase 3
-
-Ecosystem.
-
-* Hermes Finance
-* Hermes Defense
-* Hermes Healthcare
-* Hermes Trade
-* Hermes Energy
-* Hermes Climate
-* Hermes Geopolitics
-* Hermes Corporate
-* Hermes Entity
-* Hermes Features
-
-## Phase 4
-
-Scale.
-
-* Remote datasets
-* Object storage
-* Distributed processing
-* Continuous ingestion
-* Large dataset querying
-* Cloud execution
-
-## Phase 5
-
-Hermes Cloud.
-
-A managed infrastructure layer built around Hermes Core.
-
-* Hosted datasets
-* APIs
-* Dataset catalogs
-* Continuous pipelines
-* Versioned data
-* Team access
-* Usage controls
-* Enterprise infrastructure
+Over the coming releases, provenance, lineage, validation and versioning will be captured
+**automatically** at every stage, so the Dataset's story is trustworthy by construction.
 
 ---
 
-# The Vision
+## In Development
 
-Hermes starts as a Python library.
+The core value proposition is being built under a strict, code-first roadmap. The single source
+of truth — architecture, subsystem spec, engineering guide, roadmap and strategy — is
+[`docs/hermes.md`](docs/hermes.md).
 
-It can grow into a complete ecosystem for data.
+| Stage | What ships |
+| --- | --- |
+| **Phase 1 — Core foundation** | Full dataset lifecycle: `parse → normalize → validate → profile → Dataset → save → query → export`; automatic provenance & lineage capture; dataset catalog |
+| **Phase 2 — Data contracts** | Versioned schema registry with 7 canonical schemas (economic, financial, market, geopolitical, security, entity, document); normalization engine; validation engine; entity resolution (countries, companies, aliases) |
+| **Phase 3 — Data in** | Acquisition engine (retry, rate limiting, pagination, sync state); parser engine for CSV / JSON / XML / Parquet; public `fetch / ingest / read` API |
+| **Phase 4 — Connectors** | All 10 existing connectors ported onto one `Connector` contract + registry, with canonical-schema output, provenance and validation on every source |
+| **Phase 5 — Scale** | DuckDB query engine, dataset versioning / snapshots / diff, export matrix, benchmarks at 10–100M rows |
 
-The long term goal is simple:
+The pipeline we are building:
 
-> **Make high quality data infrastructure accessible through one consistent developer experience.**
-
-Instead of every developer building their own ingestion system.
-
-Instead of every company rebuilding the same normalization pipelines.
-
-Instead of every project implementing its own validation framework.
-
-Instead of datasets becoming disconnected collections of files.
-
-Hermes provides the common foundation.
-
-**One engine.**
-
-**One ecosystem.**
-
-**Any data.**
-
----
-
-# Contributing
-
-Hermes is open source and built for developers.
-
-Contributions can include:
-
-* Connectors
-* Parsers
-* Normalizers
-* Validators
-* Profilers
-* Storage backends
-* Query integrations
-* Domain packages
-* Documentation
-* Testing
-* Performance improvements
-
-Build something useful.
-
-Share it.
-
-Improve it.
-
-Build on top of it.
+```text
+CSV / JSON / XML / Parquet / API
+    ↓  fetch/ingest → parse → normalize → validate → metadata + provenance + lineage
+                        ↓
+                    Canonical Dataset
+                        ↓
+        store → query → version → export → features
+```
 
 ---
 
-# License
+## Design Principles
 
-[License information will be added here.]
+- **Local first.** `pip install hermes-plt` and start. Local files, local storage, DuckDB, Parquet,
+  Polars — no cloud account, no hosted service, no proprietary storage required.
+- **Interoperable, not replaceable.** Hermes sits *between* data sources and your models, and works
+  *with* Pandas, Polars, PyArrow, DuckDB and the rest. It does not try to be one of them.
+- **One auditable object.** A `Dataset` should carry its data and its complete story — schema,
+  metadata, provenance, lineage, version — so you never hold a disconnected file again.
+- **Honest by default.** What is built is documented as built; what is planned is documented as
+  planned.
 
 ---
 
-# Hermes
+## Roadmap
 
-**The data engine for the Python ecosystem.**
+The current roadmap is kept in a single document, because the repository *is* the plan:
+
+- **[`docs/hermes.md`](docs/hermes.md)** — what Hermes is, the data lifecycle, architecture,
+  the subsystem engineering checklist (the tracked tasks), team & ownership, phased roadmap,
+  and strategy/licensing.
+
+---
+
+## Contributing
+
+Hermes is source-available and built for the community. Contributions are welcome in: connectors,
+parsers, normalizers, validators, profilers, storage backends, query integrations, documentation,
+testing, and performance.
+
+Before contributing: read [`docs/hermes.md`](docs/hermes.md) for architecture, ownership and what is
+in flight, and open an issue or PR.
+
+---
+
+## License
+
+Hermes is **source-available** under the **Elastic License 2.0 (ELv2)** — the same license family
+used by Elasticsearch and Couchbase infrastructure. This is **not** an OSI-approved "open source"
+license; it is a deliberate choice:
+
+- **You may** read, use, modify, fork and redistribute Hermes freely, including for internal
+  commercial use.
+- **You may not** offer Hermes to third parties as a **hosted or managed service** (a "cloud
+  Hermes"). Hosting Hermes for third parties is a Hermes Enterprise privilege.
+- **You may not** strip the notices, remove license-key functionality, or use the trademarks.
+
+Companies and products that need to embed or host Hermes commercially can obtain a
+**Hermes Enterprise** license (support, SLAs, enterprise features, managed-hosting rights) from the
+copyright holders.
+
+Full terms: **[LICENSE.md](LICENSE.md)**.
+
+---
 
 **Bring the data in. Make it usable. Know where it came from. Build on it.**

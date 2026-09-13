@@ -76,7 +76,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-start justify-between gap-4 border-t border-line/70 pt-6 sm:flex-row sm:items-center">
           <p className="font-body text-xs text-ink-soft">
-            Hermes Non-Commercial License · Built by Haider Ali
+            Elastic License 2.0 (ELv2) · Built by Haider Ali
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <a

@@ -27,7 +27,7 @@ export default function OverviewPage() {
       </div>
       <DocTitle kicker="Getting Started">Overview</DocTitle>
       <Lead>
-        Hermes (<code>hermes-plt</code>, v0.2.14) is a foundational intelligence data platform for
+        Hermes (<code>hermes-plt</code>, v0.2.16) is a foundational intelligence data platform for
         acquiring, validating, normalizing, storing and serving intelligence datasets. One
         consistent pipeline for APIs, CSVs, JSON, databases and public datasets.
       </Lead>
@@ -35,7 +35,7 @@ export default function OverviewPage() {
       <Callout title="Package" tone="cedar">
         <strong>hermes-plt</strong> · Python <code>&gt;=3.11</code> (3.11/3.12/3.13) · build backend{" "}
         <code>hatchling</code> · Development Status <code>3 - Alpha</code> · authored by Haider Ali ·
-        under the Hermes Non-Commercial License.
+        under the Elastic License 2.0 (source-available; not open source).
       </Callout>
 
       <H2 id="why">Why Hermes</H2>
