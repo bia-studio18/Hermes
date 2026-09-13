@@ -27,18 +27,20 @@ export default function RoadmapPage() {
       <DocTitle kicker="Project">Roadmap</DocTitle>
       <Lead>
         Hermes ships a working foundation and builds the general-purpose core out progressively.
-        The target architecture is specified in <code>docs/architecture/hermes-core.md</code>.
+        The single architecture &amp; roadmap document is <code>docs/hermes.md</code>.
       </Lead>
 
       <H2 id="summary">The journey at a glance</H2>
       <Table
         head={["Phase", "Focus", "ETA-ish"]}
         rows={[
-          ["Phase 1 — Foundation", "fetch, parse, normalize, validate, Dataset, schema system", "Now → next"],
-          ["Phase 2 — Reliable infra", "storage, snapshots, provenance, lineage, query interface", "In progress"],
-          ["Phase 3 — Ecosystem", "Hermes Finance, Defense, Healthcare, Trade, Energy, Climate…", "Next"],
-          ["Phase 4 — Scale", "object storage, distributed processing, continuous ingestion", "Later"],
-          ["Phase 5 — Cloud", "hosted datasets, APIs, catalogs, versioned data, team access", "Future"],
+          ["Phase 1 — Core foundation", "parse, normalize, validate, Dataset, metadata/provenance/lineage", "Now → next"],
+          ["Phase 2 — Data in", "acquisition, parsers; hr.read(file) → Dataset", "In progress"],
+          ["Phase 3 — Data contract & quality", "schema registry + 7 canonical schemas, normalization, validation", "Next"],
+          ["Phase 4 — Identity & entities", "Resolver + registry + aliases; countries/companies/persons (~100k)", "Next"],
+          ["Phase 5 — Storage/query/export", "parquet storage, DuckDB, exporters, dataset catalog", "Next"],
+          ["Phase 6 — Lifecycle & connectors", "versioning/migration, connectors on the engine (World Bank first)", "Later"],
+          ["Phase 7 — Data provider", "hr.resolve_company(\"AAPL\").financials — finance & defense datasets", "Later"],
         ]}
       />
 
@@ -46,17 +48,17 @@ export default function RoadmapPage() {
       <Table
         head={["Area", "Status"]}
         rows={[
-          ["Connectors (10)", "Working & tested"],
-          ["Feature engine (@feature, LineageGraph, TieredPlan)", "Working"],
-          ["Country-risk features (5 groups)", "Working; geopolitical stubbed, others partial"],
-          ["Financial features (technical / fundamental / crypto / filing)", "Working"],
+          ["Connectors (10)", "Working standalone; porting onto the engine contract"],
+          ["Dataset + load/inspect/profile", "Working; save/export + tests pending"],
+          ["Entities (countries, companies helpers)", "Working"],
           ["RawCache (parquet, TTLs, hit/miss)", "Working"],
-          ["Asyncio scheduler (@schedule, cron/interval)", "Working"],
-          ["Entities (countries, companies)", "Working"],
+          ["CLI (profile / inspect snippets)", "Partial"],
           [
             "Core lifecycle modules (parse/normalize/validate/schema/metadata/query/storage/api)",
             "Scaffolded — being built out",
           ],
+          ["Data provider (entity-centric API)", "Specified — being built"],
+          ["Provenance / lineage / versioning", "Models exist — capture pending"],
         ]}
       />
 
@@ -89,33 +91,46 @@ export default function RoadmapPage() {
       </P>
 
       <H2 id="phases">The phases</H2>
-      <CodeBlock title="phases" code={`Phase 1 — Foundation
-  fetch, ingest, parse, normalize, validate, profile, inspect,
-  transform, export, Dataset, connector system, schema system
+      <CodeBlock title="phases" code={`Phase 1 — Core foundation
+  Dataset lifecycle, metadata/provenance/lineage/version models,
+  error system, component contracts (Parser, Normalizer, Validator,
+  Resolver, StorageBackend)
 
-Phase 2 — Reliable infrastructure
-  storage, versions, snapshots, provenance, lineage,
-  better validation & profiling, caching, query interface
+Phase 2 — Data in
+  acquisition (retry, rate limiting, pagination, sync, cache),
+  parser engine (CSV/JSON/XML/Parquet) — hr.read(file) → Dataset
 
-Phase 3 — Ecosystem
-  Hermes Finance, Defense, Healthcare, Trade, Energy, Climate,
-  Geopolitics, Corporate, Entity, Features
+Phase 3 — Data contract & quality
+  schema registry + 7 canonical schemas, infer/validate schema,
+  normalization engine, validation contracts, profiling/metadata
 
-Phase 4 — Scale
-  remote datasets, object storage, distributed processing,
-  continuous ingestion, large-dataset querying, cloud execution
+Phase 4 — Identity & entity resolution
+  Resolver interface + registry + aliases; countries (ISO2/3),
+  companies (ticker/CIK/ISIN), persons; hr.resolve_country("PK")
 
-Phase 5 — Hermes Cloud
-  hosted datasets, APIs, dataset catalogs, continuous pipelines,
-  versioned data, team access, usage controls, enterprise infra`} />
+Phase 5 — Storage / query / export / materialization
+  filesystem + parquet storage with atomic writes, DuckDB backend,
+  exporters, query engine, dataset catalog
+
+Phase 6 — Lifecycle & connectors
+  provenance + lineage capture, versioning/snapshots/diff, schema
+  migration, connectors on the engine (World Bank first, then
+  FRED → IMF → YFinance → Finnhub → Binance → SEC → GDELT →
+  OpenSanctions)
+
+Phase 7 — Data provider (entity first)
+  entity registry scaled to ~100k companies/countries/persons for
+  finance & defense; hr.resolve_company("AAPL").financials/
+  .market_data/.fillings backed by provenance-bound canonical
+  datasets`} />
       <P>
         The guiding philosophy: make high-quality data infrastructure accessible through one
         consistent developer experience. One engine, one ecosystem, any data.
       </P>
 
       <Callout title="Get involved" tone="cedar">
-        Hermes is open source. The repository ships GitHub labels (type / area / difficulty) and
-        a contributing guide (<code>docs/engineering_team_guide.md</code>) that defines the
+        Hermes is source-available under Elastic License 2.0. The repository ships GitHub labels (type / area / difficulty) and
+        a contributing guide (<code>docs/hermes.md</code>) that defines the
         vertical-slice build order (e.g. World Bank: acquire → parse → normalize → validate →
         metadata → provenance → Dataset).
       </Callout>

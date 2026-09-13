@@ -128,7 +128,7 @@ def profile(data: object | None = None, path: Path | None = None, source: str | 
     if data is not None:
         if isinstance(data, pl.LazyFrame):
             data = data.collect()
-        elif not isinstance(data, pl.DataFrame):
+        elif isinstance(data, object):
             data = pl.DataFrame(data)
     elif path:
         path = Path(path)
