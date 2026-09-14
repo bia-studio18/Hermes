@@ -1,10 +1,26 @@
-class ValidationEngine:
-    def validate(self, data: object, contract: object | None = None) -> object: ...
+import polars as pl
 
-    def check_quality(self, data: object) -> object: ...
+from hermes.validation.checks import ValidationResult
+from hermes.validation.reports import CheckResult, ValidationReport
 
-    def check_completeness(self, data: object) -> object: ...
 
-    def check_freshness(self, data: object) -> object: ...
+def validate(data: pl.DataFrame, checks: list) -> ValidationReport:
+    report = ValidationReport()
+    for check in checks:
+        result: ValidationResult = check.run(data)
+        report.add_check(
+            CheckResult(
+                name=result.check,
+                passed=result.passed,
+                message=result.message,
+            )
+        )
+    return report
 
-    def check_integrity(self, data: object) -> object: ...
+
+if __name__ == "__main__":
+    from hermes.validation.checks import NotNull
+
+    data = pl.read_csv("/run/media/haider/DATA/projects/Hermes/hermes/connectors/lib/datasets/cpi.csv")
+    report = validate(data=data, checks=[NotNull("score")])
+    print(report.summary())

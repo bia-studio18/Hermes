@@ -4,8 +4,8 @@
 > This file replaces the previous `docs/**` markdown files (consolidated here) and is the single
 > source of truth for the repository. `res/` holds personal scratch docs and is gitignored.
 
-**Status:** Alpha. Source-available under Elastic License 2.0 (ELv2) — see [Part G](#part-g--positioning-licensing--credibility).
-Every checkbox in [Part D](#part-d--subsystem-engineering-spec) is tracked here and in the code.
+**Status:** Alpha. Source-available under Elastic License 2.0 (ELv2) — see [Part H](#part-h--positioning-licensing--credibility).
+Every checkbox in [Part E](#part-e--subsystem-engineering-spec) is tracked here and in the code.
 
 ---
 
@@ -47,7 +47,7 @@ apple.xxxxx             # extensible per-domain datasets
 - Resolvable by any practical identifier or alias: ticker, CIK, ISIN, LEI, name, ISO-2/ISO-3,
   numeric country code, alias.
 - The entity registry is an anchor asset: it turns the engine's outputs into a data product and is
-  a competitor-hard moat (see [Part G](#part-g--positioning-licensing--credibility)).
+  a competitor-hard moat (see [Part H](#part-h--positioning-licensing--credibility)).
 
 ### Product direction
 
@@ -106,7 +106,1746 @@ canonical Hermes representation.
 
 ---
 
-## Part C — Architecture
+## Part C — Hermes API and Core Components
+
+`import hermes as hr` is the **canonical public API**. There is **no public `Hermes` class** — it does
+not belong in the user-facing interface.
+
+The user should interact with Hermes through the `hr` namespace:
+
+```python
+import hermes as hr
+
+data = hr.fetch(...)
+data = hr.parse(data)
+data = hr.normalize(data)
+data = hr.validate(data)
+
+dataset = hr.save(data, ...)
+```
+
+The internal implementation can use hundreds of classes, but users should primarily interact with a
+relatively small, coherent public API. The classes underneath are implementation objects and data
+models. This part is authoritative over the older public-API sketch in
+[Part E](#part-e--subsystem-engineering-spec).
+
+### 1. Public API
+
+#### Acquisition
+
+```python
+hr.fetch()
+hr.fetch_raw()
+hr.sync()
+```
+
+#### Parsing
+
+```python
+hr.parse()
+```
+
+#### Transformation
+
+```python
+hr.normalize()
+hr.transform()
+```
+
+#### Inspection / Profiling
+
+```python
+hr.inspect()
+hr.profile()
+```
+
+#### Validation / Quality
+
+```python
+hr.validate()
+hr.check_quality()
+hr.check_completeness()
+hr.check_freshness()
+hr.check_integrity()
+```
+
+#### Entities
+
+```python
+hr.resolve_entity()
+hr.resolve_company()
+hr.resolve_country()
+hr.resolve_security()
+hr.resolve_organization()
+hr.resolve_person()
+```
+
+#### Metadata
+
+```python
+hr.get_metadata()
+```
+
+#### Datasets
+
+```python
+hr.dataset()
+hr.datasets()
+hr.search_datasets()
+```
+
+#### Storage
+
+```python
+hr.save()
+hr.load()
+hr.materialize()
+hr.delete()
+```
+
+#### Query
+
+```python
+hr.query()
+```
+
+#### Provenance
+
+```python
+hr.get_provenance()
+hr.trace_provenance()
+```
+
+#### Lineage
+
+```python
+hr.get_lineage()
+hr.trace_lineage()
+```
+
+#### Versioning
+
+```python
+hr.version()
+hr.snapshot()
+hr.diff()
+hr.restore()
+```
+
+#### Schemas
+
+```python
+hr.get_schema()
+hr.register_schema()
+hr.compare_schema()
+hr.migrate()
+```
+
+#### Connectors
+
+```python
+hr.connectors()
+```
+
+#### Credentials
+
+```python
+hr.credentials()
+```
+
+The important distinction is:
+
+```python
+import hermes as hr
+```
+
+is the **public interface**. The classes underneath are implementation objects and data models.
+
+### 2. Core Classes
+
+These are the fundamental objects Hermes needs.
+
+```text
+Dataset
+DatasetRef
+Result
+
+Metadata
+Provenance
+Lineage
+Version
+Snapshot
+
+Schema
+SchemaField
+SchemaRegistry
+
+Entity
+EntityIdentifier
+EntityAlias
+EntityRelationship
+EntityRegistry
+MatchResult
+MatchEvidence
+```
+
+There is **no public `Hermes` class**.
+
+### 3. Dataset
+
+This is one of the most important abstractions in Hermes.
+
+```python
+class Dataset:
+    id
+    name
+    version
+    schema
+    metadata
+    provenance
+    lineage
+    quality
+    storage
+    source
+```
+
+Methods:
+
+```python
+dataset.head()
+dataset.tail()
+dataset.count()
+
+dataset.schema()
+dataset.metadata()
+
+dataset.inspect()
+dataset.profile()
+
+dataset.validate()
+
+dataset.save()
+dataset.load()
+
+dataset.query()
+
+dataset.snapshot()
+dataset.diff()
+
+dataset.get_provenance()
+dataset.get_lineage()
+```
+
+A `Dataset` does **not** necessarily mean that the entire dataset is sitting in RAM. It can reference:
+
+```text
+CSV
+Parquet
+Arrow
+DuckDB
+PostgreSQL
+filesystem
+remote dataset
+Hermes Cloud dataset
+```
+
+For example:
+
+```python
+import hermes as hr
+
+dataset = hr.load("companies.parquet")
+
+dataset.inspect()
+dataset.profile()
+dataset.query(...)
+```
+
+### 4. DatasetRef
+
+A lightweight reference to a dataset.
+
+```python
+class DatasetRef:
+    id
+    name
+    version
+    location
+    storage
+```
+
+This allows Hermes to pass datasets around without necessarily materializing them.
+
+For example:
+
+```python
+ref = DatasetRef(
+    name="companies",
+    location="data/companies.parquet",
+)
+```
+
+### 5. Result
+
+Hermes functions should return predictable result objects rather than completely unrelated return
+types.
+
+```python
+class Result:
+    data
+    metadata
+    warnings
+    errors
+    statistics
+```
+
+Specialized results:
+
+```text
+FetchResult
+ParseResult
+NormalizeResult
+ValidationResult
+InspectionResult
+ProfileResult
+MatchResult
+QueryResult
+```
+
+For example:
+
+```python
+result = hr.parse(raw)
+
+result.data
+result.errors
+result.warnings
+result.statistics
+```
+
+### 6. Acquisition
+
+```text
+hermes/acquisition/
+```
+
+#### Client
+
+```python
+class Client:
+    get()
+    post()
+    put()
+    delete()
+    request()
+    stream()
+```
+
+#### Cache
+
+```python
+class Cache:
+    get()
+    set()
+    exists()
+    delete()
+    clear()
+```
+
+#### RetryPolicy
+
+```python
+class RetryPolicy:
+    should_retry()
+    get_delay()
+```
+
+#### RateLimiter
+
+```python
+class RateLimiter:
+    acquire()
+    wait()
+```
+
+#### Paginator
+
+```python
+class Paginator:
+    paginate()
+```
+
+#### SyncEngine
+
+```python
+class SyncEngine:
+    sync()
+    incremental_sync()
+    full_sync()
+    detect_changes()
+```
+
+Public functions:
+
+```python
+hr.fetch()
+hr.fetch_raw()
+hr.sync()
+```
+
+### 7. Connectors
+
+Every connector should implement a common interface.
+
+```python
+class Connector:
+    name
+    version
+    capabilities
+    credentials
+
+    connect()
+    fetch()
+    fetch_raw()
+    metadata()
+    health()
+```
+
+Example:
+
+```text
+hermes/connectors/
+├── sec/
+├── fred/
+├── imf/
+├── world_bank/
+├── gdelt/
+├── opensanctions/
+├── binance/
+├── finnhub/
+└── yfinance/
+```
+
+A connector can contain source-specific functionality.
+
+For example:
+
+```python
+class SECConnector(Connector):
+    fetch_companies()
+    fetch_filings()
+    fetch_facts()
+```
+
+The important rule:
+
+**Generic functionality belongs in Hermes core. Source-specific behavior belongs in connectors.**
+
+### 8. Connector Registry
+
+```python
+class ConnectorRegistry:
+    register()
+    unregister()
+    get()
+    list()
+    discover()
+```
+
+Internally:
+
+```python
+registry.get("sec")
+registry.get("fred")
+```
+
+Publicly:
+
+```python
+hr.connectors()
+```
+
+### 9. Parsing
+
+```text
+hermes/parsing/
+```
+
+#### Parser
+
+```python
+class Parser:
+    parse()
+    parse_stream()
+    can_parse()
+```
+
+#### ParsingEngine
+
+```python
+class ParsingEngine:
+    parse()
+    parse_stream()
+    register_parser()
+    get_parser()
+```
+
+#### ParsedRecord
+
+```python
+class ParsedRecord:
+    data
+    raw
+    source
+    location
+    metadata
+    warnings
+    errors
+```
+
+#### ParseResult
+
+```python
+class ParseResult:
+    records
+    warnings
+    errors
+    statistics
+```
+
+Built-in parsers:
+
+```text
+CSVParser
+JSONParser
+JSONLParser
+XMLParser
+ParquetParser
+ArrowParser
+```
+
+Public:
+
+```python
+hr.parse(...)
+```
+
+Internal helpers can include:
+
+```python
+parse_csv()
+parse_json()
+parse_jsonl()
+parse_xml()
+parse_parquet()
+parse_arrow()
+```
+
+These don't necessarily need to be exposed at the top-level API.
+
+### 10. Normalization
+
+```text
+hermes/normalization/
+```
+
+#### NormalizationEngine
+
+```python
+class NormalizationEngine:
+    normalize()
+    normalize_stream()
+    register_rule()
+```
+
+#### NormalizationRule
+
+```python
+class NormalizationRule:
+    apply()
+    validate()
+```
+
+Rules:
+
+```text
+MapField
+RenameField
+DropField
+CastType
+ConvertUnit
+NormalizeString
+NormalizeDate
+NormalizeCountry
+NormalizeCurrency
+NormalizeIdentifier
+NormalizeName
+MapConcept
+ParsePeriod
+```
+
+Example:
+
+```python
+rules = [
+    RenameField("Country", "country"),
+    NormalizeCountry("country"),
+    CastType("value", float),
+    ConvertUnit("value", "USD"),
+]
+```
+
+Public:
+
+```python
+hr.normalize(data)
+```
+
+The engine executes the rules.
+
+### 11. Validation
+
+```text
+hermes/validation/
+```
+
+#### ValidationEngine
+
+```python
+class ValidationEngine:
+    validate()
+    validate_stream()
+    register_check()
+```
+
+#### ValidationResult
+
+```python
+class ValidationResult:
+    valid
+    errors
+    warnings
+    statistics
+```
+
+Checks:
+
+```text
+NotNull
+Unique
+UniqueCombination
+TypeCheck
+RangeCheck
+EnumCheck
+RegexCheck
+ForeignKeyCheck
+DateRangeCheck
+SchemaCheck
+FreshnessCheck
+CompletenessCheck
+ReferentialIntegrityCheck
+```
+
+Example:
+
+```python
+checks = [
+    NotNull("company_id"),
+    Unique("company_id"),
+    EnumCheck(
+        "currency",
+        ["USD", "EUR", "GBP"],
+    ),
+]
+```
+
+Public:
+
+```python
+hr.validate(data)
+```
+
+### 12. Inspection
+
+Inspection answers: **what is this dataset?**
+
+```text
+hermes/inspection/
+```
+
+#### Inspector
+
+```python
+class Inspector:
+    inspect()
+    sample()
+    schema()
+    shape()
+    columns()
+```
+
+#### InspectionResult
+
+```python
+class InspectionResult:
+    rows
+    columns
+    fields
+    sample
+    dtypes
+    nulls
+    duplicates
+    nested_fields
+```
+
+Functions:
+
+```python
+inspect()
+sample()
+infer_schema()
+detect_columns()
+detect_nested()
+detect_duplicates()
+detect_candidate_keys()
+```
+
+Public:
+
+```python
+hr.inspect(data)
+```
+
+### 13. Profiling
+
+Profiling answers: **what does this dataset statistically look like?**
+
+```text
+hermes/profiling/
+```
+
+#### Profiler
+
+```python
+class Profiler:
+    profile()
+    profile_column()
+    profile_dataset()
+```
+
+Profiles:
+
+```text
+NumericProfile
+StringProfile
+CategoricalProfile
+TemporalProfile
+DatasetProfile
+```
+
+Functions:
+
+```python
+describe_numeric()
+describe_categorical()
+describe_temporal()
+
+calculate_quantiles()
+calculate_frequency()
+calculate_cardinality()
+calculate_null_rate()
+calculate_uniqueness()
+```
+
+Public:
+
+```python
+hr.profile(data)
+```
+
+### 14. Metadata
+
+```text
+hermes/metadata/
+```
+
+#### Metadata
+
+```python
+class Metadata:
+    dataset_id
+    name
+    description
+    source
+    created_at
+    updated_at
+    schema
+    format
+    row_count
+    column_count
+    connector
+```
+
+#### MetadataExtractor
+
+```python
+class MetadataExtractor:
+    extract()
+    extract_schema()
+    extract_statistics()
+    extract_source()
+```
+
+#### MetadataRegistry
+
+```python
+class MetadataRegistry:
+    register()
+    get()
+    update()
+    delete()
+    search()
+    list()
+```
+
+Public:
+
+```python
+hr.get_metadata(dataset)
+```
+
+### 15. Entity Resolution
+
+This should be one of Hermes' major systems.
+
+```text
+hermes/entities/
+```
+
+#### Entity
+
+```python
+class Entity:
+    id
+    entity_type
+    canonical_name
+    country_id
+    identifiers
+    aliases
+    attributes
+```
+
+#### EntityIdentifier
+
+```python
+class EntityIdentifier:
+    namespace
+    value
+    source
+    valid_from
+    valid_to
+```
+
+Examples:
+
+```text
+SEC CIK
+LEI
+ISIN
+CUSIP
+national registration number
+OpenSanctions ID
+source-specific ID
+```
+
+#### EntityAlias
+
+```python
+class EntityAlias:
+    value
+    normalized_value
+    alias_type
+    source
+```
+
+#### EntityRelationship
+
+```python
+class EntityRelationship:
+    source_entity
+    relationship
+    target_entity
+    valid_from
+    valid_to
+    source
+```
+
+Examples:
+
+```text
+Apple Inc. -> issued -> AAPL
+Company X -> located_in -> Pakistan
+Person X -> director_of -> Company X
+Company X -> subsidiary_of -> Company Y
+Company X -> sanctioned_by -> OFAC
+```
+
+### 16. Entity Registry
+
+```python
+class EntityRegistry:
+    add()
+    get()
+    update()
+    delete()
+
+    find_by_identifier()
+    find_by_alias()
+    find_by_name()
+
+    link()
+    unlink()
+
+    relationships()
+```
+
+### 17. Entity Resolver
+
+```python
+class EntityResolver:
+    resolve()
+    generate_candidates()
+    compare()
+    score()
+    explain()
+```
+
+Matching:
+
+```python
+class MatchResult:
+    entity_id
+    score
+    decision
+    evidence
+```
+
+```python
+class MatchEvidence:
+    field
+    method
+    result
+    weight
+```
+
+Useful internal functions:
+
+```python
+normalize_name()
+normalize_identifier()
+
+generate_candidates()
+
+calculate_name_similarity()
+calculate_token_similarity()
+calculate_attribute_similarity()
+
+score_match()
+explain_match()
+```
+
+Public:
+
+```python
+hr.resolve_entity(...)
+hr.resolve_company(...)
+hr.resolve_country(...)
+hr.resolve_security(...)
+hr.resolve_organization(...)
+hr.resolve_person(...)
+```
+
+### 18. Schema System
+
+```text
+hermes/schemas/
+```
+
+#### Schema
+
+```python
+class Schema:
+    name
+    version
+    fields
+    namespace
+```
+
+#### SchemaField
+
+```python
+class SchemaField:
+    name
+    type
+    nullable
+    required
+    description
+    semantic_type
+```
+
+#### SchemaRegistry
+
+```python
+class SchemaRegistry:
+    register()
+    get()
+    list()
+    compare()
+    migrate()
+```
+
+Functions:
+
+```python
+infer_schema()
+validate_schema()
+compare_schema()
+migrate_schema()
+```
+
+Canonical schemas can include:
+
+```text
+Entity
+Company
+Person
+Organization
+Country
+
+FinancialStatement
+Security
+MarketData
+
+EconomicIndicator
+
+GeopoliticalEvent
+Conflict
+Sanction
+MilitaryAsset
+
+Document
+```
+
+### 19. Storage
+
+```text
+hermes/storage/
+```
+
+#### Storage
+
+```python
+class Storage:
+    save()
+    load()
+    delete()
+    exists()
+    list()
+    metadata()
+```
+
+Implementations:
+
+```text
+FilesystemStorage
+ParquetStorage
+DuckDBStorage
+```
+
+Future:
+
+```text
+PostgresStorage
+S3Storage
+HermesCloudStorage
+```
+
+Public:
+
+```python
+hr.save()
+hr.load()
+hr.delete()
+hr.materialize()
+```
+
+### 20. Query Engine
+
+```text
+hermes/query/
+```
+
+#### QueryEngine
+
+```python
+class QueryEngine:
+    query()
+    filter()
+    select()
+    sort()
+    group()
+    aggregate()
+```
+
+Objects:
+
+```text
+Query
+Filter
+Expression
+Condition
+Sort
+Aggregation
+```
+
+Example:
+
+```python
+result = hr.query(
+    "companies",
+    country="PK",
+    revenue__gt=1_000_000_000,
+)
+```
+
+Or:
+
+```python
+result = (
+    dataset
+    .query()
+    .filter(country="PK")
+    .select("name", "revenue")
+    .execute()
+)
+```
+
+### 21. Provenance
+
+```text
+hermes/provenance/
+```
+
+#### Provenance
+
+```python
+class Provenance:
+    source
+    source_url
+    connector
+    retrieved_at
+    raw_hash
+    transformation
+```
+
+#### ProvenanceRecord
+
+```python
+class ProvenanceRecord:
+    dataset_id
+    record_id
+    source
+    source_record
+    transformations
+    timestamp
+```
+
+#### ProvenanceTracker
+
+```python
+class ProvenanceTracker:
+    record()
+    get()
+    trace()
+```
+
+Functions:
+
+```python
+get_provenance()
+trace_provenance()
+hash_record()
+hash_dataset()
+```
+
+A Hermes record should be traceable like:
+
+```text
+final record
+    ↓
+entity resolution
+    ↓
+normalization
+    ↓
+parsing
+    ↓
+source record
+    ↓
+source
+```
+
+### 22. Lineage
+
+```text
+hermes/lineage/
+```
+
+#### Lineage
+
+```python
+class Lineage:
+    dataset_id
+    parents
+    transformations
+    children
+```
+
+#### LineageGraph
+
+```python
+class LineageGraph:
+    add()
+    remove()
+
+    parents()
+    children()
+
+    ancestors()
+    descendants()
+
+    trace()
+```
+
+Public:
+
+```python
+hr.get_lineage()
+hr.trace_lineage()
+```
+
+### 23. Versioning
+
+```text
+hermes/versioning/
+```
+
+#### Version
+
+```python
+class Version:
+    dataset_id
+    version
+    created_at
+    hash
+    changes
+```
+
+#### Snapshot
+
+```python
+class Snapshot:
+    dataset_id
+    version
+    created_at
+    hash
+    location
+```
+
+#### VersionManager
+
+```python
+class VersionManager:
+    create()
+    get()
+    list()
+    compare()
+    restore()
+```
+
+Public:
+
+```python
+hr.version()
+hr.snapshot()
+hr.diff()
+hr.restore()
+```
+
+### 24. Dataset Registry / Catalog
+
+```text
+hermes/datasets/
+```
+
+#### DatasetRegistry
+
+```python
+class DatasetRegistry:
+    register()
+    unregister()
+    get()
+    list()
+    search()
+```
+
+#### DatasetCatalog
+
+```python
+class DatasetCatalog:
+    search()
+    discover()
+    describe()
+    dependencies()
+```
+
+Public:
+
+```python
+hr.dataset()
+hr.datasets()
+hr.search_datasets()
+```
+
+### 25. Export
+
+```text
+hermes/export/
+```
+
+Exporters:
+
+```text
+CSVExporter
+JSONExporter
+ParquetExporter
+ArrowExporter
+```
+
+Functions:
+
+```python
+export_csv()
+export_json()
+export_parquet()
+export_arrow()
+```
+
+Potential public API:
+
+```python
+hr.export(data, format="parquet")
+```
+
+rather than exposing every exporter.
+
+### 26. Credential System
+
+Don't do:
+
+```python
+hr = Hermes(
+    fred_api="...",
+    sec_email="...",
+    ...
+)
+```
+
+Instead:
+
+```python
+class Credential:
+    provider
+    value
+    source
+```
+
+```python
+class CredentialStore:
+    get()
+    set()
+    delete()
+    exists()
+```
+
+```python
+class CredentialResolver:
+    resolve()
+    required()
+    validate()
+```
+
+Usage:
+
+```python
+hr.credentials.set("fred", "...")
+```
+
+or environment/configuration. Connectors declare what credentials they need.
+
+### 27. Error System
+
+```python
+HermesError
+```
+
+with specialized errors:
+
+```text
+HermesError
+├── ConfigurationError
+├── ConnectorError
+├── AuthenticationError
+├── RateLimitError
+├── AcquisitionError
+├── ParseError
+├── NormalizationError
+├── ValidationError
+├── SchemaError
+├── StorageError
+├── QueryError
+├── EntityResolutionError
+├── DatasetError
+└── VersionError
+```
+
+### 28. CLI
+
+Eventually:
+
+```bash
+hermes fetch sec
+hermes fetch fred
+
+hermes parse data.csv
+hermes normalize data.csv
+hermes validate data.csv
+
+hermes inspect data.csv
+hermes profile data.csv
+
+hermes entity resolve companies.csv
+
+hermes dataset list
+hermes dataset info companies
+
+hermes save data.csv
+hermes load companies
+
+hermes schema list
+hermes schema show company
+
+hermes lineage companies
+hermes provenance companies
+
+hermes version companies
+hermes diff companies:v1 companies:v2
+```
+
+### 29. Actual Hermes Package Structure
+
+Putting everything together:
+
+```text
+hermes/
+├── __init__.py
+│
+├── acquisition/
+│   ├── client.py
+│   ├── cache.py
+│   ├── pagination.py
+│   ├── retry.py
+│   ├── rate_limit.py
+│   └── sync.py
+│
+├── connectors/
+│   ├── base.py
+│   ├── registry.py
+│   ├── sec/
+│   ├── fred/
+│   ├── imf/
+│   ├── world_bank/
+│   ├── gdelt/
+│   ├── opensanctions/
+│   ├── binance/
+│   ├── finnhub/
+│   └── yfinance/
+│
+├── parsing/
+│   ├── engine.py
+│   ├── parser.py
+│   ├── records.py
+│   └── errors.py
+│
+├── normalization/
+│   ├── engine.py
+│   ├── rules.py
+│   ├── mapping.py
+│   └── errors.py
+│
+├── validation/
+│   ├── engine.py
+│   ├── checks.py
+│   ├── contracts.py
+│   ├── reports.py
+│   └── errors.py
+│
+├── inspection/
+│   ├── inspector.py
+│   └── models.py
+│
+├── profiling/
+│   ├── profiler.py
+│   └── models.py
+│
+├── metadata/
+│   ├── extractor.py
+│   ├── models.py
+│   └── registry.py
+│
+├── entities/
+│   ├── models.py
+│   ├── registry.py
+│   ├── resolver.py
+│   ├── aliases.py
+│   ├── countries.py
+│   └── companies.py
+│
+├── schemas/
+│   ├── base.py
+│   ├── registry.py
+│   ├── entity.py
+│   ├── financial.py
+│   ├── market.py
+│   ├── economic.py
+│   ├── geopolitical.py
+│   └── security.py
+│
+├── datasets/
+│   ├── registry.py
+│   ├── catalog.py
+│   └── models.py
+│
+├── storage/
+│   ├── base.py
+│   ├── filesystem.py
+│   ├── parquet.py
+│   └── duckdb.py
+│
+├── query/
+│   ├── engine.py
+│   ├── filters.py
+│   └── expressions.py
+│
+├── provenance/
+│   ├── models.py
+│   └── tracker.py
+│
+├── lineage/
+│   ├── models.py
+│   └── graph.py
+│
+├── versioning/
+│   ├── models.py
+│   └── manager.py
+│
+├── export/
+│   ├── csv.py
+│   ├── json.py
+│   ├── parquet.py
+│   └── arrow.py
+│
+├── credentials/
+│   ├── models.py
+│   ├── store.py
+│   └── resolver.py
+│
+└── errors.py
+```
+
+### 30. The Core Public API
+
+The whole thing ultimately exposes:
+
+```python
+import hermes as hr
+```
+
+#### Data acquisition
+
+```python
+hr.fetch()
+hr.fetch_raw()
+hr.sync()
+```
+
+#### Data understanding
+
+```python
+hr.inspect()
+hr.profile()
+hr.get_metadata()
+```
+
+#### Data processing
+
+```python
+hr.parse()
+hr.normalize()
+hr.transform()
+```
+
+#### Data verification
+
+```python
+hr.validate()
+hr.check_quality()
+hr.check_completeness()
+hr.check_freshness()
+hr.check_integrity()
+```
+
+#### Entity intelligence
+
+```python
+hr.resolve_entity()
+hr.resolve_company()
+hr.resolve_country()
+hr.resolve_security()
+hr.resolve_organization()
+hr.resolve_person()
+```
+
+#### Dataset management
+
+```python
+hr.dataset()
+hr.datasets()
+hr.search_datasets()
+
+hr.save()
+hr.load()
+hr.materialize()
+hr.delete()
+```
+
+#### Query
+
+```python
+hr.query()
+```
+
+#### Data history
+
+```python
+hr.get_provenance()
+hr.get_lineage()
+
+hr.version()
+hr.snapshot()
+hr.diff()
+hr.restore()
+```
+
+#### Schemas
+
+```python
+hr.get_schema()
+hr.register_schema()
+hr.compare_schema()
+hr.migrate()
+```
+
+### 31. What Hermes should feel like
+
+A developer should be able to do this:
+
+```python
+import hermes as hr
+
+raw = hr.fetch_raw("sec")
+
+parsed = hr.parse(raw)
+
+normalized = hr.normalize(parsed)
+
+resolved = hr.resolve_entity(normalized)
+
+validated = hr.validate(resolved)
+
+dataset = hr.save(
+    validated,
+    name="companies",
+)
+```
+
+Then:
+
+```python
+dataset.inspect()
+dataset.profile()
+```
+
+And:
+
+```python
+dataset.query(
+    country="PK"
+)
+```
+
+And:
+
+```python
+hr.get_provenance(dataset)
+hr.get_lineage(dataset)
+```
+
+And:
+
+```python
+hr.diff(
+    "companies:v1",
+    "companies:v2",
+)
+```
+
+The important design is now:
+
+```text
+                 import hermes as hr
+                          │
+       ┌──────────────────┼──────────────────┐
+       ↓                  ↓                  ↓
+   Acquisition       Processing          Intelligence
+       │                  │                  │
+     fetch         parse/normalize      entities
+       │            validate             schemas
+       ↓                  │                  │
+                    Dataset ◄───────────────┘
+                       │
+            ┌──────────┼──────────┐
+            ↓          ↓          ↓
+         Storage    Provenance   Lineage
+            │          │          │
+            └──────────┼──────────┘
+                       ↓
+                     Query
+```
+
+Hermes does **not** expose every internal class through `hermes/__init__.py`. The public API stays
+clean — `import hermes as hr` — while the internal implementation can evolve independently.
+
+## Part D — Architecture
 
 ### Package layout (current)
 
@@ -230,12 +1969,12 @@ Storage    Query      Export     Features (de-scoped)
 
 ---
 
-## Part D — Subsystem Engineering Spec
+## Part E — Subsystem Engineering Spec
 
 **How to read this:** every unchecked box is an engineering task. Assignments follow the team/ownership
-map in [Part E](#part-e--engineering-team). DoD = Definition of Done.
+map in [Part F](#part-f--engineering-team). DoD = Definition of Done.
 
-### D0. Project direction
+### E0. Project direction
 
 **Objective:** evolve Hermes into a reusable data platform that can *acquire, preserve raw data, parse,
 normalize to canonical schemas, validate, profile, attach metadata, track provenance + lineage, resolve
@@ -249,7 +1988,7 @@ External Source → Connector → Raw Data → Parse → Normalize → Validate
 → Metadata + Provenance + Lineage → Hermes Dataset → Storage / Query / Export
 ```
 
-### D1. Core Dataset System
+### E1. Core Dataset System
 
 - [x] Create `Dataset` abstraction
 - [x] Define dataset identity
@@ -269,7 +2008,7 @@ lazy/eager execution where appropriate; integrates with Arrow, Polars, Pandas, D
 `parse normalize validate profile inspect transform resolve query save export metadata schema lineage`
 return consistent `Dataset`/result types.
 
-### D2. Acquisition Engine
+### E2. Acquisition Engine
 
 - [ ] Define `Source`: configuration, credentials, capabilities, metadata, lifecycle
 - [ ] Implement `fetch()`, `ingest()`, `source()`, `connect()`, `read()`, `stream()`
@@ -286,7 +2025,7 @@ return consistent `Dataset`/result types.
 - [ ] Resumable acquisition; request timeout handling
 - [ ] Implement `fetch_raw()`, `sync()`; preserve existing `_fetch()` acquisition abstraction
 
-### D3. Parsing Engine
+### E3. Parsing Engine
 
 - [ ] Define `Parser` contract: input contract, output contract, registration, selection
 - [ ] Implement `parse()`, `detect_format()`, `read_raw()`, `decode()`
@@ -299,7 +2038,7 @@ return consistent `Dataset`/result types.
 - [ ] Prevent generic parser from containing SEC/GDELT business logic
 - [ ] Parser does not perform semantic normalization, entity resolution, or contain domain mappings
 
-### D4. Schema / Data Contract Engine
+### E4. Schema / Data Contract Engine
 
 - [ ] Define schema model: fields, types, nullable, required, constraints
 - [ ] Schema versioning and serialization
@@ -309,7 +2048,7 @@ return consistent `Dataset`/result types.
 - [ ] Initial canonical schemas registered: entity, economic, financial, market, geopolitical,
       security, document
 
-### D5. Normalization Engine
+### E5. Normalization Engine
 
 - [ ] Define normalization interface; source→canonical mapping
 - [ ] Type, unit, temporal, geographic, identifier normalization
@@ -322,7 +2061,7 @@ return consistent `Dataset`/result types.
 - [ ] Normalization is deterministic; steps recorded in lineage
 - [ ] Normalization rules reusable (`rules.py`: date, numeric, string cleanup, null, unit, identifier)
 
-### D6. Quality Engine
+### E6. Quality Engine
 
 - [ ] Define quality-check and validation-rule interfaces
 - [ ] Define quality report, score/model, severity levels, warning vs error behavior
@@ -338,7 +2077,7 @@ return consistent `Dataset`/result types.
 - [ ] Anomaly detection: extensible interface, not coupled to ML implementations
 - [ ] Quality results recorded in metadata/provenance; machine- and human-readable reports
 
-### D7. Metadata System
+### E7. Metadata System
 
 - [ ] Dataset-level and column-level metadata models
 - [ ] Type, row/column counts, null stats, unique stats, date range, frequency detection,
@@ -347,7 +2086,7 @@ return consistent `Dataset`/result types.
 - [ ] Implement `get_metadata()`, `inspect()`, `profile()`
 - [ ] Metadata does not modify the dataset
 
-### D8. Provenance
+### E8. Provenance
 
 - [ ] Define provenance model
 - [ ] Record source, URL/API endpoint, retrieval timestamp, connector, connector version,
@@ -356,14 +2095,14 @@ return consistent `Dataset`/result types.
 - [ ] Implement `get_provenance()`
 - [ ] Provenance immutable once recorded where appropriate
 
-### D9. Lineage
+### E9. Lineage
 
 - [ ] Define lineage model
 - [ ] Track input/output dataset, operations, transformations, timestamps, versions, parameters
 - [ ] Build dataset lineage graph; implement `get_lineage()`; make lineage queryable
 - [ ] Start with ordered lineage records; design so a DAG can be added later; do not build a DAG initially
 
-### D10. Entity System *(first-class pillar)*
+### E10. Entity System *(first-class pillar)*
 
 - [ ] Define `Entity` and `EntityMatch` models; canonical entity representation
 - [ ] Define `Resolver` interface: `resolve()`, `identify()`, `match()`, `link()`, `entity()`
@@ -383,7 +2122,7 @@ return consistent `Dataset`/result types.
 Core provides the resolver interface; domain-specific entity knowledge stays outside Core.
 Corporate/financial/defense/healthcare identifiers can be added independently.
 
-### D11. Dataset Catalog
+### E11. Dataset Catalog
 
 - [ ] Define dataset registry and identifier
 - [ ] Fields: description, owner/source, schema, versions, coverage, frequency, quality, freshness,
@@ -391,7 +2130,7 @@ Corporate/financial/defense/healthcare identifiers can be added independently.
 - [ ] Implement `datasets.list()`, `datasets.get()`, `datasets.search()`
 - [ ] Register each bundled static dataset with schema, metadata, validation, provenance, version
 
-### D12. Storage
+### E12. Storage
 
 - [ ] Define storage abstraction; pluggable backends
 - [ ] Filesystem backend; Parquet backend (partitioning, compression, manifests); DuckDB integration
@@ -400,7 +2139,7 @@ Corporate/financial/defense/healthcare identifiers can be added independently.
 - [ ] Implement `save()`, `load()`, `delete()`, existence checks
 - [ ] Atomic writes; corruption protection; storage tests
 
-### D13. Query Engine
+### E13. Query Engine
 
 - [ ] Define query interface and execution model; query result abstraction
 - [ ] Implement `query()` and `sql()`
@@ -408,20 +2147,20 @@ Corporate/financial/defense/healthcare identifiers can be added independently.
 - [ ] DuckDB execution; Polars/Arrow/Pandas integration
 - [ ] Query separated from storage; query tests
 
-### D14. Materialization
+### E14. Materialization
 
 - [ ] Define materialization abstraction
 - [ ] Materialize to Polars, Pandas, Arrow, DuckDB relation
 - [ ] Implement `materialize()`; never mutate canonical data
 
-### D15. Export
+### E15. Export
 
 - [ ] Define exporter interface and configuration; export metadata
 - [ ] Implement `export()`, `to_arrow()`, `to_polars()`, `to_pandas()`, `to_duckdb()`
 - [ ] Formats: Parquet, CSV, JSON, JSONL, Arrow
 - [ ] Preserve metadata/schema/provenance where supported
 
-### D16. Dataset Versioning
+### E16. Dataset Versioning
 
 - [ ] Version model: dataset, schema, pipeline, version identifiers, version metadata
 - [ ] Implement `version()`, `snapshot()`, `diff()`
@@ -430,52 +2169,52 @@ Corporate/financial/defense/healthcare identifiers can be added independently.
 - [ ] Detect added/removed/changed rows and schema changes
 - [ ] Versioning tests
 
-### D17. Schema Migration
+### E17. Schema Migration
 
 - [ ] Migration model, registry, direction, compatibility rules
 - [ ] Detect breaking schema changes; forward migrations
 - [ ] Implement `migrate()`; record migration provenance; test reproducibility
 
-### D18. Registry System
+### E18. Registry System
 
 - [ ] Component, dataset, schema, connector, parser, validator, transformer, resolver, storage
       registries
 - [ ] Implement `register()`, component lookup/discovery/versioning/metadata
 
-### D19. Execution Engine
+### E19. Execution Engine
 
 - [ ] Execution context, pipeline abstraction, state, results, error handling, retry behavior
 - [ ] Deterministic stage order; pass `Dataset` between stages
 - [ ] Capture lineage, execution metadata, errors automatically
 - [ ] Reusable and configurable pipelines
 
-### D20. Inspection / Developer Experience
+### E20. Inspection / Developer Experience
 
 - [ ] Implement `inspect()`: dimensions, schema, metadata, sample records, quality, lineage,
       provenance, version
 - [ ] CLI: dataset inspection, schema inspection, profile, validation, lineage, dataset catalog
 - [ ] TUI where practical
 
-### D21. Error System
+### E21. Error System
 
 - [ ] Hermes exception hierarchy
 - [ ] Acquisition, parsing, schema, normalization, validation, transformation, resolution, storage,
       query, configuration errors
 - [ ] Useful error context; preserve original source errors where appropriate
 
-### D22. Extension Architecture
+### E22. Extension Architecture
 
 - [ ] Connector interface/config/metadata/lifecycle
 - [ ] Plugin interfaces: connector, parser, schema, mapper, normalizer, validator, profiler,
       transformer, resolver, storage backend, exporter
 - [ ] Connectors depend on Core, never the reverse
 
-### D23. Python Ecosystem Integration
+### E23. Python Ecosystem Integration
 
 - [ ] Arrow-native internal interoperability; Arrow/pandas/polars conversions and schema mapping
 - [ ] Dataset ↔ Polars, Pandas, DuckDB (SQL execution, parquet querying), NumPy where appropriate
 
-### D24. Public API
+### E24. Public API
 
 ```python
 hr.fetch()            hr.ingest()           hr.read()             hr.sync()
@@ -496,7 +2235,7 @@ hr.get_schema()       hr.register_schema()  hr.compare_schema()   hr.migrate()
 `Dataset` methods mirror the `hr.*` ops: `parse normalize validate profile inspect transform resolve
 query save export schema metadata lineage`.
 
-### D25. Testing
+### E25. Testing
 
 - [ ] Unit: acquisition, parsing, schema, normalization, validation, profiling, transformation,
       resolution, storage, query, export, versioning, provenance, lineage, registry
@@ -507,7 +2246,7 @@ query save export schema metadata lineage`.
 - [ ] Test suite organized as `unit / connectors / features / integration`
 - [ ] Regression and failure/recovery tests; schema compatibility tests
 
-### D26. Production Hardening
+### E26. Production Hardening
 
 - [ ] Structured logging; standardized error taxonomy
 - [ ] Retry policies, rate-limit handling, request timeouts
@@ -517,12 +2256,12 @@ query save export schema metadata lineage`.
 - [ ] Deterministic pipelines; reproducibility checks
 - [ ] Performance and memory benchmarks; connector reliability tests
 
-### D27. Static Data
+### E27. Static Data
 
 - [ ] Move bundled datasets into `data/datasets/`
 - [ ] Register each: metadata, schema, validation, provenance, version; catalog access
 
-### D28. v1 Acceptance Criteria
+### E28. v1 Acceptance Criteria
 
 **Acquisition:** reliable connector framework, raw acquisition, cache, retry, pagination, rate limiting,
 incremental sync.
@@ -577,7 +2316,7 @@ repeating and generalizing the architecture rather than inventing it per source.
 
 ---
 
-## Part E — Engineering & Team
+## Part F — Engineering & Team
 
 ### Team roles
 
@@ -685,11 +2424,11 @@ CI passes.
 
 ---
 
-## Part F — Roadmap & Strategy
+## Part G — Roadmap & Strategy
 
 ### v1 scope
 
-v1 = the checkboxes in [Part D](#part-d--subsystem-engineering-spec). Strategy: **core-first** —
+v1 = the checkboxes in [Part E](#part-e--subsystem-engineering-spec). Strategy: **core-first** —
 build the general data engine so anyone can process their own data (CSV/JSON/XML/Parquet) and so the
 finance/defense datasets and data-provider can be built on real infrastructure.
 
@@ -706,49 +2445,49 @@ finance/defense datasets and data-provider can be built on real infrastructure.
 
 ### Phases
 
-**Phase 1 — Core Foundation** *[Blocking] · Haider* (Checklist D1/D7/D21)
+**Phase 1 — Core Foundation** *[Blocking] · Haider* (Checklist E1/E7/E21)
 `Dataset` lifecycle with conversions, metadata/provenance/lineage/version models, error system,
 component ABCs (Parser, Normalizer, Validator, Resolver, StorageBackend).
 
-**Phase 2 — Data In** *[Abdullah day one] · Abdullah + Abdulrehman + Faik* (D2/D3)
+**Phase 2 — Data In** *[Abdullah day one] · Abdullah + Abdulrehman + Faik* (E2/E3)
 Real acquisition (Client/RetryPolicy/RateLimiter/Paginator/SyncState + RawCache), parsing engine
 (detect_format + csv/json/parquet/xml parsers → `pl.DataFrame`). Done: `hr.read("file.csv")` returns a
 `Dataset`.
 
-**Phase 3 — Data Contract** *[Blocking after Phase 2] · Haider + Ifra* (D4/D5)
+**Phase 3 — Data Contract** *[Blocking after Phase 2] · Haider + Ifra* (E4/E5)
 Schema registry + 7 canonical schemas + `infer_schema`, normalization engine + reusable rules.
 Done: `hr.normalize(df, schema="economic.v1")` → canonical `Dataset`.
 
-**Phase 4 — Data Quality** *· Ifra* (D6/D7)
+**Phase 4 — Data Quality** *· Ifra* (E6/E7)
 Validation contracts/checks/reports; profiling + metadata extraction wired into `Dataset.profile()`.
 
-**Phase 5 — Identity & Entity Resolution** *· Ifra, Haider design* (D10)
+**Phase 5 — Identity & Entity Resolution** *· Ifra, Haider design* (E10)
 `Resolver` interface + registry + aliases; countries (ISO2/3/name/numeric) and companies
 (ticker/CIK/ISIN) resolvers; `hr.resolve_country("PK")`, `hr.resolve_company("AAPL")` real.
 
 **Phase 6 — Storage / Query / Export / Materialization** *· Haider + Abdulrehman, integrity Abdullah*
-(D11/D12/D13/D14/D15)
+(E11/E12/E13/E14/E15)
 Filesystem+parquet storage with atomic writes + sidecars; DuckDB backend; exporters; query engine;
 dataset catalog.
 
-**Phase 7 — Dataset Lifecycle** *· Haider* (D8/D9/D16/D17/D27)
+**Phase 7 — Dataset Lifecycle** *· Haider* (E8/E9/E16/E17/E27)
 Automatic provenance + lineage capture; versioning/snapshots/diff; schema migration; bundled static
 datasets registered.
 
-**Phase 8 — Public API, CLI, DX** *· Haider + Faik + Tasbiha* (D20/D24)
+**Phase 8 — Public API, CLI, DX** *· Haider + Faik + Tasbiha* (E20/E24)
 Thin `hr.*` wrappers with consistent types; CLI commands (`inspect`, `profile`, `validate`, `schema`,
 `datasets list`, `lineage`, `sync`); pretty inspect; examples; notebook snippets.
 
-**Phase 9 — Connectors on the Engine** *· Abdulrehman lead, Haider arch, Abdullah security* (D9/S)
+**Phase 9 — Connectors on the Engine** *· Abdulrehman lead, Haider arch, Abdullah security* (E9/S)
 `BaseConnector` + registry; World Bank as the reference vertical slice on the `economic` schema; rollout
 FRED → IMF → YFinance → Finnhub → Binance → SEC → GDELT → OpenSanctions; STRIDE review per connector.
 
-**Phase 10 — Data Provider (Entity-first serving layer)** *· Ifra + Haider* (D10)
+**Phase 10 — Data Provider (Entity-first serving layer)** *· Ifra + Haider* (E10)
 Entity registry scaled to ~100k companies/countries/persons (finance & defense); `resolve_entity` →
 entity object; `.financials / .market_data / .fillings` backed by canonical datasets, provenance-bound;
 provider CI demo green.
 
-**Phase 11 — Hardening, Testing, Docs** *· All hands* (D25/D26/D28)
+**Phase 11 — Hardening, Testing, Docs** *· All hands* (E25/E26/E28)
 Structured logging, error taxonomy wired everywhere, streaming/resumable sync, benchmarks; test-suite
 split + integration e2e + CI coverage gate; security redaction/tamper tests; per-subsystem docs;
 v1 acceptance (both core-success tests).
@@ -763,33 +2502,33 @@ v1 acceptance (both core-success tests).
 
 ### Definitions of done — v1 acceptance (summary)
 
-See **D28**. The two non-negotiable green demos: (1) the core lifecycle on a local file with
+See **E28**. The two non-negotiable green demos: (1) the core lifecycle on a local file with
 provenance/lineage; (2) `resolve_company("AAPL").financials` returning a provenance-bound Dataset.
 
 ### Status legend
 
 | Area | Checklist | Status |
 |---|---|---|
-| Core Dataset | D1 | ~35% (Dataset + load/inspect/profile/conversions real; save/export + tests pending) |
-| Acquisition | D2 | ~20% (cache done; client/retry/rate/pagination/sync pending) |
-| Parsing | D3 | ~15% (module skeleton + parsers exist; engine dispatch pending) |
-| Schemas / Contracts | D4 | ~10% (field/schema models; registry + engines pending) |
-| Normalization | D5 | ~10% |
-| Quality | D6 | ~10% (profile real in `api/data.py`; validation pending) |
-| Metadata | D7 | ~15% (InspectReport/MetaData real; extractor pending) |
-| Provenance / Lineage | D8/D9 | ~10% (models exist; capture pending) |
-| Entities | D10 | ~15% (countries/companies helpers real; registry/resolver/aliases pending) |
-| Dataset Catalog | D11 | ~10% |
-| Storage / Query / Export | D12–15 | ~10% (export/utils real; storage/query pending) |
-| Versioning / Migration | D16/D17 | ~10% (models exist) |
-| Public API + CLI | D20/D24 | ~5% (facade wired, bodies pending; CLI profile_data works) |
+| Core Dataset | E1 | ~35% (Dataset + load/inspect/profile/conversions real; save/export + tests pending) |
+| Acquisition | E2 | ~20% (cache done; client/retry/rate/pagination/sync pending) |
+| Parsing | E3 | ~15% (module skeleton + parsers exist; engine dispatch pending) |
+| Schemas / Contracts | E4 | ~10% (field/schema models; registry + engines pending) |
+| Normalization | E5 | ~10% |
+| Quality | E6 | ~10% (profile real in `api/data.py`; validation pending) |
+| Metadata | E7 | ~15% (InspectReport/MetaData real; extractor pending) |
+| Provenance / Lineage | E8/E9 | ~10% (models exist; capture pending) |
+| Entities | E10 | ~15% (countries/companies helpers real; registry/resolver/aliases pending) |
+| Dataset Catalog | E11 | ~10% |
+| Storage / Query / Export | E12–15 | ~10% (export/utils real; storage/query pending) |
+| Versioning / Migration | E16/E17 | ~10% (models exist) |
+| Public API + CLI | E20/E24 | ~5% (facade wired, bodies pending; CLI profile_data works) |
 | Connectors on engine | Phase 9 | ~30% (connectors work standalone; contract pending) |
 | Provider layer | Phase 10 | ~5% (entities skeleton) |
-| Hardening / Testing / Docs | D25/D26/D28 | ~20% (tests pass; platform + docs pending) |
+| Hardening / Testing / Docs | E25/E26/E28 | ~20% (tests pass; platform + docs pending) |
 
 ---
 
-## Part G — Positioning, Licensing & Credibility
+## Part H — Positioning, Licensing & Credibility
 
 ### License — Elastic License 2.0 (decided)
 
