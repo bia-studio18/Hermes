@@ -1,9 +1,13 @@
+from hermes.validation.checks import NotNull, ValidationResult
 from hermes.validation.contracts import DataContract
-from hermes.validation.engine import ValidationEngine
-from hermes.validation.reports import ValidationReport
+from hermes.validation.engine import validate
+from hermes.validation.reports import CheckResult, ValidationReport
 
 __all__ = [
-    "ValidationEngine",
+    "validate",
+    "NotNull",
+    "ValidationResult",
+    "CheckResult",
     "ValidationReport",
     "DataContract",
 ]

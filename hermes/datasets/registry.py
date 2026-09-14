@@ -15,7 +15,7 @@ class DatasetRegistry:
     def get(self, dataset_id: str) -> DatasetDescriptor | None:
         raise NotImplementedError()
 
-    def list(self) -> builtins.list[DatasetDescriptor]:
+    def list_dataset(self) -> builtins.list[DatasetDescriptor]:
         raise NotImplementedError()
 
     def search(self, query: str) -> builtins.list[DatasetDescriptor]:

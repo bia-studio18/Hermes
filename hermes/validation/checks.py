@@ -1,16 +1,32 @@
-def null_check(data: object, column: str) -> object: ...
+import polars as pl
+from dataclasses import dataclass, field
+from typing import Any
 
 
-def type_check(data: object, column: str, expected_type: str) -> object: ...
+@dataclass
+class ValidationResult:
+    passed: bool
+    check: str
+    column: str | list[str] | None = None
+    statistics: dict[str, Any] = field(default_factory=dict)
+    violations: int = 0
+    message: str = ""
 
 
-def range_check(data: object, column: str, min_val: object = None, max_val: object = None) -> object: ...
+class NotNull:
+    def __init__(self, column: str):
+        self.column = column
 
-
-def duplicate_check(data: object, columns: list[str]) -> object: ...
-
-
-def required_field_check(data: object, columns: list[str]) -> object: ...
-
-
-def date_validity_check(data: object, column: str) -> object: ...
+    def run(self, data: pl.DataFrame) -> ValidationResult:
+        null_count = data.select(pl.col(self.column).null_count()).item()
+        return ValidationResult(
+            passed=(null_count == 0),
+            check="NotNull",
+            column=self.column,
+            statistics={
+                "null_count": null_count,
+                "null_ratio": (null_count / data.height) * 100 if data.height > 0 else 0.0,
+            },
+            violations=null_count,
+            message=f"Column '{self.column}' has {null_count} null values",
+        )
