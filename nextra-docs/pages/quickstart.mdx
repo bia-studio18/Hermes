@@ -1,0 +1,165 @@
+---
+title: Quickstart
+---
+
+# Quickstart
+
+Get Hermes running in under 5 minutes. This guide walks you through installation, basic configuration, and your first data pipeline.
+
+## Install
+
+Hermes requires **Python 3.11 or newer**. Install from PyPI:
+
+```bash
+pip install hermes-plt
+```
+
+Verify the installation:
+
+```bash
+python -c "import hermes; print(hermes.__version__)"
+```
+
+## Basic Usage
+
+### Profile a local file
+
+The fastest way to see Hermes in action — profile any CSV, Parquet, or JSON file:
+
+```python
+import hermes as hr
+
+# Profile a CSV file directly
+report = hr.profile(path="data.csv")
+
+print(report.row_count)
+print(report.column_count)
+for col in report.columns:
+    print(f"{col.name}: {col.dtype}, nulls={col.null_count}, unique={col.unique_count}")
+```
+
+Or from the terminal:
+
+```bash
+hermes profile_data data.csv
+```
+
+### Read and inspect data
+
+```python
+import hermes as hr
+import polars as pl
+
+# Read a file into a DataFrame
+df = pl.read_csv("gdp.csv")
+
+# Quick inspection
+info = hr.inspect(df)
+print(f"rows: {info.row_count}, columns: {info.column_count}")
+for col_name, col_type in info.columns:
+    print(f"  {col_name}: {col_type}")
+```
+
+### Work with the Dataset object
+
+The `Dataset` is Hermes' core abstraction — it holds your data alongside its metadata, provenance, and lineage:
+
+```python
+import hermes as hr
+import polars as pl
+
+df = pl.read_csv("gdp.csv")
+
+# Create a Dataset
+ds = hr.Dataset(
+    name="gdp",
+    data_ref="gdp.csv",
+    data=df,
+)
+
+# Profile it (populates metadata)
+ds.profile()
+
+# Inspect the data
+report = ds.inspect()
+print(f"rows: {report.row_count}, columns: {report.column_count}")
+
+# Access metadata
+print(ds.metadata_info)
+print(ds.provenance_info)
+print(ds.lineage_info)
+```
+
+### Export data
+
+```python
+# Save to different formats
+ds.save("output/", format="parquet")   # writes output/gdp.parquet
+ds.save("output/", format="csv")       # writes output/gdp.csv
+ds.save("output/", format="json")      # writes output/gdp.json
+
+# Or export to raw bytes
+csv_bytes = ds.export("csv")
+parquet_bytes = ds.export("parquet")
+```
+
+### Interoperate with your stack
+
+```python
+# Convert to any format your tools expect
+polars_df = ds.to_polars()   # polars.DataFrame
+arrow_tbl = ds.to_arrow()    # pyarrow.Table
+pandas_df = ds.to_pandas()   # pandas.DataFrame
+```
+
+## Connectors
+
+Hermes ships with 10 source connectors. Here's how to fetch data from a few of them:
+
+### World Bank (no API key required)
+
+```python
+import asyncio
+from hermes import Hermes
+
+hermes = Hermes(
+    opensanction_api="x",
+    new_data_api="x",
+    sec_username="x",
+    sec_email="x",
+)
+
+# Fetch GDP growth for the US
+df = hermes.world_bank.fetch(
+    country_code="US",
+    indicator_code="NY.GDP.MKTP.KD.ZG",
+    frequency="Y",
+)
+print(df.head())
+```
+
+### FRED (requires API key)
+
+```python
+fd = hermes.fred.fetch(series_id="CPIAUCSL")  # CPI
+print(fd.head())
+```
+
+### Binance (no API key required)
+
+```python
+# 2 years of daily BTC futures candles
+df = hermes.binance.fetch_history(
+    symbol="BTCUSDT",
+    interval="1d",
+    market="future",
+    years=2,
+)
+print(df.head())
+```
+
+## Next Steps
+
+- [Installation](/installation) — detailed setup and environment variables
+- [Acquisition](/core/acquisition) — deep dive into connectors and the caching layer
+- [Python API](/reference/python-api) — complete API reference

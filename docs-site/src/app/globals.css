@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  --color-midnight: #0b0d0f;
+  --color-offwhite: #f5f5f2;
+  --color-gray: #8b9198;
+  --color-teal: #2f6f68;
+  /* Slightly lighter gray for body copy legibility on midnight */
+  --color-gray-bright: #9aa2aa;
+}
+
+@theme inline {
+  --color-midnight: var(--color-midnight);
+  --color-offwhite: var(--color-offwhite);
+  --color-gray: var(--color-gray);
+  --color-gray-bright: var(--color-gray-bright);
+  --color-teal: var(--color-teal);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-midnight);
+  color: var(--color-offwhite);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Decorative hero texture — sparse dots + thin teal lines (world-map / network overlay) */
+.map-texture {
+  background-image:
+    radial-gradient(circle at 12% 22%, var(--color-teal) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 42% 18%, var(--color-teal) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 71% 32%, var(--color-teal) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 88% 12%, var(--color-teal) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 30% 62%, var(--color-teal) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 64% 58%, var(--color-teal) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 92% 52%, var(--color-teal) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 18% 84%, var(--color-teal) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 51% 79%, var(--color-teal) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 81% 88%, var(--color-teal) 0 1px, transparent 1.5px);
+  background-size: 100% 100%;
+}
+
+::selection {
+  background: var(--color-teal);
+  color: var(--color-midnight);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

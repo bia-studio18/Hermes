@@ -1,0 +1,118 @@
+---
+title: Metadata
+---
+
+# Metadata
+
+The metadata module extracts, stores, and manages dataset metadata — column statistics, data quality metrics, frequency detection, and date range analysis.
+
+## Top-Level API
+
+```python
+import hermes as hr
+import polars as pl
+
+df = pl.read_csv("data.csv")
+
+# Full statistical profile
+metadata = hr.profile(df)
+print(metadata.row_count)
+print(metadata.column_count)
+print(metadata.frequency)
+
+# Quick inspection (no full scan)
+info = hr.inspect(df)
+print(info.row_count)
+print(info.columns)
+
+# Frequency detection
+freqs = hr.get_freqs(df)
+
+# Date range detection
+ranges = hr.date_ranges(df)
+
+# Anomaly detection (IQR-based)
+anomalies = hr.anomaly_count(df, threshold=1.5)
+```
+
+## MetaData
+
+The primary metadata model returned by `profile()`:
+
+```python
+metadata = hr.profile(df)
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `row_count` | `int` | Total rows |
+| `column_count` | `int` | Total columns |
+| `columns` | `list[ColumnMetadata]` | Per-column statistics |
+| `date_range` | `dict[str, tuple] \| None` | Min/max dates per temporal column |
+| `frequency` | `str \| None` | Detected frequency (e.g., "1d", "1w") |
+| `source` | `str \| None` | Data source identifier |
+| `retrieved_at` | `datetime \| None` | When data was retrieved |
+| `profiled_at` | `datetime \| None` | When profiling was run |
+| `quality` | `QualityInfo \| None` | Data quality metrics |
+
+## ColumnMetadata
+
+Per-column statistics:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | `str` | Column name |
+| `dtype` | `str` | Data type |
+| `null_count` | `int` | Number of null values |
+| `null_ratio` | `float` | Ratio of nulls (0.0–1.0) |
+| `unique_count` | `int` | Number of unique values |
+| `min_value` | `Any` | Minimum value (numeric columns) |
+| `max_value` | `Any` | Maximum value (numeric columns) |
+| `mean` | `float \| None` | Mean value (numeric columns) |
+| `median` | `float \| None` | Median value (numeric columns) |
+| `std` | `float \| None` | Standard deviation (numeric columns) |
+| `top_values` | `list[tuple]` | Top 5 value-count pairs (string columns) |
+
+## QualityInfo
+
+Data quality metrics:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `completeness` | `dict[str, float]` | Completeness ratio per column (1.0 = complete) |
+| `duplicate_count` | `int` | Number of duplicate rows |
+| `anomaly_count` | `dict[str, int]` | Anomaly count per numeric column |
+
+## InspectReport
+
+Lightweight report from `inspect()` — no full statistical scan:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `dataset_id` | `str \| None` | Dataset UUID |
+| `name` | `str \| None` | Dataset name |
+| `version` | `str \| None` | Dataset version |
+| `schema_ref` | `str \| None` | Schema reference |
+| `row_count` | `int` | Total rows |
+| `column_count` | `int` | Total columns |
+| `columns` | `list[tuple[str, str]]` | (name, dtype) pairs |
+| `stored_metadata` | `MetaData \| None` | Previously stored metadata |
+| `provenance` | `Provenance \| None` | Data provenance |
+| `lineage` | `Lineage \| None` | Processing lineage |
+| `sample` | `list[dict]` | First 5 rows as dicts |
+
+## MetadataExtractor
+
+Low-level extractor for custom metadata pipelines:
+
+```python
+from hermes.metadata import MetadataExtractor
+
+extractor = MetadataExtractor()
+metadata = extractor.extract(data)
+column_meta = extractor.extract_column(series)
+frequency = extractor.detect_frequency(data)
+date_range = extractor.detect_date_range(data)
+```
+
+<!-- TODO: verify against source — MetadataExtractor methods are scaffolded -->

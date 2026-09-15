@@ -1,0 +1,92 @@
+---
+title: Parsing
+---
+
+# Parsing
+
+The parsing module converts raw data from various formats into structured intermediate records.
+
+<Callout type="warning">
+The parsing engine is scaffolded. The public API surface is defined but most methods raise `NotImplementedError`. This page documents the designed interface.
+</Callout>
+
+## ParserEngine
+
+The central parsing orchestrator.
+
+```python
+from hermes.parsing import ParserEngine
+
+engine = ParserEngine()
+```
+
+### Methods
+
+#### `detect_format(source) -> str`
+
+Detect the format of the input data. Returns a format string.
+
+```python
+format = engine.detect_format("data.csv")  # -> "csv"
+```
+
+#### `parse(raw_data, format=None) -> object`
+
+Parse raw data into structured records. Optionally specify the format explicitly.
+
+```python
+result = engine.parse(raw_data)
+result = engine.parse(raw_data, format="json")
+```
+
+#### `parse_csv(raw_data) -> object`
+#### `parse_json(raw_data) -> object`
+#### `parse_parquet(raw_data) -> object`
+#### `parse_xml(raw_data) -> object`
+
+Format-specific parsers.
+
+## Format Parsers
+
+Individual parsers for each supported format:
+
+| Parser | Class | Supported Formats |
+|--------|-------|-------------------|
+| `CSVParser` | `hermes.parsing.csv_parser` | CSV |
+| `JSONParser` | `hermes.parsing.json_parser` | JSON, JSONL |
+| `ParquetParser` | `hermes.parsing.parquet_parser` | Parquet |
+| `XMLParser` | `hermes.parsing.xml_parser` | XML |
+
+Each implements `parse(raw_data, **kwargs) -> object`.
+
+## IntermediateRecord
+
+The canonical intermediate representation produced by parsers:
+
+```python
+from hermes.parsing import IntermediateRecord
+
+record = IntermediateRecord(
+    fields={"country": "US", "value": 2.5},
+    source_format="csv",
+    raw_values={"country": "US", "value": "2.5"},
+)
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `fields` | `dict[str, object]` | Parsed field values |
+| `source_format` | `str` | Original format (csv, json, etc.) |
+| `raw_values` | `dict[str, object]` | Raw unparsed values |
+
+## Errors
+
+```python
+from hermes.parsing.errors import ParseError, UnsupportedFormatError, MalformedRecordError
+```
+
+| Exception | Description |
+|-----------|-------------|
+| `ParseError` | Base parsing error |
+| `UnsupportedFormatError` | Source format not supported |
+| `MalformedRecordError` | Individual record is malformed |

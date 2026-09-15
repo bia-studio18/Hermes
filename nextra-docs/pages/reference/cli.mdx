@@ -1,0 +1,95 @@
+---
+title: CLI
+---
+
+# CLI Reference
+
+Hermes provides a command-line interface built with [Typer](https://typer.tiangolo.com/). After installation, the `hermes` command is available in your shell.
+
+## Usage
+
+```bash
+hermes [COMMAND] [OPTIONS]
+```
+
+## Commands
+
+### `hermes version`
+
+Print the current version.
+
+```bash
+$ hermes version
+Hermes v0.2.16
+```
+
+### `hermes info`
+
+Print version and description.
+
+```bash
+$ hermes info
+Hermes v0.2.16
+Foundational intelligence data platform
+```
+
+### `hermes profile-data <PATH>`
+
+Profile a dataset file and display a rich-formatted report.
+
+```bash
+$ hermes profile_data gdp.csv
+```
+
+**Arguments:**
+
+| Argument | Description |
+|----------|-------------|
+| `PATH` | Path to the dataset file (CSV, Parquet, JSON) |
+
+The command displays:
+- **Summary panel** — file path, row count, column count, date range, frequency
+- **Columns table** — per-column stats: type, unique count, null count, null %, min, max, mean, median
+- **Top values** — most frequent values per string column
+- **Quality panel** — completeness, duplicate count, anomaly count
+
+**Example output:**
+
+```
+╭─ Profile Report ─────────────────────────────────────────╮
+│  File:   gdp.csv                                         │
+│  Rows:   249                                             │
+│  Columns: 6                                              │
+│  Date range: date: 2000-01-01 → 2023-01-01              │
+│  Frequency: 365 days                                    │
+╰──────────────────────────────────────────────────────────╯
+
+╭─ Columns ────────────────────────────────────────────────╮
+│  Column        Type     Unique   Nulls   Null%   ...     │
+│  country_code  Utf8     249      0       0.00%   ...     │
+│  indicator     Utf8     1        0       0.00%   ...     │
+│  value         Float64  249      0       0.00%   ...     │
+│  ...                                                      │
+╰──────────────────────────────────────────────────────────╯
+
+╭─ Quality ────────────────────────────────────────────────╮
+│  Completeness: 100% (all columns complete)               │
+│  Duplicates: 0                                           │
+│  Anomalies: none detected                                │
+╰──────────────────────────────────────────────────────────╯
+```
+
+## Installation
+
+The CLI is installed automatically with `pip install hermes-plt`. The entry point is defined in `pyproject.toml`:
+
+```toml
+[project.scripts]
+hermes = "hermes.cli:app"
+```
+
+## Dependencies
+
+The CLI uses:
+- `typer` — command framework
+- `rich` — terminal formatting and tables

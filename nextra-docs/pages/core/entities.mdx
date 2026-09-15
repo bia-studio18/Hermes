@@ -1,0 +1,123 @@
+---
+title: Entities
+---
+
+# Entities
+
+The entities module provides country and company resolution — mapping between ISO codes, ticker symbols, CIK numbers, and human-readable names.
+
+## Top-Level API
+
+```python
+import hermes as hr
+
+# Resolve a country
+result = hr.resolve_country("USA")
+
+# Resolve a company
+result = hr.resolve_company("AAPL")
+
+# General entity resolution
+result = hr.resolve_entity("Apple Inc.", entity_type="company")
+```
+
+## Countries
+
+### `countries` — ISO-3 Code List
+
+A list of 249 ISO-3 country codes:
+
+```python
+from hermes.entities.countries import countries
+
+print(len(countries))  # 249
+print(countries[:5])   # ['AFG', 'ALA', 'ALB', 'DZA', 'ASM']
+```
+
+### `iso3_to_iso2(iso3_code) -> str`
+
+Convert ISO-3 to ISO-2 country code:
+
+```python
+from hermes.entities.countries import iso3_to_iso2
+
+iso3_to_iso2("USA")  # -> "US"
+iso3_to_iso2("GBR")  # -> "GB"
+iso3_to_iso2("JPN")  # -> "JP"
+```
+
+Returns `"Not Found"` if the code is invalid.
+
+### `check_iso3(code)`
+
+Validate an ISO-3 code. Raises `RuntimeError` if invalid:
+
+```python
+from hermes.entities.countries import check_iso3
+
+check_iso3("USA")  # passes
+check_iso3("XYZ")  # raises RuntimeError("The XYZ is not iso3")
+```
+
+## Companies
+
+### `get_cik(ticker) -> str`
+
+Resolve a stock ticker to its SEC CIK number:
+
+```python
+from hermes.entities.companies import get_cik
+
+get_cik("AAPL")  # -> "CIK0320193"
+get_cik("MSFT")  # -> "CIK0001045810"
+get_cik("ZZZZ") # -> "Not Found"
+```
+
+Uses the `sec-cik-mapper` library to map tickers to CIK numbers.
+
+## Entity Models
+
+### `Entity`
+
+```python
+from hermes.entities.models import Entity
+
+entity = Entity(
+    entity_id="us_001",
+    name="United States",
+    entity_type="country",
+    country="US",
+    identifiers={"iso3": "USA", "iso2": "US"},
+    aliases=["US", "United States of America"],
+)
+```
+
+### `EntityMatch`
+
+```python
+from hermes.entities.models import EntityMatch
+```
+
+Used by the resolver to return ranked matches for entity queries.
+
+## EntityRegistry
+
+Registry for managing entity lookups:
+
+```python
+from hermes.entities import EntityRegistry
+```
+
+<!-- TODO: verify against source — EntityRegistry methods are scaffolded -->
+
+## Resolver
+
+The resolver orchestrates entity lookups across registries:
+
+```python
+from hermes.entities import Resolver
+
+resolver = Resolver()
+```
+
+<!-- TODO: verify against source — Resolver implementation is scaffolded -->

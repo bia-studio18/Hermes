@@ -1,0 +1,98 @@
+---
+title: Storage
+---
+
+# Storage
+
+The storage module provides pluggable backends for persisting datasets. Hermes supports filesystem storage, Parquet files, and DuckDB.
+
+<Callout type="warning">
+Storage backends are scaffolded. The abstract interface is defined but most implementations raise `NotImplementedError`. This page documents the designed interface.
+</Callout>
+
+## StorageBackend (Abstract)
+
+All storage backends implement this interface:
+
+```python
+from hermes.storage import StorageBackend
+
+class StorageBackend(ABC):
+    def save(self, dataset: object, path: str) -> None: ...
+    def load(self, path: str) -> object: ...
+    def delete(self, path: str) -> None: ...
+    def exists(self, path: str) -> bool: ...
+    def list(self, prefix: str = "") -> list[str]: ...
+```
+
+## FilesystemStorage
+
+Local filesystem storage:
+
+```python
+from hermes.storage.filesystem import FilesystemStorage
+
+storage = FilesystemStorage(base_path="~/.hermes/data")
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `base_path` | `str` | `~/.hermes/data` | Root directory for stored files |
+
+## ParquetStorage
+
+Parquet-native storage:
+
+```python
+from hermes.storage.parquet import ParquetStorage
+
+storage = ParquetStorage(base_path="~/.hermes/data")
+```
+
+## DuckDBStorage
+
+DuckDB-backed analytical storage:
+
+```python
+from hermes.storage.duckdb import DuckDBStorage
+
+storage = DuckDBStorage(database_path="~/.hermes/data/hermes.duckdb")
+```
+
+DuckDB storage also supports SQL queries:
+
+```python
+result = storage.query("SELECT * FROM my_table WHERE value > 100")
+```
+
+<!-- TODO: verify against source — DuckDBStorage.query() is scaffolded -->
+
+## Dataset-Level Persistence
+
+The `Dataset` object provides higher-level persistence methods that delegate to storage backends:
+
+```python
+import hermes as hr
+
+ds = hr.Dataset(name="gdp", data_ref="gdp.csv", data=df)
+
+# Save to disk
+ds.save("output/", format="parquet")
+ds.save("output/", format="csv")
+ds.save("output/", format="json")
+
+# Export to bytes
+bytes_data = ds.export("parquet")
+```
+
+## Top-Level API
+
+```python
+import hermes as hr
+
+result = hr.save(data, path="output/", format="parquet")
+result = hr.load("output/gdp.parquet")
+result = hr.materialize(data, target="duckdb://my_db")
+```
+
+<!-- TODO: verify against source — save/load/materialize are scaffolded -->

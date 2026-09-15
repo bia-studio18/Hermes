@@ -1,0 +1,151 @@
+---
+title: Datasets
+---
+
+# Datasets
+
+The `Dataset` is Hermes' core abstraction — it holds your data alongside its metadata, provenance, lineage, and schema information. A Dataset is never just a file; it is a file **plus its story**.
+
+## Creating a Dataset
+
+```python
+import hermes as hr
+import polars as pl
+
+df = pl.read_csv("gdp.csv")
+
+ds = hr.Dataset(
+    name="gdp",
+    data_ref="gdp.csv",
+    data=df,
+)
+```
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `name` | `str` | *(required)* | Human-readable dataset name |
+| `version` | `str` | `"0.0.1"` | Semantic version string |
+| `data_ref` | `str \| Path` | *(required)* | Path or reference to the source data |
+| `schema_ref` | `str \| None` | `None` | Reference to the dataset's schema |
+| `data` | `pl.DataFrame \| None` | `None` | In-memory data |
+| `metadata` | `MetaData` | `MetaData()` | Dataset metadata |
+| `provenance` | `Provenance` | `Provenance()` | Data provenance |
+| `lineage` | `Lineage` | `Lineage()` | Processing lineage |
+
+## Loading Data
+
+### `load() -> pl.DataFrame`
+
+Load data from `data_ref`:
+
+```python
+ds = hr.Dataset(name="gdp", data_ref="gdp.csv")
+ds.load()  # reads the CSV into ds.data
+```
+
+Supported file formats:
+- `.csv` — via `pl.read_csv()`
+- `.json` — via `pl.read_json()`
+- `.parquet` — via `pl.read_parquet()`
+- `.jsonl`, `.ndjson` — via `pl.read_ndjson()`
+
+Also supports:
+- `sqlite://` — reads all tables from a SQLite database
+- `postgres://` / `postgresql://` — raises `NotImplementedError` (use `hr.fetch()` instead)
+- `http://` / `https://` — raises `NotImplementedError` (use `hr.fetch()` instead)
+
+## Inspecting Data
+
+### `inspect() -> InspectReport`
+
+Quick scan without full statistics:
+
+```python
+report = ds.inspect()
+
+print(report.row_count)
+print(report.column_count)
+for name, dtype in report.columns:
+    print(f"  {name}: {dtype}")
+print(report.sample)  # first 5 rows
+```
+
+## Profiling Data
+
+### `profile() -> MetaData`
+
+Full statistical profile — column stats, quality metrics, frequency detection:
+
+```python
+metadata = ds.profile()
+
+print(metadata.row_count)
+print(metadata.column_count)
+print(metadata.frequency)
+print(metadata.quality.duplicate_count)
+
+for col in metadata.columns:
+    print(f"{col.name}: {col.dtype}, nulls={col.null_count}, unique={col.unique_count}")
+```
+
+## Accessing Metadata
+
+```python
+ds.metadata_info     # -> MetaData
+ds.provenance_info   # -> Provenance
+ds.lineage_info      # -> Lineage
+ds.schema_info       # -> str | None
+```
+
+## Exporting Data
+
+### `save(path, format="parquet")`
+
+Write to disk:
+
+```python
+ds.save("output/", format="parquet")   # writes output/gdp.parquet
+ds.save("output/", format="csv")       # writes output/gdp.csv
+ds.save("output/", format="json")      # writes output/gdp.json
+```
+
+### `export(format="parquet") -> bytes`
+
+Export to raw bytes:
+
+```python
+csv_bytes = ds.export("csv")
+parquet_bytes = ds.export("parquet")
+json_bytes = ds.export("json")
+```
+
+Supported export formats: `csv`, `json`, `parquet`, `polars`, `arrow`, `pandas`.
+
+## Interoperability
+
+```python
+ds.to_polars()   # -> pl.DataFrame
+ds.to_arrow()    # -> pa.Table
+ds.to_pandas()   # -> pd.DataFrame
+```
+
+## Dataset API
+
+Top-level dataset management functions:
+
+```python
+import hermes as hr
+
+# List all datasets
+result = hr.list_datasets()
+
+# Get a specific dataset
+result = hr.get_dataset("dataset_id")
+
+# Search datasets
+result = hr.search_datasets("economic")
+```
+
+<!-- TODO: verify against source — list_datasets, get_dataset, search_datasets are scaffolded -->

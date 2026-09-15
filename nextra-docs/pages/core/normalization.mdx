@@ -1,0 +1,95 @@
+---
+title: Normalization
+---
+
+# Normalization
+
+The normalization module converts parsed data into a consistent, canonical representation with standardized types, units, and naming conventions.
+
+<Callout type="warning">
+The normalization engine is scaffolded. The public API surface is defined but most methods raise `NotImplementedError`. This page documents the designed interface.
+</Callout>
+
+## NormalizationEngine
+
+```python
+from hermes.normalization import NormalizationEngine
+
+engine = NormalizationEngine()
+```
+
+### Methods
+
+#### `normalize(data, mappings=None) -> object`
+
+Apply field mappings to normalize column names and types.
+
+```python
+result = engine.normalize(data, mappings=[...])
+```
+
+#### `apply_rules(data, rules) -> object`
+
+Apply a list of normalization rules to the data.
+
+```python
+result = engine.apply_rules(data, rules=[...])
+```
+
+#### `cast_types(data, schema) -> object`
+
+Cast columns to match a target schema.
+
+```python
+result = engine.cast_types(data, schema=target_schema)
+```
+
+## FieldMapping
+
+Defines how a source field maps to a target field:
+
+```python
+from hermes.normalization import FieldMapping
+
+mapping = FieldMapping(
+    source_field="gdp_growth",
+    target_field="gdp_growth_yoy",
+    transform=None,      # optional callable
+    dtype="float",       # optional target type
+    default=None,        # default value if missing
+)
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `source_field` | `str` | Name in the source data |
+| `target_field` | `str` | Name in the normalized output |
+| `transform` | `Callable \| None` | Optional transformation function |
+| `dtype` | `str \| None` | Target data type |
+| `default` | `object` | Default value when source is missing |
+
+## Normalization Rules
+
+Built-in rule classes for common normalization patterns:
+
+| Rule | Description |
+|------|-------------|
+| `DateNormalizationRule` | Standardize date formats to ISO 8601 |
+| `NumericNormalizationRule` | Cast and validate numeric columns |
+| `CountryCodeRule` | Normalize country codes (ISO-2/ISO-3) |
+| `StringCleanupRule` | Strip whitespace, normalize case |
+| `NullNormalizationRule` | Handle missing values |
+| `TimezoneNormalizationRule` | Normalize timezone-aware timestamps |
+
+Each rule implements `apply(data) -> data`.
+
+## Errors
+
+```python
+from hermes.normalization.errors import NormalizationError, ConversionError
+```
+
+| Exception | Description |
+|-----------|-------------|
+| `NormalizationError` | Base normalization error |
+| `ConversionError` | Type conversion failed |
