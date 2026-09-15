@@ -33,22 +33,22 @@ class Dataset(BaseModel):
 
     def provenance_info(self) -> Provenance:
         if self.provenance is None:
-            raise ValueError('No provenance Is stored')
+            raise ValueError("No provenance Is stored")
         return self.provenance
 
     def lineage_info(self) -> Lineage:
         if self.lineage is None:
-            raise ValueError('No lineage is stored')
+            raise ValueError("No lineage is stored")
         return self.lineage
 
     def schema_info(self) -> str | None:
         if self.schema_ref is None:
-            raise ValueError('No Schema is stored')
+            raise ValueError("No Schema is stored")
         return self.schema_ref
 
     def metadata_info(self) -> MetaData:
         if self.metadata is None:
-            raise ValueError('No MetaData Available')
+            raise ValueError("No MetaData Available")
         return self.metadata
 
     def inspect(self) -> InspectReport:
@@ -77,9 +77,7 @@ class Dataset(BaseModel):
 
         _profile = profile(self.data)
         self.set_metadata(_profile)
-        self.lineage.add_step(
-            LineageStep(operation="profile", output_ref=self.name)
-        )
+        self.lineage.add_step(LineageStep(operation="profile", output_ref=self.name))
         return self.metadata
 
     def set_metadata(self, metadata: MetaData) -> None:
@@ -185,9 +183,7 @@ class Dataset(BaseModel):
             data = self.__load_file()
 
         self.data = data
-        self.lineage.add_step(
-            LineageStep(operation="load", input_ref=ref, output_ref=self.name)
-        )
+        self.lineage.add_step(LineageStep(operation="load", input_ref=ref, output_ref=self.name))
         return self.data
 
     def __load_file(self):

@@ -14,6 +14,8 @@ class ResultError(BaseModel):
 class Result(BaseModel):
     status: Literal["success", "warning", "partial", "failure"]
     data: Any = None
+    metadata: dict[str, Any] | None = None
+    statistics: dict[str, Any] | None = None
     errors: list[ResultError] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 

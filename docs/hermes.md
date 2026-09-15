@@ -35,10 +35,10 @@ import hermes as hr
 
 apple = hr.resolve_company("AAPL")
 
-apple.financials        # SEC/Finnhub financials
-apple.market_data       # OHLCV/history via market connectors
-apple.fillings          # SEC filings
-apple.xxxxx             # extensible per-domain datasets
+apple.financials  # SEC/Finnhub financials
+apple.market_data  # OHLCV/history via market connectors
+apple.fillings  # SEC filings
+apple.xxxxx  # extensible per-domain datasets
 ```
 
 ### Entity scope (v1)
@@ -1221,13 +1221,7 @@ result = hr.query(
 Or:
 
 ```python
-result = (
-    dataset
-    .query()
-    .filter(country="PK")
-    .select("name", "revenue")
-    .execute()
-)
+result = dataset.query().filter(country="PK").select("name", "revenue").execute()
 ```
 
 ### 21. Provenance
@@ -1798,9 +1792,7 @@ dataset.profile()
 And:
 
 ```python
-dataset.query(
-    country="PK"
-)
+dataset.query(country="PK")
 ```
 
 And:
@@ -2301,8 +2293,9 @@ Store → Query → Version → Export
 
 ```python
 import hermes as hr
+
 apple = hr.resolve_company("AAPL")
-apple.financials      # CI-verified provider demo
+apple.financials  # CI-verified provider demo
 apple.market_data
 apple.fillings
 ```

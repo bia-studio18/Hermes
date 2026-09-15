@@ -9,6 +9,8 @@ import polars.selectors as cs
 from hermes.core.errors import HermesError
 from hermes.core.metadata import ColumnMetadata, InspectReport, MetaData, QualityInfo
 from hermes.core.result import Result
+from hermes.validation.engine import validate
+from hermes.validation.reports import ValidationReport
 
 logger = logging.getLogger(__name__)
 
@@ -21,19 +23,11 @@ def normalize(data: object, **kwargs: object) -> Result:
     raise NotImplementedError()
 
 
-def validate(
-    data: object,
-    contract: object | None = None
-) -> Result:
-
-    raise NotImplementedError()
+def validate_data(data: pl.DataFrame, rules: list) -> ValidationReport:
+    return validate(data=data, checks=rules)
 
 
-def transform(
-    data: object,
-    fn: object | None = None,
-    **kwargs: object
-) -> Result:
+def transform(data: object, fn: object | None = None, **kwargs: object) -> Result:
 
     raise NotImplementedError()
 
@@ -69,7 +63,7 @@ def get_time_cols(data: pl.DataFrame) -> list[str] | None:
 def get_freqs(data: pl.DataFrame) -> list[str] | None:
     time_cols = get_time_cols(data)
     if not time_cols:
-        logger.info('No frequency found')
+        logger.info("No frequency found")
         return None
 
     cols = []
@@ -80,16 +74,14 @@ def get_freqs(data: pl.DataFrame) -> list[str] | None:
     return cols
 
 
-def date_ranges(
-    data: pl.DataFrame | pl.LazyFrame
-) -> list[dict[str, tuple[Any, Any]]] | None:
+def date_ranges(data: pl.DataFrame | pl.LazyFrame) -> list[dict[str, tuple[Any, Any]]] | None:
 
     if isinstance(data, pl.LazyFrame):
         data = data.collect()
     time_cols = get_time_cols(data)
 
     if not time_cols:
-        logger.info('no date found')
+        logger.info("no date found")
         return None
 
     bounds = []
@@ -124,11 +116,15 @@ def anomaly_count(data: pl.DataFrame | pl.LazyFrame, threshold: float = 1.5) -> 
     return anomaly_data.row(0, named=True)
 
 
-def profile(data: object | None = None, path: Path | None = None, source: str | None = None) -> MetaData:
+def profile(
+    data: pl.DataFrame | pl.LazyFrame | None = None,
+    path: Path | None = None,
+    source: str | None = None,
+) -> MetaData:
     if data is not None:
         if isinstance(data, pl.LazyFrame):
             data = data.collect()
-        elif isinstance(data, object):
+        elif not isinstance(data, pl.DataFrame):
             data = pl.DataFrame(data)
     elif path:
         path = Path(path)
@@ -141,29 +137,25 @@ def profile(data: object | None = None, path: Path | None = None, source: str | 
     else:
         raise ValueError("Either data or path must be provided")
 
-    stats_df = data.select([
-        pl.all().null_count().name.suffix("_null_count"),
-        pl.all().n_unique().name.suffix("_unique_count"),
-        cs.numeric().min().name.suffix("_min"),
-        cs.numeric().max().name.suffix("_max"),
-        cs.numeric().mean().name.suffix("_mean"),
-        cs.numeric().median().name.suffix("_median"),
-        cs.numeric().std().name.suffix("_std"),
-    ])
+    stats_df = data.select(
+        [
+            pl.all().null_count().name.suffix("_null_count"),
+            pl.all().n_unique().name.suffix("_unique_count"),
+            cs.numeric().min().name.suffix("_min"),
+            cs.numeric().max().name.suffix("_max"),
+            cs.numeric().mean().name.suffix("_mean"),
+            cs.numeric().median().name.suffix("_median"),
+            cs.numeric().std().name.suffix("_std"),
+        ]
+    )
     stats = stats_df.row(0, named=True)
 
     string_cols = data.select(cs.string()).columns
     top_values_map = {}
 
     for col in string_cols:
-        structs = (
-            data.select(pl.col(col).value_counts(sort=True).head(5))
-            .to_series()
-            .to_list()
-        )
-        top_values_map[col] = [
-            (item[col], item["count"]) for item in structs if item is not None
-        ]
+        structs = data.select(pl.col(col).value_counts(sort=True).head(5)).to_series().to_list()
+        top_values_map[col] = [(item[col], item["count"]) for item in structs if item is not None]
 
     col_metadata = []
     total_rows = len(data)

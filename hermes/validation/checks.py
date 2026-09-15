@@ -1,6 +1,7 @@
-import polars as pl
 from dataclasses import dataclass, field
 from typing import Any
+
+import polars as pl
 
 
 @dataclass

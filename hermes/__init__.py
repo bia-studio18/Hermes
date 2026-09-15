@@ -1,4 +1,4 @@
-from hermes.api.acquire import fetch, ingest, read, sync
+from hermes.api.acquire import fetch, fetch_raw, ingest, read, sync
 from hermes.api.data import (
     anomaly_count,
     date_ranges,
@@ -34,6 +34,7 @@ from hermes.core.result import Result
 __all__ = [
     # Fetching
     "fetch",
+    "fetch_raw",
     "ingest",
     "read",
     "sync",

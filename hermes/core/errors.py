@@ -6,6 +6,22 @@ class AcquisitionError(HermesError):
     """Failed to acquire data from source."""
 
 
+class ServerError(AcquisitionError):
+    """The remote server returned a 5xx error (retryable)."""
+
+
+class RateLimitError(AcquisitionError):
+    """Rate limit exceeded; retry after delay."""
+
+    def __init__(self, message: str = "", retry_after: float | None = None) -> None:
+        super().__init__(message)
+        self.retry_after = retry_after
+
+
+class TimeoutError(AcquisitionError):
+    """Request timed out."""
+
+
 class ParseError(HermesError):
     """Failed to parse source data."""
 

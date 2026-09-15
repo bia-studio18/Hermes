@@ -78,6 +78,21 @@ class RawCache:
         meta_path.write_text(json.dumps(meta, indent=2, default=str))
         logger.debug(f"Cached {df.height} rows for {source}:{params}")
 
+    set = put
+
+    def exists(self, source: str, params: dict, ttl: timedelta | None = None) -> bool:
+        try:
+            self.get(source, params, ttl=ttl)
+        except CacheMiss:
+            return False
+        return True
+
+    def delete(self, source: str, params: dict) -> None:
+        path = self._key_path(source, params)
+        path.unlink(missing_ok=True)
+        meta = path.with_suffix(".meta.json")
+        meta.unlink(missing_ok=True)
+
     async def get_or_fetch(
         self,
         source: str,
