@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is Hermes? — Hermes</title>
+  <link rel="stylesheet" href="../../css/hermes.css">
+  
+</head>
+<body>
+
+<header class="d-header">
+  <div class="d-header-inner">
+    <div class="d-header-left">
+      <button class="d-mobile-toggle" aria-label="Menu">&#9776;</button>
+      <a href="../../index.html" class="d-logo">
+        <div class="d-logo-mark">H</div>
+        <span class="d-logo-text">Hermes</span>
+      </a>
+      <span class="d-logo-sep">/</span>
+      <span class="d-logo-section">Introduction</span>
+    </div>
+    <div class="d-header-right">
+      <div class="d-search">
+        <span class="d-search-icon">&#8981;</span>
+        <input type="text" placeholder="Search..." readonly data-search>
+        <span class="d-search-shortcut">Ctrl K</span>
+      </div>
+      <span class="d-version">v0.2.16</span>
+      <a href="https://github.com/anomalyco/hermes" class="d-header-link" target="_blank">GitHub</a>
+    </div>
+  </div>
+</header>
+
+<aside class="d-sidebar">
+  <nav>
+    <div class="d-sidebar-group">
+      <div class="d-sidebar-group-title">Introduction</div>
+      <a href="../introduction/index.html" class="d-sidebar-link">Overview</a>
+      <a href="../introduction/what-is-hermes.html" class="d-sidebar-link active">What is Hermes?</a>
+      <a href="../introduction/getting-started.html" class="d-sidebar-link">Getting Started</a>
+    </div>
+    <div class="d-sidebar-group">
+      <div class="d-sidebar-group-title">Installation</div>
+      <a href="../installation/index.html" class="d-sidebar-link">Installation</a>
+    </div>
+    <div class="d-sidebar-group">
+      <div class="d-sidebar-group-title">Quickstart</div>
+      <a href="../quickstart/index.html" class="d-sidebar-link">Quickstart</a>
+    </div>
+    <div class="d-sidebar-group">
+      <div class="d-sidebar-group-title">Core Concepts</div>
+      <a href="../concepts/data-acquisition.html" class="d-sidebar-link">Data Acquisition</a>
+      <a href="../concepts/connectors.html" class="d-sidebar-link">Connectors</a>
+      <a href="../concepts/parsing.html" class="d-sidebar-link">Parsing</a>
+      <a href="../concepts/normalization.html" class="d-sidebar-link">Normalization</a>
+      <a href="../concepts/validation.html" class="d-sidebar-link">Validation</a>
+      <a href="../concepts/entities.html" class="d-sidebar-link">Entities</a>
+      <a href="../concepts/datasets.html" class="d-sidebar-link">Datasets</a>
+      <a href="../concepts/schemas.html" class="d-sidebar-link">Schemas</a>
+      <a href="../concepts/metadata.html" class="d-sidebar-link">Metadata</a>
+      <a href="../concepts/provenance.html" class="d-sidebar-link">Provenance</a>
+      <a href="../concepts/lineage.html" class="d-sidebar-link">Lineage</a>
+      <a href="../concepts/storage.html" class="d-sidebar-link">Storage</a>
+      <a href="../concepts/querying.html" class="d-sidebar-link">Querying</a>
+    </div>
+    <div class="d-sidebar-group">
+      <div class="d-sidebar-group-title">Guides</div>
+      <a href="../guides/working-with-data.html" class="d-sidebar-link">Working with Data</a>
+      <a href="../guides/connectors.html" class="d-sidebar-link">Connectors</a>
+      <a href="../guides/parsing.html" class="d-sidebar-link">Parsing</a>
+      <a href="../guides/normalization.html" class="d-sidebar-link">Normalization</a>
+      <a href="../guides/validation.html" class="d-sidebar-link">Validation</a>
+      <a href="../guides/entities.html" class="d-sidebar-link">Entities</a>
+      <a href="../guides/datasets.html" class="d-sidebar-link">Datasets</a>
+      <a href="../guides/storage.html" class="d-sidebar-link">Storage</a>
+      <a href="../guides/querying.html" class="d-sidebar-link">Querying</a>
+    </div>
+    <div class="d-sidebar-group">
+      <div class="d-sidebar-group-title">API Reference</div>
+      <a href="../api/index.html" class="d-sidebar-link">Overview</a>
+      <a href="../api/core.html" class="d-sidebar-link">Core</a>
+      <a href="../api/acquisition.html" class="d-sidebar-link">Acquisition</a>
+      <a href="../api/connectors.html" class="d-sidebar-link">Connectors</a>
+      <a href="../api/parsing.html" class="d-sidebar-link">Parsing</a>
+      <a href="../api/normalization.html" class="d-sidebar-link">Normalization</a>
+      <a href="../api/validation.html" class="d-sidebar-link">Validation</a>
+      <a href="../api/entities.html" class="d-sidebar-link">Entities</a>
+      <a href="../api/datasets.html" class="d-sidebar-link">Datasets</a>
+      <a href="../api/storage.html" class="d-sidebar-link">Storage</a>
+      <a href="../api/query.html" class="d-sidebar-link">Query</a>
+      <a href="../api/export.html" class="d-sidebar-link">Export</a>
+      <a href="../api/schemas.html" class="d-sidebar-link">Schemas</a>
+    </div>
+    <div class="d-sidebar-group">
+      <div class="d-sidebar-group-title">CLI Reference</div>
+      <a href="../cli/index.html" class="d-sidebar-link">CLI Overview</a>
+      <a href="../cli/commands.html" class="d-sidebar-link">Commands</a>
+      <a href="../cli/options.html" class="d-sidebar-link">Options</a>
+    </div>
+    <div class="d-sidebar-group">
+      <div class="d-sidebar-group-title">Architecture</div>
+      <a href="../architecture/index.html" class="d-sidebar-link">Overview</a>
+      <a href="../architecture/package-structure.html" class="d-sidebar-link">Package Structure</a>
+      <a href="../architecture/data-flow.html" class="d-sidebar-link">Data Flow</a>
+      <a href="../architecture/core-abstractions.html" class="d-sidebar-link">Core Abstractions</a>
+      <a href="../architecture/storage.html" class="d-sidebar-link">Storage</a>
+      <a href="../architecture/connectors.html" class="d-sidebar-link">Connectors</a>
+      <a href="../architecture/extension-points.html" class="d-sidebar-link">Extension Points</a>
+    </div>
+    <div class="d-sidebar-group">
+      <div class="d-sidebar-group-title">Development</div>
+      <a href="../development/index.html" class="d-sidebar-link">Development Setup</a>
+      <a href="../development/repository-structure.html" class="d-sidebar-link">Repository Structure</a>
+      <a href="../development/testing.html" class="d-sidebar-link">Testing</a>
+      <a href="../development/code-quality.html" class="d-sidebar-link">Code Quality</a>
+      <a href="../development/building.html" class="d-sidebar-link">Building</a>
+      <a href="../development/releases.html" class="d-sidebar-link">Releases</a>
+    </div>
+    <div class="d-sidebar-group">
+      <div class="d-sidebar-group-title">Contributing</div>
+      <a href="../contributing/index.html" class="d-sidebar-link">Contribution Workflow</a>
+      <a href="../contributing/guidelines.html" class="d-sidebar-link">Guidelines</a>
+      <a href="../contributing/adding-connectors.html" class="d-sidebar-link">Adding Connectors</a>
+      <a href="../contributing/adding-parsers.html" class="d-sidebar-link">Adding Parsers</a>
+      <a href="../contributing/adding-validators.html" class="d-sidebar-link">Adding Validators</a>
+      <a href="../contributing/documentation.html" class="d-sidebar-link">Documentation</a>
+    </div>
+  </nav>
+</aside>
+
+<div class="d-sidebar-overlay"></div>
+
+<main class="d-main">
+  <div class="d-content">
+    <h1>What is Hermes?</h1>
+    <p class="d-lead">A Python toolkit for data professionals who need to acquire, profile, validate, and trace the provenance of structured data &mdash; entirely on their own machine.</p>
+
+    <h2 id="the-problem">The Problem</h2>
+    <p>Financial, economic, and geopolitical data lives in dozens of places: CSV exports, API endpoints, Parquet files, XML feeds. Each source has its own format, its own quirks, and its own notion of quality. Getting all of this data into a consistent, queryable, auditable form usually means stitching together ad-hoc scripts, manual Excel cleaning, and undocumented transforms.</p>
+    <p>When something breaks &mdash; a column disappears, a date format changes, an API silently returns empty data &mdash; there's no record of what happened or why.</p>
+
+    <h2 id="what-hermes-does">What Hermes Does</h2>
+    <p>Hermes solves this by providing a single <code>Dataset</code> object that wraps a Polars DataFrame and carries its entire lifecycle story:</p>
+    <ul>
+      <li><strong>Acquire</strong> &mdash; Fetch data from 10 built-in connectors (Binance, FRED, World Bank, SEC EDGAR, and more) or load it from local files.</li>
+      <li><strong>Parse</strong> &mdash; Read CSV, JSON, Parquet, and XML into typed DataFrames with the <code>ParserEngine</code>.</li>
+      <li><strong>Normalize</strong> &mdash; Apply date, numeric, and categorical normalization rules with the <code>NormalizationEngine</code>.</li>
+      <li><strong>Validate</strong> &mdash; Run checks against a schema or custom rules and produce a <code>ValidationReport</code>.</li>
+      <li><strong>Profile</strong> &mdash; Generate full statistical summaries with <code>hr.profile()</code>, including column distributions, null rates, and quality scores.</li>
+      <li><strong>Trace</strong> &mdash; Every operation is recorded in <strong>provenance</strong> and <strong>lineage</strong> metadata, so you always know where data came from and what happened to it.</li>
+    </ul>
+
+    <h2 id="design-philosophy">Design Philosophy</h2>
+    <h3 id="local-first">Local First</h3>
+    <p>Hermes runs on your laptop. No cloud account, no Docker daemon, no API key for the library itself. <code>pip install hermes-plt</code> and you are working.</p>
+
+    <h3 id="interoperable">Interoperable, Not Replaceable</h3>
+    <p>Hermes is built on top of Polars, Pandas, PyArrow, and DuckDB. It doesn't replace these tools &mdash; it makes them work together. You can call <code>.to_pandas()</code>, <code>.to_arrow()</code>, or <code>.to_polars()</code> on any Dataset to get the native frame type you need.</p>
+
+    <h3 id="one-auditable-object">One Auditable Object</h3>
+    <p>The <code>Dataset</code> is the central abstraction. It bundles data, metadata, provenance, lineage, and schema information into a single, serializable package. A Dataset can be saved to disk, reloaded later, and the full audit trail is preserved.</p>
+
+    <h3 id="honest-by-default">Honest by Default</h3>
+    <p>Hermes documents exactly what works today and what is planned. Features that are not yet implemented raise <code>NotImplementedError</code> and are marked with a <span class="badge badge-plan">Planned</span> badge in this documentation.</p>
+
+    <h2 id="who-is-hermes-for">Who is Hermes For?</h2>
+    <ul>
+      <li><strong>Quantitative researchers</strong> who need reproducible, auditable data pipelines.</li>
+      <li><strong>Data engineers</strong> building financial or economic data warehouses.</li>
+      <li><strong>Journalists and analysts</strong> who need to trace claims back to source data.</li>
+      <li><strong>Compliance teams</strong> that require provable data lineage for regulatory purposes.</li>
+    </ul>
+
+    <h2 id="next-steps">Next Steps</h2>
+    <ul>
+      <li><a href="getting-started.html">Getting Started</a> &mdash; Install Hermes and run your first command.</li>
+      <li><a href="../quickstart/index.html">Quickstart</a> &mdash; Hands-on tutorial with a real dataset.</li>
+      <li><a href="../concepts/datasets.html">Dataset Concept</a> &mdash; Deep dive into the core abstraction.</li>
+    </ul>
+  </div>
+  <nav class="d-toc">
+    <div class="d-toc-title">On this page</div>
+    <a href="#the-problem">The Problem</a>
+    <a href="#what-hermes-does">What Hermes Does</a>
+    <a href="#design-philosophy">Design Philosophy</a>
+    <a href="#who-is-hermes-for">Who is Hermes For?</a>
+    <a href="#next-steps">Next Steps</a>
+  </nav>
+</main>
+
+<footer class="d-footer">
+  <a href="../../index.html">Hermes</a> &middot; v0.2.16 &middot; Source-available under ELv2
+</footer>
+
+<div class="search-overlay">
+  <div class="search-modal">
+    <div class="search-modal-input">
+      <span>&#8981;</span>
+      <input type="text" placeholder="Search...">
+      <span style="font-size:10px;color:var(--t5);font-family:var(--mono);">ESC</span>
+    </div>
+    <div class="search-modal-results"></div>
+  </div>
+</div>
+
+<script src="../../js/hermes.js"></script>
+</body>
+</html>

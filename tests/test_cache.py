@@ -137,3 +137,30 @@ class TestRawCache:
         data = json.loads(meta.read_text())
         assert data["source"] == "src"
         assert data["rows"] == 1
+
+
+class TestCacheInterface:
+    def test_exists_when_present(self, tmp_cache: RawCache):
+        tmp_cache.put("s", {"k": "v"}, pl.DataFrame({"a": [1]}))
+        assert tmp_cache.exists("s", {"k": "v"}) is True
+
+    def test_exists_when_missing(self, tmp_cache: RawCache):
+        assert tmp_cache.exists("s", {"k": "v"}) is False
+
+    def test_exists_when_expired(self, tmp_cache: RawCache):
+        tmp_cache.put("s", {"k": "v"}, pl.DataFrame({"a": [1]}))
+        time.sleep(0.015)
+        assert tmp_cache.exists("s", {"k": "v"}, ttl=timedelta(milliseconds=5)) is False
+
+    def test_set_alias(self, tmp_cache: RawCache):
+        df = pl.DataFrame({"a": [1]})
+        tmp_cache.set("s", {"k": "v"}, df)
+        assert_frame_equal(tmp_cache.get("s", {"k": "v"}), df)
+
+    def test_delete_removes_entry(self, tmp_cache: RawCache):
+        tmp_cache.put("s", {"k": "v"}, pl.DataFrame({"a": [1]}))
+        tmp_cache.delete("s", {"k": "v"})
+        assert tmp_cache.exists("s", {"k": "v"}) is False
+
+    def test_delete_missing_is_noop(self, tmp_cache: RawCache):
+        tmp_cache.delete("s", {"k": "nope"})

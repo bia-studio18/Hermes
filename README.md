@@ -52,13 +52,13 @@ ds.profile()
 ds.inspect()
 
 # Interoperate with your stack
-polars_df  = ds.to_polars()   # polars.DataFrame
-arrow_tbl  = ds.to_arrow()    # pyarrow.Table
-pandas_df  = ds.to_pandas()   # pandas.DataFrame
+polars_df = ds.to_polars()  # polars.DataFrame
+arrow_tbl = ds.to_arrow()  # pyarrow.Table
+pandas_df = ds.to_pandas()  # pandas.DataFrame
 
 # Persist it (writes out/gdp.parquet)
 ds.save("out", format="parquet")  # parquet / csv / json
-csv_bytes = ds.export("csv")      # raw bytes for your own storage
+csv_bytes = ds.export("csv")  # raw bytes for your own storage
 ```
 
 ```bash
@@ -94,9 +94,9 @@ never just a file — it is a file **plus its story**:
 ```python
 ds = hr.Dataset(name="gdp", data_ref="gs/imports-1985-2024.csv", data=df)
 ds.profile()
-ds.schema_info     # schema reference
-ds.lineage_info    # steps that produced the data
-ds.provenance_info # where the data came from
+ds.schema_info  # schema reference
+ds.lineage_info  # steps that produced the data
+ds.provenance_info  # where the data came from
 ```
 
 Over the coming releases, provenance, lineage, validation and versioning will be captured
