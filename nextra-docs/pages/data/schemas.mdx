@@ -1,0 +1,179 @@
+---
+title: Schemas
+---
+
+# Schemas
+
+Hermes defines canonical schemas for different data domains. Each schema specifies field names, types, constraints, and primary keys — providing a contract that data must satisfy.
+
+## Built-in Schemas
+
+### `economic.observation`
+
+Canonical economic indicator observation:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `entity_id` | `str` | Yes | Country or entity identifier |
+| `date` | `datetime` | Yes | Observation date |
+| `indicator` | `str` | Yes | Indicator code (e.g., "NY.GDP.MKTP.KD.ZG") |
+| `value` | `float` | No | Indicator value |
+| `unit` | `str` | No | Unit of measurement |
+| `frequency` | `str` | No | Data frequency (e.g., "Y", "M", "Q") |
+| `source` | `str` | No | Data source |
+
+Primary keys: `entity_id`, `date`, `indicator`
+
+### `financial.observation`
+
+Canonical financial metric observation:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `entity_id` | `str` | Yes | Company or asset identifier |
+| `date` | `datetime` | Yes | Observation date |
+| `metric` | `str` | Yes | Metric name (e.g., "revenue", "pe_ratio") |
+| `value` | `float` | No | Metric value |
+| `unit` | `str` | No | Unit of measurement |
+| `period` | `str` | No | Fiscal period (e.g., "Q1", "FY") |
+| `source` | `str` | No | Data source |
+
+Primary keys: `entity_id`, `date`, `metric`
+
+### `market.observation`
+
+Canonical market data (OHLCV):
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `symbol` | `str` | Yes | Trading symbol |
+| `timestamp` | `datetime` | Yes | Candle timestamp |
+| `open` | `float` | No | Open price |
+| `high` | `float` | No | High price |
+| `low` | `float` | No | Low price |
+| `close` | `float` | No | Close price |
+| `volume` | `float` | No | Trading volume |
+| `source` | `str` | No | Data source |
+
+Primary keys: `symbol`, `timestamp`
+
+### `geopolitical.event`
+
+Canonical geopolitical event:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `event_id` | `str` | Yes | Event identifier |
+| `date` | `datetime` | Yes | Event date |
+| `event_type` | `str` | Yes | Event category |
+| `actor_1` | `str` | No | Primary actor |
+| `actor_2` | `str` | No | Secondary actor |
+| `country` | `str` | No | Country code |
+| `goldstein_scale` | `float` | No | Goldstein scale value |
+| `source` | `str` | No | Data source |
+
+Primary keys: `event_id`
+
+### `security.event`
+
+Canonical security event:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `event_id` | `str` | Yes | Event identifier |
+| `date` | `datetime` | Yes | Event date |
+| `event_type` | `str` | Yes | Event category |
+| `country` | `str` | No | Country code |
+| `severity` | `str` | No | Severity level |
+| `description` | `str` | No | Event description |
+| `source` | `str` | No | Data source |
+
+Primary keys: `event_id`
+
+### `entity`
+
+Canonical entity (countries, companies, persons):
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `entity_id` | `str` | Yes | Entity identifier |
+| `name` | `str` | Yes | Entity name |
+| `entity_type` | `str` | Yes | Type (country, company, person) |
+| `country` | `str` | No | Country code |
+| `identifiers` | `dict` | No | External identifiers |
+| `aliases` | `list` | No | Alternative names |
+
+Primary keys: `entity_id`
+
+### `document`
+
+Canonical document/filing:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `document_id` | `str` | Yes | Document identifier |
+| `title` | `str` | No | Document title |
+| `source` | `str` | Yes | Data source |
+| `date` | `datetime` | No | Document date |
+| `url` | `str` | No | Document URL |
+| `content_type` | `str` | No | MIME type |
+| `metadata` | `dict` | No | Additional metadata |
+
+Primary keys: `document_id`
+
+## Schema Base Classes
+
+### `Schema`
+
+```python
+from hermes.schemas import Schema, FieldDef
+
+schema = Schema(
+    name="my_schema",
+    version="1.0.0",
+    fields=[
+        FieldDef(name="id", dtype="str", required=True),
+        FieldDef(name="value", dtype="float", nullable=True),
+    ],
+    primary_keys=["id"],
+    description="My custom schema",
+)
+```
+
+### `FieldDef`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `str` | *(required)* | Field name |
+| `dtype` | `str` | *(required)* | Data type |
+| `nullable` | `bool` | `True` | Whether null values are allowed |
+| `required` | `bool` | `False` | Whether the field is required |
+| `description` | `str \| None` | `None` | Human-readable description |
+| `unit` | `str \| None` | `None` | Unit of measurement |
+| `constraints` | `dict` | `{}` | Additional constraints |
+
+## Schema Registry
+
+<!-- TODO: verify against source — SchemaRegistry methods are scaffolded -->
+
+```python
+from hermes.schemas import SchemaRegistry
+
+registry = SchemaRegistry()
+registry.register(schema)
+retrieved = registry.get("my_schema", version="1.0.0")
+schemas = registry.list()
+```
+
+## Top-Level API
+
+```python
+import hermes as hr
+
+result = hr.get_schema("economic.observation")
+result = hr.register_schema(my_schema)
+result = hr.compare_schema(schema_a, schema_b)
+result = hr.migrate(data, from_schema=old, to_schema=new)
+```
+
+<!-- TODO: verify against source — schema API functions are scaffolded -->

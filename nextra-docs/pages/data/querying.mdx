@@ -1,0 +1,115 @@
+---
+title: Querying
+---
+
+# Querying
+
+The query module provides a structured interface for filtering, selecting, sorting, aggregating, and joining datasets. It also supports raw SQL queries via DuckDB.
+
+<Callout type="warning">
+The query engine is scaffolded. The public API surface is defined but most methods raise `NotImplementedError`. This page documents the designed interface.
+</Callout>
+
+## QueryEngine
+
+```python
+from hermes.query import QueryEngine
+
+engine = QueryEngine()
+```
+
+### Methods
+
+#### `filter(data, conditions) -> object`
+
+Filter rows based on conditions:
+
+```python
+filtered = engine.filter(data, conditions=[...])
+```
+
+#### `select(data, columns) -> object`
+
+Select specific columns:
+
+```python
+subset = engine.select(data, columns=["country", "gdp_growth"])
+```
+
+#### `sort(data, columns, ascending=True) -> object`
+
+Sort by one or more columns:
+
+```python
+sorted_data = engine.sort(data, columns=["date"], ascending=False)
+```
+
+#### `aggregate(data, operations) -> object`
+
+Aggregate with specified operations:
+
+```python
+agg = engine.aggregate(data, operations={"value": "mean", "count": "sum"})
+```
+
+#### `join(left, right, on) -> object`
+
+Join two datasets:
+
+```python
+joined = engine.join(left_df, right_df, on="country_code")
+```
+
+#### `sql(query) -> object`
+
+Execute a raw SQL query:
+
+```python
+result = engine.sql("SELECT country, AVG(value) FROM data GROUP BY country")
+```
+
+## Filters
+
+Structured filter objects:
+
+```python
+from hermes.query.filters import eq, gt, lt, gte, lte, in_list, between
+
+# Equality
+f = eq("country", "US")
+
+# Comparisons
+f = gt("value", 100)
+f = lt("value", 0)
+f = gte("year", 2020)
+f = lte("year", 2024)
+
+# Membership
+f = in_list("country", ["US", "GB", "JP"])
+
+# Range
+f = between("value", 0, 100)
+```
+
+## Expressions
+
+Logical combinators:
+
+```python
+from hermes.query.expressions import and_, or_, not_
+
+# Combine filters
+combined = and_(eq("country", "US"), gt("value", 100))
+any_match = or_(eq("country", "US"), eq("country", "GB"))
+negated = not_(eq("country", "XX"))
+```
+
+## Top-Level API
+
+```python
+import hermes as hr
+
+result = hr.query(data, conditions=[eq("country", "US")])
+```
+
+<!-- TODO: verify against source — query() is scaffolded -->

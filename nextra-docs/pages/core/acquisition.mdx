@@ -1,0 +1,254 @@
+---
+title: Acquisition
+---
+
+# Acquisition
+
+The acquisition module handles data fetching from external sources with built-in caching, retries, rate limiting, pagination, and incremental sync.
+
+## Architecture
+
+```
+fetch / sync / read
+    │
+    ▼
+┌─────────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+│   Client    │───▶│  Retry   │───▶│ Rate     │───▶│  Cache   │
+│  (aiohttp)  │    │  Policy  │    │ Limiter  │    │ (Parquet)│
+└─────────────┘    └──────────┘    └──────────┘    └──────────┘
+```
+
+## RawCache
+
+The Parquet-based disk cache. All connectors share this cache layer.
+
+### `RawCache(cache_dir=None)`
+
+```python
+from hermes.acquisition import RawCache
+
+cache = RawCache()  # defaults to ~/.hermes_cache/raw/
+cache = RawCache(cache_dir="/tmp/hermes_cache")
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `cache_dir` | `str \| Path \| None` | `~/.hermes_cache/raw/` | Directory for cached Parquet files |
+
+### Methods
+
+#### `get(source, params, ttl=None) -> pl.DataFrame`
+
+Retrieve a cached DataFrame. Raises `CacheMiss` on miss, expiry, or corruption.
+
+```python
+from hermes.acquisition import RawCache, CacheMiss
+
+cache = RawCache()
+try:
+    df = cache.get("world_bank", {"country": "US"})
+except CacheMiss:
+    print("Not cached or expired")
+```
+
+#### `put(source, params, df)`
+
+Store a DataFrame in the cache.
+
+```python
+cache.put("world_bank", {"country": "US"}, df)
+```
+
+#### `get_or_fetch(source, params, fetch_fn, force=False, ttl=None) -> pl.DataFrame`
+
+Async method — returns cached data if available, otherwise calls `fetch_fn`, caches the result, and returns it.
+
+```python
+import polars as pl
+
+async def fetch_data():
+    return pl.DataFrame({"value": [1, 2, 3]})
+
+df = await cache.get_or_fetch(
+    source="world_bank",
+    params={"country": "US"},
+    fetch_fn=fetch_data,
+)
+```
+
+#### `clear(older_than=None)`
+
+Delete cached files. Pass `older_than` as a `timedelta` to only remove old entries.
+
+```python
+from datetime import timedelta
+
+cache.clear()                          # clear everything
+cache.clear(older_than=timedelta(days=7))  # clear files older than 7 days
+```
+
+#### `stats() -> dict`
+
+Returns hit/miss statistics per source.
+
+```python
+stats = cache.stats()
+print(stats["total_files"])
+print(stats["by_source"])
+print(stats["hit_rate"])
+```
+
+#### `exists(source, params, ttl=None) -> bool`
+
+Check if a cache entry exists without raising `CacheMiss`.
+
+#### `delete(source, params)`
+
+Remove a specific cache entry.
+
+### Cache Keys
+
+Keys are SHA-256 hashes of `source + JSON-serialized params`, truncated to 16 characters. Each cached file has a `.meta.json` sidecar with source, params, timestamp, row count, and column names.
+
+## Client
+
+Async HTTP client wrapping `aiohttp`.
+
+### `Client(base_url, timeout=30.0, max_retries=0, ...)`
+
+```python
+from hermes.acquisition import Client
+
+async with Client(base_url="https://api.worldbank.org/v2") as client:
+    data = await client.get("/countries/US/indicators/NY.GDP.MKTP.KD.ZG")
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `base_url` | `str` | `""` | Base URL for all requests |
+| `timeout` | `float` | `30.0` | Request timeout in seconds |
+| `max_retries` | `int` | `0` | Max retry attempts on failure |
+| `backoff_factor` | `float` | `1.0` | Exponential backoff multiplier |
+| `max_backoff` | `float` | `60.0` | Maximum delay between retries |
+| `headers` | `dict[str, str] \| None` | `None` | Default headers for all requests |
+
+### Methods
+
+- `get(url, **kwargs)` — HTTP GET
+- `post(url, **kwargs)` — HTTP POST
+- `put(url, **kwargs)` — HTTP PUT
+- `delete(url, **kwargs)` — HTTP DELETE
+- `stream(method, url, **kwargs)` — Chunked streaming
+
+### Error Mapping
+
+| HTTP Status | Exception |
+|-------------|-----------|
+| 401, 403 | `AuthenticationError` |
+| 429 | `RateLimitError` (with `retry_after`) |
+| 5xx | `ServerError` |
+| Other 4xx | `AcquisitionError` |
+
+## RateLimiter
+
+Sliding-window rate limiter.
+
+### `RateLimiter(max_requests=60, window_seconds=60.0)`
+
+```python
+from hermes.acquisition import RateLimiter
+
+limiter = RateLimiter(max_requests=100, window_seconds=60.0)
+
+async with limiter:
+    data = await client.get("/endpoint")
+```
+
+| Property | Description |
+|----------|-------------|
+| `available` | Remaining requests in the current window |
+| `retry_after` | Seconds until the next request slot opens |
+
+## RetryPolicy
+
+Configurable retry with exponential backoff and jitter.
+
+### `RetryPolicy(max_retries=3, backoff_factor=1.0, max_delay=60.0, jitter=True)`
+
+```python
+from hermes.acquisition import RetryPolicy
+
+policy = RetryPolicy(max_retries=3, backoff_factor=1.0)
+
+async def fetch():
+    return await client.get("/data")
+
+result = await policy.execute(fetch)
+```
+
+Retries automatically on: `RateLimitError`, `TimeoutError`, `ServerError`, `OSError`, `aiohttp.ClientError`. Custom targets can be specified via `retry_on` list.
+
+## Paginator
+
+Multi-strategy paginator supporting 6 strategies:
+
+```python
+from hermes.acquisition import Paginator
+
+paginator = Paginator(strategy="page")
+results = await paginator.paginate(
+    fetch_fn=my_fetch,
+    max_pages=10,
+    page_size=100,
+)
+```
+
+| Strategy | Parameters | Description |
+|----------|-----------|-------------|
+| `page` | `page_size` | Page-number based |
+| `offset` | `page_size` | Offset-based |
+| `cursor` | `initial_cursor` | Cursor-based |
+| `next_url` | `initial_url` | URL-based pagination |
+| `date_range` | `start_date`, `end_date`, `date_delta` | Date window iteration |
+| `token` | `initial_token` | Token-based |
+
+## SyncEngine
+
+Incremental/full sync with change detection via record hashing.
+
+```python
+from hermes.acquisition import SyncEngine, SyncState
+
+async def my_fetch(since=None):
+    # Fetch from API, optionally since a cursor
+    return records
+
+engine = SyncEngine(source="my_source", fetch_fn=my_fetch)
+data, report, state = await engine.sync(interval="1h")
+
+print(report.added)
+print(report.removed)
+print(report.modified)
+```
+
+### SyncState
+
+Persisted at `~/.hermes/sync/<source>.json`. Tracks cursor, last sync time, and record hashes for change detection.
+
+## Top-Level API
+
+```python
+import hermes as hr
+
+# Cached fetch
+result = hr.fetch("world_bank", country_code="US", indicator_code="NY.GDP.MKTP.KD.ZG")
+
+# Raw fetch (bypass cache)
+result = hr.fetch_raw("world_bank", country_code="US", indicator_code="NY.GDP.MKTP.KD.ZG")
+
+# Read local file
+result = hr.read("data.csv")
+
+# Incremental sync
+result = hr.sync("world_bank", fetch_fn=my_fetch, interval="1h")
+```

@@ -13,3 +13,4 @@ res/
 **/.next/
 **/home/
 res/
+**/node_modules/

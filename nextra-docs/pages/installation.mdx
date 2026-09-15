@@ -1,0 +1,99 @@
+---
+title: Installation
+---
+
+# Installation
+
+## Requirements
+
+- **Python 3.11 or newer** (3.11, 3.12, 3.13)
+- Operating system: Linux, macOS, or Windows
+
+## Install from PyPI
+
+```bash
+pip install hermes-plt
+```
+
+The package name on PyPI is `hermes-plt`. After installation, you can import it as `hermes`:
+
+```python
+import hermes as hr
+```
+
+## Dependencies
+
+Hermes installs the following dependencies automatically:
+
+| Package | Purpose |
+|---------|---------|
+| `aiohttp` | Async HTTP client for connectors |
+| `polars` | Primary DataFrame library |
+| `pyarrow` | Arrow interchange and Parquet support |
+| `fastparquet` | Parquet read/write |
+| `pydantic` | Data validation and models |
+| `pycountry` | ISO country code resolution |
+| `sec-cik-mapper` | SEC ticker-to-CIK mapping |
+| `yfinance` | Yahoo Finance data |
+| `typer` | CLI framework |
+
+## Environment Variables
+
+Create a `.env` file in your project root (or export these in your shell):
+
+```bash
+# Required for OpenSanctions connector
+OPEN_SANCTIONS_API=
+
+# Required for NewsData connector
+NEWS_DATA_API=
+
+# Required for FRED connector (Federal Reserve Economic Data)
+FRED_API=
+
+# Required for Finnhub connector (financial data)
+FINNHUB_API=
+
+# Required for SEC EDGAR connector (User-Agent identification)
+SEC_USERNAME=
+SEC_EMAIL=
+```
+
+| Variable | Used by | Notes |
+|----------|---------|-------|
+| `OPEN_SANCTIONS_API` | OpenSanctions connector | API key from [opensanctions.org](https://opensanctions.org) |
+| `NEWS_DATA_API` | OpenSanctions connector | API key from [newsdata.io](https://newsdata.io) |
+| `FRED_API` | FRED connector | API key from [fred.stlouisfed.org](https://fred.stlouisfed.org) |
+| `FINNHUB_API` | Finnhub connector | API key from [finnhub.io](https://finnhub.io) |
+| `SEC_USERNAME` | SEC EDGAR connector | Your name for User-Agent header |
+| `SEC_EMAIL` | SEC EDGAR connector | Your email for User-Agent header |
+
+Not all connectors require API keys. World Bank, IMF, Binance, YFinance, and bundled public datasets work without any configuration.
+
+## Verify Installation
+
+```bash
+python -c "import hermes; print(hermes.__version__)"
+```
+
+Or use the CLI:
+
+```bash
+hermes version
+hermes info
+```
+
+## Docker (optional)
+
+<!-- TODO: verify against source -->
+No official Docker image is published yet. You can build your own:
+
+```dockerfile
+FROM python:3.12-slim
+RUN pip install hermes-plt
+```
+
+## Next Steps
+
+- [Quickstart](/quickstart) — run your first pipeline
+- [Configuration](/reference/configuration) — full configuration reference

@@ -1,0 +1,100 @@
+---
+title: Export
+---
+
+# Export
+
+The export module writes datasets to various file formats. It supports CSV, JSON, Parquet, Arrow, and DataFrame interchange.
+
+## Dataset Methods
+
+The primary way to export data is through the `Dataset` object:
+
+```python
+import hermes as hr
+
+ds = hr.Dataset(name="gdp", data_ref="gdp.csv", data=df)
+
+# Save to disk (writes to directory)
+ds.save("output/", format="parquet")   # -> output/gdp.parquet
+ds.save("output/", format="csv")       # -> output/gdp.csv
+ds.save("output/", format="json")      # -> output/gdp.json
+
+# Export to raw bytes
+csv_bytes = ds.export("csv")
+parquet_bytes = ds.export("parquet")
+json_bytes = ds.export("json")
+
+# Export as dataframes
+polars_df = ds.export("polars")        # -> pl.DataFrame
+arrow_tbl = ds.export("arrow")        # -> pa.Table
+pandas_df = ds.export("pandas")       # -> pd.DataFrame
+```
+
+## export() Utility
+
+Low-level export function:
+
+```python
+from hermes.export import export
+import polars as pl
+
+df = pl.read_csv("data.csv")
+
+# Export to CSV
+export(data=df, filetype="csv", loc="output/", name="my_data")
+
+# Export to JSON
+export(data=df, filetype="json", loc="output/", name="my_data")
+
+# Export to Parquet
+export(data=df, filetype="parquet", loc="output/", name="my_data")
+```
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `data` | `pl.DataFrame` | *(required)* | Data to export |
+| `filetype` | `str` | `"csv"` | Output format: `csv`, `json`, `parquet` |
+| `loc` | `Path \| str` | `"data/"` | Output directory |
+| `name` | `str \| None` | `None` | Filename (without extension). If `None`, uses timestamp |
+
+The function creates the target directory if it doesn't exist.
+
+## Format Support
+
+| Format | File Extension | Method |
+|--------|---------------|--------|
+| CSV | `.csv` | `pl.DataFrame.write_csv()` |
+| JSON | `.json` | `pl.DataFrame.write_json()` |
+| Parquet | `.parquet` | `pl.DataFrame.write_parquet()` |
+
+## Interchange Formats
+
+Convert to other DataFrame libraries:
+
+```python
+import hermes as hr
+
+ds = hr.Dataset(name="gdp", data=df)
+
+# Polars
+polars_df = ds.to_polars()   # -> pl.DataFrame
+
+# PyArrow
+arrow_tbl = ds.to_arrow()    # -> pa.Table
+
+# Pandas
+pandas_df = ds.to_pandas()   # -> pd.DataFrame
+```
+
+## Top-Level API
+
+```python
+import hermes as hr
+
+result = hr.save(data, path="output/", format="parquet")
+```
+
+<!-- TODO: verify against source — hr.save() is scaffolded -->

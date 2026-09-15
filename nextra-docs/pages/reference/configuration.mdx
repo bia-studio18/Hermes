@@ -1,0 +1,178 @@
+---
+title: Configuration
+---
+
+# Configuration
+
+Hermes configuration covers API keys, cache settings, and runtime options.
+
+## Environment Variables
+
+Create a `.env` file in your project root:
+
+```bash
+# OpenSanctions
+OPEN_SANCTIONS_API=your_api_key
+
+# NewsData
+NEWS_DATA_API=your_api_key
+
+# FRED (Federal Reserve Economic Data)
+FRED_API=your_api_key
+
+# Finnhub (financial data)
+FINNHUB_API=your_api_key
+
+# SEC EDGAR (User-Agent identification)
+SEC_USERNAME=Your Name
+SEC_EMAIL=your@email.com
+```
+
+### Required Variables
+
+| Variable | Connector | Description |
+|----------|-----------|-------------|
+| `OPEN_SANCTIONS_API` | OpenSanctions | API key from [opensanctions.org](https://opensanctions.org) |
+| `NEWS_DATA_API` | OpenSanctions | API key from [newsdata.io](https://newsdata.io) |
+| `FRED_API` | FRED | API key from [fred.stlouisfed.org](https://fred.stlouisfed.org) |
+| `FINNHUB_API` | Finnhub | API key from [finnhub.io](https://finnhub.io) |
+| `SEC_USERNAME` | SEC EDGAR | Your name for User-Agent header |
+| `SEC_EMAIL` | SEC EDGAR | Your email for User-Agent header |
+
+### Connectors Without API Keys
+
+These connectors work without any configuration:
+- **World Bank** — `world_bank`
+- **IMF** — `imf`
+- **Binance** — `binance`
+- **YFinance** — `yfinance`
+- **GDELT** — `gdelt` (stub)
+- **Public datasets** — `public_data` (bundled CSVs)
+
+## Programmatic Configuration
+
+<!-- TODO: verify against source — configure() and get_config() raise NotImplementedError -->
+
+```python
+import hermes as hr
+
+# Set API keys programmatically
+config = hr.configure(api_keys={
+    "fred": "your_key",
+    "finnhub": "your_key",
+})
+
+# Retrieve current config
+config = hr.get_config()
+```
+
+## Cache Configuration
+
+The cache stores Parquet files on disk. Default location: `~/.hermes_cache/raw/`.
+
+### Default Settings
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Cache directory | `~/.hermes_cache/raw/` | Root cache path |
+| Default TTL | 24 hours | Cache entry lifetime |
+| Key format | SHA-256 truncated to 16 chars | `source + JSON params` |
+
+### Custom Cache
+
+```python
+from hermes.acquisition import RawCache
+
+cache = RawCache(cache_dir="/my/custom/cache")
+```
+
+Or pass `cache_dir` when constructing the `Hermes` facade (if using the legacy facade pattern).
+
+### Per-Source TTLs
+
+Connectors use different cache TTLs:
+
+| Connector | TTL |
+|-----------|-----|
+| World Bank | 7 days |
+| IMF | 7 days |
+| FRED | 30 days |
+| Binance | 1 day |
+| Finnhub | 7 days |
+| YFinance | 1 day |
+| SEC EDGAR | 7 days |
+| OpenSanctions | 30 days |
+
+### Managing the Cache
+
+```python
+from hermes.acquisition import RawCache
+
+cache = RawCache()
+
+# View statistics
+stats = cache.stats()
+print(stats["total_files"])
+print(stats["by_source"])
+print(stats["hit_rate"])
+
+# Clear all cached data
+cache.clear()
+
+# Clear only old entries
+from datetime import timedelta
+cache.clear(older_than=timedelta(days=7))
+```
+
+## Sync State
+
+Incremental sync state is persisted at `~/.hermes/sync/<source>.json`.
+
+### Default Settings
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| State directory | `~/.hermes/sync/` | Root state path |
+| State format | JSON | Per-source state files |
+
+### Custom State Path
+
+```python
+from hermes.acquisition import SyncEngine
+
+engine = SyncEngine(source="my_source", fetch_fn=my_fetch)
+data, report, state = await engine.sync(
+    interval="1h",
+    state_path="/my/custom/path/state.json",
+)
+```
+
+## Scheduler Configuration
+
+The scheduler uses asyncio for job execution.
+
+### Schedule Specs
+
+| Spec Type | Example | Description |
+|-----------|---------|-------------|
+| Alias | `"hourly"`, `"daily"`, `"weekly"` | Named intervals |
+| Interval | `"30m"`, `"2h"`, `"7d"` | Numeric + unit (m/h/d/w) |
+| Cron | `"0 3 * * *"` | 5-field cron expression |
+
+### Cron Fields
+
+```
+┌───────────── minute (0-59)
+│ ┌───────────── hour (0-23)
+│ │ ┌───────────── day of month (1-31)
+│ │ │ ┌───────────── month (1-12)
+│ │ │ │ ┌───────────── day of week (0-6, Sun=0)
+│ │ │ │ │
+* * * * *
+```
+
+Cron supports:
+- Wildcards: `*`
+- Ranges: `1-5`
+- Steps: `*/5`, `1-30/5`
+- Lists: `1,3,5`

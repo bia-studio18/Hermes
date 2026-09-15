@@ -1,0 +1,132 @@
+---
+title: Validation
+---
+
+# Validation
+
+The validation module checks data quality, schema compliance, and business rules. It produces structured reports that can be consumed programmatically or displayed to users.
+
+## validate()
+
+The primary entry point for running validation checks:
+
+```python
+import polars as pl
+from hermes.validation import validate, NotNull
+
+data = pl.read_csv("data.csv")
+
+report = validate(
+    data=data,
+    checks=[
+        NotNull("country_code"),
+        NotNull("value"),
+    ],
+)
+
+print(report.summary())
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `data` | `pl.DataFrame` | The DataFrame to validate |
+| `checks` | `list` | List of check instances to run |
+
+### Returns
+
+A `ValidationReport` with pass/fail status and detailed results.
+
+## Built-in Checks
+
+### `NotNull(column)`
+
+Checks that a column contains no null values.
+
+```python
+from hermes.validation import NotNull
+
+check = NotNull("country_code")
+result = check.run(data)
+
+print(result.passed)       # True/False
+print(result.violations)   # number of nulls
+print(result.message)      # human-readable description
+```
+
+#### `ValidationResult`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `passed` | `bool` | Whether the check passed |
+| `check` | `str` | Check name |
+| `column` | `str \| list[str] \| None` | Column(s) checked |
+| `statistics` | `dict[str, Any]` | Check-specific statistics |
+| `violations` | `int` | Number of violations |
+| `message` | `str` | Human-readable result message |
+
+## DataContract
+
+Define expected schema and constraints for a dataset:
+
+```python
+from hermes.validation.contracts import DataContract, Constraint
+
+contract = DataContract(
+    schema="economic.observation",
+    required_columns=["entity_id", "date", "indicator", "value"],
+    constraints=[
+        Constraint(field="value", constraint_type="range", params={"min": 0, "max": 100}),
+    ],
+    description="Economic observation dataset",
+)
+```
+
+### `DataContract` Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `schema_name` | `str \| None` | Expected schema name |
+| `required_columns` | `list[str]` | Columns that must exist |
+| `constraints` | `list[Constraint]` | Data constraints |
+| `description` | `str \| None` | Human-readable description |
+
+### `Constraint` Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `field` | `str` | Column name |
+| `constraint_type` | `str` | Type of constraint |
+| `params` | `dict` | Constraint parameters |
+
+## ValidationReport
+
+```python
+report = validate(data, checks=[...])
+
+print(report.passed)       # True if all checks passed
+print(report.checks)       # list of CheckResult
+print(report.errors)       # list of error messages
+print(report.warnings)     # list of warning messages
+print(report.summary())    # formatted text summary
+```
+
+### CheckResult
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | `str` | Check name |
+| `passed` | `bool` | Whether it passed |
+| `message` | `str \| None` | Result message |
+| `severity` | `str` | `"error"` or `"warning"` |
+
+## Errors
+
+```python
+from hermes.validation.errors import ValidationError
+```
+
+| Exception | Description |
+|-----------|-------------|
+| `ValidationError` | Data failed validation checks |
