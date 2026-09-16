@@ -33,7 +33,7 @@ SEC_EMAIL=your@email.com
 | Variable | Connector | Description |
 |----------|-----------|-------------|
 | `OPEN_SANCTIONS_API` | OpenSanctions | API key from [opensanctions.org](https://opensanctions.org) |
-| `NEWS_DATA_API` | OpenSanctions | API key from [newsdata.io](https://newsdata.io) |
+| `NEWS_DATA_API` | Reserved (newsdata) | Not yet wired to a connector |
 | `FRED_API` | FRED | API key from [fred.stlouisfed.org](https://fred.stlouisfed.org) |
 | `FINNHUB_API` | Finnhub | API key from [finnhub.io](https://finnhub.io) |
 | `SEC_USERNAME` | SEC EDGAR | Your name for User-Agent header |
@@ -51,7 +51,7 @@ These connectors work without any configuration:
 
 ## Programmatic Configuration
 
-<!-- TODO: verify against source — configure() and get_config() raise NotImplementedError -->
+ {/* TODO: verify against source — configure() and get_config() raise NotImplementedError */}
 
 ```python
 import hermes as hr
@@ -86,7 +86,13 @@ from hermes.acquisition import RawCache
 cache = RawCache(cache_dir="/my/custom/cache")
 ```
 
-Or pass `cache_dir` when constructing the `Hermes` facade (if using the legacy facade pattern).
+Or pass `cache=None` to a connector to bypass the disk cache entirely:
+
+```python
+from hermes.connectors import World_bank
+
+wb = World_bank(cache=None)  # no caching
+```
 
 ### Per-Source TTLs
 
@@ -126,26 +132,9 @@ cache.clear(older_than=timedelta(days=7))
 
 ## Sync State
 
-Incremental sync state is persisted at `~/.hermes/sync/<source>.json`.
+Incremental sync state was previously persisted at `~/.hermes/sync/<source>.json`. The `SyncEngine`/`SyncState` layer is currently being reworked — it is not yet importable in this version.
 
-### Default Settings
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| State directory | `~/.hermes/sync/` | Root state path |
-| State format | JSON | Per-source state files |
-
-### Custom State Path
-
-```python
-from hermes.acquisition import SyncEngine
-
-engine = SyncEngine(source="my_source", fetch_fn=my_fetch)
-data, report, state = await engine.sync(
-    interval="1h",
-    state_path="/my/custom/path/state.json",
-)
-```
+{/* TODO: verify against source — hermes/acquisition/sync.py is not present in the working tree */}
 
 ## Scheduler Configuration
 

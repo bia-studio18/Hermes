@@ -17,7 +17,7 @@ pip install hermes-plt
 Verify the installation:
 
 ```bash
-python -c "import hermes; print(hermes.__version__)"
+hermes version
 ```
 
 ## Basic Usage
@@ -114,49 +114,54 @@ pandas_df = ds.to_pandas()   # pandas.DataFrame
 
 ## Connectors
 
-Hermes ships with 10 source connectors. Here's how to fetch data from a few of them:
+Hermes ships with 10 source connectors that share a common disk cache and retry layer. Connectors are used directly (they are `async`), and each `fetch()` caches its result by default.
 
 ### World Bank (no API key required)
 
 ```python
 import asyncio
-from hermes import Hermes
+from hermes.connectors import World_bank
 
-hermes = Hermes(
-    opensanction_api="x",
-    new_data_api="x",
-    sec_username="x",
-    sec_email="x",
-)
+async def main():
+    wb = World_bank()  # uses the shared disk cache (~/.hermes_cache/raw)
 
-# Fetch GDP growth for the US
-df = hermes.world_bank.fetch(
-    country_code="US",
-    indicator_code="NY.GDP.MKTP.KD.ZG",
-    frequency="Y",
-)
-print(df.head())
+    df = await wb.fetch(
+        country_code="US",
+        indicator_code="NY.GDP.MKTP.KD.ZG",
+    )
+    print(df.head())
+
+asyncio.run(main())
 ```
 
 ### FRED (requires API key)
 
 ```python
-fd = hermes.fred.fetch(series_id="CPIAUCSL")  # CPI
-print(fd.head())
+from hermes.connectors import FRED
+
+fred = FRED(api="your_fred_key")  # FRED_API env var
+
+df = await fred.fetch(series_id="CPIAUCSL")  # Consumer Price Index
+print(df.head())
 ```
 
 ### Binance (no API key required)
 
 ```python
-# 2 years of daily BTC futures candles
-df = hermes.binance.fetch_history(
-    symbol="BTCUSDT",
-    interval="1d",
-    market="future",
-    years=2,
-)
+from hermes.connectors import Binance
+
+b = Binance()
+
+# Single request (cached): 30 daily spot candles
+df = await b.fetch(mode="spot", endpoint="ohlcv", symbol="BTCUSDT", interval="1d", limit=30)
 print(df.head())
+
+# Multi-year history (future market, up to 10 concurrent requests)
+history = await b.fetch_history(symbol="BTCUSDT", interval="1d", market="future", years=2)
+print(history.head())
 ```
+
+See [Acquisition](/core/acquisition) and the [Python API](/reference/python-api) for the full connector list and signatures.
 
 ## Next Steps
 

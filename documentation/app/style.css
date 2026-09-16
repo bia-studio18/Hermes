@@ -1,0 +1,92 @@
+/* Hermes brand palette — reused from the landing page (website/src/app/globals.css) */
+:root {
+  --color-midnight: #0b0d0f;
+  --color-offwhite: #f5f5f2;
+  --color-gray: #8b9198;
+  --color-teal: #2f6f68;
+  --color-border: #1c262b;
+
+  /* Typography: Inter for UI text, JetBrains Mono for code */
+  --x-font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --x-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Fira Code", Menlo, monospace;
+}
+
+.dark {
+  --color-midnight: #0b0d0f;
+}
+
+/* Sidebar / navbar on Midnight, thin 1px borders */
+.dark .nextra-sidebar-container {
+  background-color: #0b0d0f;
+}
+
+.dark .nextra-nav-container {
+  background-color: #0b0d0f;
+}
+
+/* Link / active accent color (Teal) */
+.nextra-cards a,
+.dark a,
+.dark .nx-text-primary-600 {
+  color: #2f6f68;
+}
+
+/* Headings in Off White, muted body text in Gray */
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4 {
+  color: #f5f5f2;
+}
+
+.dark body {
+  color: #f5f5f2;
+}
+
+.dark .nx-text-gray-500,
+.dark .nx-text-gray-400,
+.dark .nx-text-gray-600 {
+  color: #8b9198;
+}
+
+/* Code blocks: dark, teal-tinted syntax accents, sans rounded pills */
+.dark [data-rehype-pretty-code-figure] pre {
+  background-color: #101416;
+  border: 1px solid #1c262b;
+  border-radius: 4px;
+}
+
+:not(pre) > code {
+  font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  background-color: rgba(47, 111, 104, 0.12);
+  border-radius: 4px;
+}
+
+.dark :not(pre) > code {
+  color: #d6e5e2;
+}
+
+/* Selection in brand teal */
+::selection {
+  background: rgba(47, 111, 104, 0.35);
+  color: #f5f5f2;
+}
+
+/* Thin scrollbar matching the dark palette */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1c262b;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #263338;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}

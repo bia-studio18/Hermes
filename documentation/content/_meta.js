@@ -1,0 +1,8 @@
+export default {
+  index: "Introduction",
+  quickstart: "Quickstart",
+  installation: "Installation",
+  core: "CORE",
+  data: "DATA",
+  reference: "REFERENCE",
+};

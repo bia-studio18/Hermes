@@ -62,7 +62,7 @@ SEC_EMAIL=
 | Variable | Used by | Notes |
 |----------|---------|-------|
 | `OPEN_SANCTIONS_API` | OpenSanctions connector | API key from [opensanctions.org](https://opensanctions.org) |
-| `NEWS_DATA_API` | OpenSanctions connector | API key from [newsdata.io](https://newsdata.io) |
+| `NEWS_DATA_API` | Reserved (newsdata source) | Not yet wired to a connector; see `hermes.core.config.API_SOURCES` |
 | `FRED_API` | FRED connector | API key from [fred.stlouisfed.org](https://fred.stlouisfed.org) |
 | `FINNHUB_API` | Finnhub connector | API key from [finnhub.io](https://finnhub.io) |
 | `SEC_USERNAME` | SEC EDGAR connector | Your name for User-Agent header |
@@ -73,7 +73,15 @@ Not all connectors require API keys. World Bank, IMF, Binance, YFinance, and bun
 ## Verify Installation
 
 ```bash
-python -c "import hermes; print(hermes.__version__)"
+hermes version
+```
+
+Or from Python:
+
+```python
+from importlib.metadata import version
+
+print(version("hermes-plt"))
 ```
 
 Or use the CLI:
@@ -85,7 +93,7 @@ hermes info
 
 ## Docker (optional)
 
-<!-- TODO: verify against source -->
+ {/* TODO: verify against source */}
 No official Docker image is published yet. You can build your own:
 
 ```dockerfile

@@ -12,6 +12,13 @@ import hermes as hr
 
 ## Fetching / Acquisition
 
+<Callout type="warning" emoji="🛠">
+  The top-level `hr.fetch`, `hr.fetch_raw`, `hr.ingest`, `hr.read`, and `hr.sync`
+  are scaffolded and currently return `NotImplementedError`. This section documents
+  their intended signatures. For working acquisition today, use the connector
+  classes directly — see [Acquisition](/core/acquisition).
+</Callout>
+
 ### `hr.fetch(source, **kwargs) -> Result`
 
 Acquire data from a registered connector (cached).
@@ -27,7 +34,7 @@ result = hr.fetch("binance", mode="future", endpoint="ohlcv", symbol="BTCUSDT", 
 | `source` | `str` | Connector name (see table below) |
 | `**kwargs` | | Connector-specific parameters |
 
-**Registered connectors:** `binance`, `finnhub`, `fred`, `gdelt`, `imf`, `opensanctions`, `public_data`, `sec`, `world_bank`, `yfinance`
+**Registered connectors (intended):** `binance`, `finnhub`, `fred`, `gdelt`, `imf`, `opensanctions`, `public_data`, `sec`, `world_bank`, `yfinance`
 
 ### `hr.fetch_raw(source, **kwargs) -> Result`
 
@@ -100,11 +107,11 @@ anomalies = hr.anomaly_count(df, threshold=1.5)
 
 ### `hr.parse(data, **kwargs) -> Result`
 
-<!-- TODO: verify against source — parse() raises NotImplementedError -->
+ {/* TODO: verify against source — parse() raises NotImplementedError */}
 
 ### `hr.normalize(data, **kwargs) -> Result`
 
-<!-- TODO: verify against source — normalize() raises NotImplementedError -->
+ {/* TODO: verify against source — normalize() raises NotImplementedError */}
 
 ### `hr.validate_data(data, rules) -> ValidationReport`
 
@@ -118,7 +125,7 @@ report = hr.validate_data(df, checks=[NotNull("country_code")])
 
 ### `hr.transform(data, fn=None, **kwargs) -> Result`
 
-<!-- TODO: verify against source — transform() raises NotImplementedError -->
+ {/* TODO: verify against source — transform() raises NotImplementedError */}
 
 ## Datasets
 
@@ -148,75 +155,75 @@ ds = hr.Dataset(name="gdp", data_ref="gdp.csv", data=df)
 
 ### `hr.list_datasets() -> Result`
 
-<!-- TODO: verify against source — scaffolded -->
+ {/* TODO: verify against source — scaffolded */}
 
 ### `hr.get_dataset(dataset_id) -> Result`
 
-<!-- TODO: verify against source — scaffolded -->
+ {/* TODO: verify against source — scaffolded */}
 
 ### `hr.search_datasets(query) -> Result`
 
-<!-- TODO: verify against source — scaffolded -->
+ {/* TODO: verify against source — scaffolded */}
 
 ## Entities
 
 ### `hr.resolve_country(query) -> Result`
 
-<!-- TODO: verify against source — scaffolded -->
+ {/* TODO: verify against source — scaffolded */}
 
 ### `hr.resolve_company(query) -> Result`
 
-<!-- TODO: verify against source — scaffolded -->
+ {/* TODO: verify against source — scaffolded */}
 
 ### `hr.resolve_entity(query, entity_type=None) -> Result`
 
-<!-- TODO: verify against source — scaffolded -->
+ {/* TODO: verify against source — scaffolded */}
 
 ## Schemas
 
 ### `hr.get_schema(name, version=None) -> Result`
 
-<!-- TODO: verify against source — scaffolded -->
+ {/* TODO: verify against source — scaffolded */}
 
 ### `hr.register_schema(schema) -> Result`
 
-<!-- TODO: verify against source — scaffolded -->
+ {/* TODO: verify against source — scaffolded */}
 
 ### `hr.compare_schema(schema_a, schema_b) -> Result`
 
-<!-- TODO: verify against source — scaffolded -->
+ {/* TODO: verify against source — scaffolded */}
 
 ### `hr.migrate(data, from_schema, to_schema) -> Result`
 
-<!-- TODO: verify against source — scaffolded -->
+ {/* TODO: verify against source — scaffolded */}
 
 ## Storage
 
 ### `hr.save(data, path, format="parquet") -> Result`
 
-<!-- TODO: verify against source — scaffolded -->
+ {/* TODO: verify against source — scaffolded */}
 
 ### `hr.load(path) -> Result`
 
-<!-- TODO: verify against source — scaffolded -->
+ {/* TODO: verify against source — scaffolded */}
 
 ### `hr.query(data, **kwargs) -> Result`
 
-<!-- TODO: verify against source — scaffolded -->
+ {/* TODO: verify against source — scaffolded */}
 
 ### `hr.materialize(data, target) -> Result`
 
-<!-- TODO: verify against source — scaffolded -->
+ {/* TODO: verify against source — scaffolded */}
 
 ## Configuration
 
 ### `hr.configure(api_keys=None, **settings) -> HermesConfig`
 
-<!-- TODO: verify against source — configure() raises NotImplementedError -->
+ {/* TODO: verify against source — configure() raises NotImplementedError */}
 
 ### `hr.get_config() -> HermesConfig`
 
-<!-- TODO: verify against source — get_config() raises NotImplementedError -->
+ {/* TODO: verify against source — get_config() raises NotImplementedError */}
 
 ## Error Hierarchy
 
