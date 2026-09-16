@@ -132,11 +132,9 @@ class RawCache:
             source = p.parent.name
             by_source[source] = by_source.get(source, 0) + 1
         hit_rate = {}
-        for src in set(list(self._hits.keys()) + list(self._misses.keys())):
-            h = self._hits.get(src, 0)
-            m = self._misses.get(src, 0)
-            total_calls = h + m
-            hit_rate[src] = round(h / total_calls, 4) if total_calls > 0 else 0
+        for src in set(self._hits) | set(self._misses):
+            total_calls = self._hits.get(src, 0) + self._misses.get(src, 0)
+            hit_rate[src] = round(self._hits.get(src, 0) / total_calls, 4) if total_calls > 0 else 0
         return {
             "total_files": total,
             "by_source": by_source,
