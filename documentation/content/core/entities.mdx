@@ -83,7 +83,7 @@ Uses the `sec-cik-mapper` library to map tickers to CIK numbers.
 from hermes.entities.models import Entity
 
 entity = Entity(
-    entity_id="us_001",
+    id="us_001",
     name="United States",
     entity_type="country",
     country="US",
@@ -96,28 +96,41 @@ entity = Entity(
 
 ```python
 from hermes.entities.models import EntityMatch
+
+match = EntityMatch(entity=entity, score=0.95, match_type="exact")
 ```
 
-Used by the resolver to return ranked matches for entity queries.
+Used by resolvers to return ranked matches for entity queries.
 
 ## EntityRegistry
 
-Registry for managing entity lookups:
+Registry for managing entity resolvers by type:
 
 ```python
 from hermes.entities import EntityRegistry
-```
 
-<!-- TODO: verify against source — EntityRegistry methods are scaffolded -->
+registry = EntityRegistry()
+registry.register("company", my_resolver)  # my_resolver: Resolver
+registry.get("company")                    # -> Resolver | None
+registry.resolve("AAPL", entity_type="company")
+registry.list_types()                      # -> list[str]
+```
 
 ## Resolver
 
-The resolver orchestrates entity lookups across registries:
+Abstract base class for entity resolvers. Implement `resolve`, `identify`, and `match`:
 
 ```python
-from hermes.entities import Resolver
+from abc import ABC, abstractmethod
+from hermes.entities.models import Entity, EntityMatch
 
-resolver = Resolver()
+class MyResolver(ABC):
+    @abstractmethod
+    def resolve(self, query: str) -> Entity | None: ...
+    @abstractmethod
+    def identify(self, data: object) -> object: ...
+    @abstractmethod
+    def match(self, query: str, threshold: float = 0.8) -> list[EntityMatch]: ...
 ```
 
-<!-- TODO: verify against source — Resolver implementation is scaffolded -->
+`Resolver` cannot be instantiated directly — use a concrete subclass.

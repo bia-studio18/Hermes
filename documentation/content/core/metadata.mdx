@@ -101,18 +101,25 @@ Lightweight report from `inspect()` — no full statistical scan:
 | `lineage` | `Lineage \| None` | Processing lineage |
 | `sample` | `list[dict]` | First 5 rows as dicts |
 
-## MetadataExtractor
+## Low-Level API
 
-Low-level extractor for custom metadata pipelines:
+The helpers used by `hr.profile()` are available directly from `hermes.api.data`:
 
 ```python
-from hermes.metadata import MetadataExtractor
+import polars as pl
+from hermes.api.data import get_time_cols, get_freqs, date_ranges, anomaly_count, inspect
 
-extractor = MetadataExtractor()
-metadata = extractor.extract(data)
-column_meta = extractor.extract_column(series)
-frequency = extractor.detect_frequency(data)
-date_range = extractor.detect_date_range(data)
+df = pl.read_csv("data.csv")
+
+get_time_cols(df)                          # -> list[str] | None
+get_freqs(df)                              # -> list[str] | None  (e.g. ["1M"])
+date_ranges(df)                            # -> list[dict[str, tuple]] | None
+anomaly_count(df, threshold=1.5)           # -> dict[str, int]  (IQR-based)
+info = inspect(df)                         # InspectReport
 ```
 
-<!-- TODO: verify against source — MetadataExtractor methods are scaffolded -->
+The models below live in `hermes.core.metadata`:
+
+```python
+from hermes.core.metadata import ColumnMetadata, InspectReport, MetaData, QualityInfo
+```

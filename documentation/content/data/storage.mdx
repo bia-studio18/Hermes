@@ -65,7 +65,7 @@ DuckDB storage also supports SQL queries:
 result = storage.query("SELECT * FROM my_table WHERE value > 100")
 ```
 
-<!-- TODO: verify against source — DuckDBStorage.query() is scaffolded -->
+ {/* TODO: verify against source — DuckDBStorage.query() is scaffolded */}
 
 ## Dataset-Level Persistence
 
@@ -95,4 +95,4 @@ result = hr.load("output/gdp.parquet")
 result = hr.materialize(data, target="duckdb://my_db")
 ```
 
-<!-- TODO: verify against source — save/load/materialize are scaffolded -->
+ {/* TODO: verify against source — save/load/materialize are scaffolded */}

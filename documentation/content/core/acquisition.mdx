@@ -4,18 +4,18 @@ title: Acquisition
 
 # Acquisition
 
-The acquisition module handles data fetching from external sources with built-in caching, retries, rate limiting, pagination, and incremental sync.
+The acquisition module handles data fetching from external sources with built-in caching and an async HTTP client. Connectors use `RawCache` for on-disk Parquet caching.
 
 ## Architecture
 
 ```
-fetch / sync / read
+Connector
     │
     ▼
-┌─────────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-│   Client    │───▶│  Retry   │───▶│ Rate     │───▶│  Cache   │
-│  (aiohttp)  │    │  Policy  │    │ Limiter  │    │ (Parquet)│
-└─────────────┘    └──────────┘    └──────────┘    └──────────┘
+┌─────────────┐         ┌──────────┐
+│   Client    │────────▶│  Cache   │
+│  (aiohttp)  │         │ (Parquet)│
+└─────────────┘         └──────────┘
 ```
 
 ## RawCache
@@ -149,106 +149,39 @@ async with Client(base_url="https://api.worldbank.org/v2") as client:
 | 5xx | `ServerError` |
 | Other 4xx | `AcquisitionError` |
 
-## RateLimiter
+## Using Connectors
 
-Sliding-window rate limiter.
-
-### `RateLimiter(max_requests=60, window_seconds=60.0)`
+The working path for acquiring data is to instantiate a connector directly. Every connector's `fetch()` uses the shared `RawCache` unless `cache=None` is passed, and takes the same `retries`/`timeout` knobs:
 
 ```python
-from hermes.acquisition import RateLimiter
+import asyncio
+from hermes.connectors import World_bank, FRED, Binance
 
-limiter = RateLimiter(max_requests=100, window_seconds=60.0)
+async def main():
+    wb = World_bank()
+    df = await wb.fetch(country_code="US", indicator_code="NY.GDP.MKTP.KD.ZG")
+    print(df.head())
 
-async with limiter:
-    data = await client.get("/endpoint")
+asyncio.run(main())
 ```
 
-| Property | Description |
-|----------|-------------|
-| `available` | Remaining requests in the current window |
-| `retry_after` | Seconds until the next request slot opens |
+Registered connectors (exported from `hermes.connectors`):
 
-## RetryPolicy
-
-Configurable retry with exponential backoff and jitter.
-
-### `RetryPolicy(max_retries=3, backoff_factor=1.0, max_delay=60.0, jitter=True)`
-
-```python
-from hermes.acquisition import RetryPolicy
-
-policy = RetryPolicy(max_retries=3, backoff_factor=1.0)
-
-async def fetch():
-    return await client.get("/data")
-
-result = await policy.execute(fetch)
-```
-
-Retries automatically on: `RateLimitError`, `TimeoutError`, `ServerError`, `OSError`, `aiohttp.ClientError`. Custom targets can be specified via `retry_on` list.
-
-## Paginator
-
-Multi-strategy paginator supporting 6 strategies:
-
-```python
-from hermes.acquisition import Paginator
-
-paginator = Paginator(strategy="page")
-results = await paginator.paginate(
-    fetch_fn=my_fetch,
-    max_pages=10,
-    page_size=100,
-)
-```
-
-| Strategy | Parameters | Description |
-|----------|-----------|-------------|
-| `page` | `page_size` | Page-number based |
-| `offset` | `page_size` | Offset-based |
-| `cursor` | `initial_cursor` | Cursor-based |
-| `next_url` | `initial_url` | URL-based pagination |
-| `date_range` | `start_date`, `end_date`, `date_delta` | Date window iteration |
-| `token` | `initial_token` | Token-based |
-
-## SyncEngine
-
-Incremental/full sync with change detection via record hashing.
-
-```python
-from hermes.acquisition import SyncEngine, SyncState
-
-async def my_fetch(since=None):
-    # Fetch from API, optionally since a cursor
-    return records
-
-engine = SyncEngine(source="my_source", fetch_fn=my_fetch)
-data, report, state = await engine.sync(interval="1h")
-
-print(report.added)
-print(report.removed)
-print(report.modified)
-```
-
-### SyncState
-
-Persisted at `~/.hermes/sync/<source>.json`. Tracks cursor, last sync time, and record hashes for change detection.
+| Connector | Class | API key required |
+|-----------|-------|------------------|
+| Binance | `Binance` | No |
+| Finnhub | `FINNHUB` | Yes (`FINNHUB_API`) |
+| FRED | `FRED` | Yes (`FRED_API`) |
+| GDELT | `GDELT` | No (stub) |
+| IMF | `IMF` | No |
+| OpenSanctions | `OpenSanction` | Yes (`OPEN_SANCTIONS_API`) |
+| Public datasets | `PUBLIC_DATASET` | No |
+| SEC EDGAR | `SECEDGAR` | Uses `SEC_USERNAME` / `SEC_EMAIL` |
+| World Bank | `World_bank` | No |
+| Yahoo Finance | `Yfinance` | No |
 
 ## Top-Level API
 
-```python
-import hermes as hr
+The top-level `hr.fetch`, `hr.fetch_raw`, `hr.ingest`, `hr.sync`, and `hr.read` wrappers are scaffolded — they currently return `NotImplementedError`. Use the connector classes directly until these land.
 
-# Cached fetch
-result = hr.fetch("world_bank", country_code="US", indicator_code="NY.GDP.MKTP.KD.ZG")
-
-# Raw fetch (bypass cache)
-result = hr.fetch_raw("world_bank", country_code="US", indicator_code="NY.GDP.MKTP.KD.ZG")
-
-# Read local file
-result = hr.read("data.csv")
-
-# Incremental sync
-result = hr.sync("world_bank", fetch_fn=my_fetch, interval="1h")
-```
+ {/* TODO: verify against source — hermes/api/acquire.py returns NotImplementedError objects; hr.fetch/fetch_raw/ingest/sync/read are stubs */}

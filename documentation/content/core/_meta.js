@@ -1,0 +1,8 @@
+export default {
+  acquisition: "Acquisition",
+  parsing: "Parsing",
+  normalization: "Normalization",
+  validation: "Validation",
+  metadata: "Metadata",
+  entities: "Entities",
+};
