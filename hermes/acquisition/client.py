@@ -17,29 +17,14 @@ from hermes.core.errors import (
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_TIMEOUT = 30.0
-_DEFAULT_MAX_RETRIES = 0
-
 
 class Client:
-    """Async HTTP client wrapping :mod:`aiohttp`.
-
-    Provides ``get`` / ``post`` / ``put`` / ``delete`` / ``request`` / ``stream`` with
-    configurable default headers, timeout, and connection limits. Transport errors,
-    5xx responses, and rate-limit responses are retried with exponential back-off
-    up to ``max_retries`` attempts after the initial call.
-
-    Used as an async context manager::
-
-        async with Client(base_url="https://api.example.com") as client:
-            data = await client.get("/items")
-    """
 
     def __init__(
         self,
         base_url: str = "",
-        timeout: float = _DEFAULT_TIMEOUT,
-        max_retries: int = _DEFAULT_MAX_RETRIES,
+        timeout: float = 30.0,
+        max_retries: int = 0,
         backoff_factor: float = 1.0,
         max_backoff: float = 60.0,
         headers: dict[str, str] | None = None,
@@ -78,19 +63,15 @@ class Client:
             self._session = None
 
     async def get(self, url: str, **kwargs: Any) -> Any:
-        """Send a GET request and return the parsed response."""
         return await self.request("GET", url, **kwargs)
 
     async def post(self, url: str, **kwargs: Any) -> Any:
-        """Send a POST request and return the parsed response."""
         return await self.request("POST", url, **kwargs)
 
     async def put(self, url: str, **kwargs: Any) -> Any:
-        """Send a PUT request and return the parsed response."""
         return await self.request("PUT", url, **kwargs)
 
     async def delete(self, url: str, **kwargs: Any) -> Any:
-        """Send a DELETE request and return the parsed response."""
         return await self.request("DELETE", url, **kwargs)
 
     async def request(
@@ -105,13 +86,6 @@ class Client:
         timeout: float | None = None,
         **kwargs: Any,
     ) -> Any:
-        """Send an HTTP request, returning the parsed response on success.
-
-        Retries transport errors, 5xx responses and rate-limit responses with
-        exponential back-off. Raises :class:`~hermes.core.errors.AcquisitionError`
-        (or a subclass) permanently on 4xx errors, authentication failures, and
-        when retries are exhausted.
-        """
         merged_headers = {**self.headers, **(headers or {})}
         req_timeout = aiohttp.ClientTimeout(total=timeout) if timeout is not None else None
 
@@ -155,7 +129,6 @@ class Client:
         chunk_size: int = 8192,
         **kwargs: Any,
     ) -> AsyncIterator[bytes]:
-        """Stream the response body as an async iterator of bytes."""
         merged_headers = {**self.headers, **(headers or {})}
         async with self.session.request(
             method,
