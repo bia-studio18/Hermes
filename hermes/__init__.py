@@ -31,6 +31,14 @@ from hermes.core.errors import (
 )
 from hermes.core.result import Result
 
+from hermes.credentials.manager import (
+    list_creds,
+    has_cred,
+    set_cred,
+    get_cred,
+    delete_cred
+)
+
 __all__ = [
     # Fetching
     "fetch",
@@ -38,6 +46,12 @@ __all__ = [
     "ingest",
     "read",
     "sync",
+    # Credentials
+    "list_creds",
+    "has_cred",
+    "set_cred",
+    "get_cred",
+    "delete_cred",
     # Data operations
     "parse",
     "normalize",

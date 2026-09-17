@@ -2,7 +2,7 @@ from hermes.storage.base import StorageBackend
 
 
 class DuckDBStorage(StorageBackend):
-    def __init__(self, database_path: str = "~/.hermes/data/hermes.duckdb") -> None:
+    def __init__(self, database_path: str = "~/.hermes-plt/data/hermes.duckdb") -> None:
         self.database_path = database_path
 
     def save(self, dataset: object, path: str) -> None:
