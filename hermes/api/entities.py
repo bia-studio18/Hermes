@@ -1,10 +1,10 @@
 from hermes.core.result import Result
 
 
-def resolve_entity(query: str, entity_type: str | None = None) -> Result:
-    if entity_type == 'country':
+def resolve_entity(query: str, entity_type: str | None = None):
+    if entity_type == "country":
         return resolve_country(query=query)
-    if entity_type == 'company':
+    if entity_type == "company":
         return resolve_company(query=query)
 
 

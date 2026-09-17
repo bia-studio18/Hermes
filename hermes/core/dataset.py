@@ -6,7 +6,6 @@ import polars as pl
 import pyarrow as pa
 from pydantic import BaseModel, ConfigDict, Field
 
-from hermes.api.data import profile
 from hermes.core.errors import HermesError
 from hermes.core.lineage import Lineage, LineageStep
 from hermes.core.metadata import InspectReport, MetaData
@@ -74,6 +73,8 @@ class Dataset(BaseModel):
     def profile(self) -> MetaData:
         if self.data is None:
             raise HermesError("Load The Data First")
+
+        from hermes.api.data import profile
 
         _profile = profile(self.data)
         self.set_metadata(_profile)
@@ -187,14 +188,6 @@ class Dataset(BaseModel):
         return self.data
 
     def __load_file(self):
-        _path = Path(self.data_ref)
-        suffix = _path.suffix.lower()
-        if suffix == ".csv":
-            return pl.read_csv(_path)
-        if suffix == ".json":
-            return pl.read_json(_path)
-        if suffix == ".parquet":
-            return pl.read_parquet(_path)
-        if suffix in [".jsonl", ".ndjson"]:
-            return pl.read_ndjson(_path)
-        raise HermesError(f"{suffix} is not supported by Hermes yet")
+        from hermes.parsing.engine import ParserEngine
+
+        return ParserEngine().parse(self.data_ref)

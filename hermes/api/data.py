@@ -9,14 +9,25 @@ import polars.selectors as cs
 from hermes.core.errors import HermesError
 from hermes.core.metadata import ColumnMetadata, InspectReport, MetaData, QualityInfo
 from hermes.core.result import Result
+from hermes.parsing.engine import ParserEngine
 from hermes.validation.engine import validate
 from hermes.validation.reports import ValidationReport
 
 logger = logging.getLogger(__name__)
 
 
-def parse(data: object, **kwargs: object) -> Result:
-    raise NotImplementedError()
+def parse(data: object, format: str | None = None, **kwargs: object) -> Result:
+    try:
+        df = ParserEngine().parse(data, format=format, **kwargs)
+        return Result(
+            status="success",
+            data=df,
+            statistics={"rows": df.height, "columns": df.width},
+        )
+    except HermesError as exc:
+        result = Result(status="failure", data=None)
+        result.add_error(exc)
+        return result
 
 
 def normalize(data: object, **kwargs: object) -> Result:

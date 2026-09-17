@@ -1,10 +1,3 @@
-class ParseError(Exception):
-    """Failed to parse source data."""
+from hermes.core.errors import ParseError
 
-
-class UnsupportedFormatError(ParseError):
-    """Source format is not supported."""
-
-
-class MalformedRecordError(ParseError):
-    """Source record is malformed."""
+__all__ = ["ParseError"]
