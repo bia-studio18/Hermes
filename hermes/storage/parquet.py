@@ -2,7 +2,7 @@ from hermes.storage.base import StorageBackend
 
 
 class ParquetStorage(StorageBackend):
-    def __init__(self, base_path: str = "~/.hermes/data") -> None:
+    def __init__(self, base_path: str = "~/.hermes-plt/data") -> None:
         self.base_path = base_path
 
     def save(self, dataset: object, path: str) -> None:
