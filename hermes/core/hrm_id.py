@@ -1,9 +1,7 @@
 import secrets
 import time
 
-
 BASE62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-
 
 def base62_encode(number: int) -> str:
     if number == 0:
@@ -23,11 +21,7 @@ def hrm_id(entity_type: str) -> str:
 
     random_bits = secrets.randbits(76)
 
-    value = (
-        (timestamp << 80)
-        | (0x7 << 76)
-        | random_bits
-    )
+    value = (timestamp << 80) | (0x7 << 76) | random_bits
 
     encoded = base62_encode(value)
 

@@ -1005,6 +1005,7 @@ dependencies = [
     { name = "pyarrow" },
     { name = "pycountry" },
     { name = "pydantic" },
+    { name = "sec-cik-mapper" },
     { name = "typer" },
     { name = "yfinance" },
 ]
@@ -1032,6 +1033,7 @@ requires-dist = [
     { name = "pyarrow", specifier = ">=25.0.0" },
     { name = "pycountry", specifier = ">=24.6.1" },
     { name = "pydantic" },
+    { name = "sec-cik-mapper", specifier = ">=2.1.0" },
     { name = "typer", specifier = ">=0.27.2" },
     { name = "yfinance", specifier = ">=1.6.0" },
 ]
@@ -2477,6 +2479,20 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/b2/1d/1b2ef7bcde851c78d7f17f1cca13fd6dc695fc4b3d6197941e72cae5b132/ruff-0.16.0-py3-none-win32.whl", hash = "sha256:7fab76fa065c873f41ff744347c6e77bcc3dfec4bcc754dc26b63d23c0f7f5fb", size = 10785885, upload-time = "2026-07-23T19:11:23.947Z" },
     { url = "https://files.pythonhosted.org/packages/b2/a3/d5e4ef7a56be3f928ffb90b94c25ba7d3cb9c7fe0736aeaaedf361770712/ruff-0.16.0-py3-none-win_amd64.whl", hash = "sha256:429c117f022bf481fabd9d551e7a3952b24c65e6ef44337ea09d90bebef14472", size = 11923141, upload-time = "2026-07-23T19:11:26.409Z" },
     { url = "https://files.pythonhosted.org/packages/cb/9a/8415f2657cbe200f41a4531ccededf135505a92d4a012229121f885b26f9/ruff-0.16.0-py3-none-win_arm64.whl", hash = "sha256:14296fedcd2705c77ab8235439278bbb38f285cf7da5528b00b3e330c3d4872d", size = 11273407, upload-time = "2026-07-23T19:11:28.705Z" },
+]
+
+[[package]]
+name = "sec-cik-mapper"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pandas" },
+    { name = "requests" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/82/76/8256d52917a18edd486c876980399c673e7566e117ab1612d9f2108d1105/sec-cik-mapper-2.1.0.tar.gz", hash = "sha256:7ef321eec7f2b017bd982886249ed7f514263cbf704f4e1bf04093bce1ee3d4b", size = 23392, upload-time = "2022-01-09T21:27:12.368Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/22/14/8442c72156825524c7394c5bc474687c8580ede188dcdd058be31199b0eb/sec_cik_mapper-2.1.0-py3-none-any.whl", hash = "sha256:c826b3f70ec3040ee59ad788c6e8e916f717786cac6f0e2897bba121252d1487", size = 12514, upload-time = "2022-01-09T21:27:10.648Z" },
 ]
 
 [[package]]

@@ -312,6 +312,7 @@ def test_engine_unsupported_input():
 
 # -- public API --------------------------------------------------------------
 
+
 def test_hr_normalize():
     data = [{"status": "yes", "name": " X "}]
     out = hr.normalize(data, rules=[NormalizeBoolean("status"), NormalizeString("name", case="lower")])

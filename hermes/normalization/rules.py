@@ -5,20 +5,20 @@ from typing import Any, Literal, cast
 
 import polars as pl
 
-from hermes.normalization.errors import RuleConfigurationError, RuleExecutionError, TransformationError
-from hermes.normalization.rule import NormalizationRule
 from hermes.constants import (
     _CAST_TYPES,
     _COUNTRY_COMMON_ALIASES,
     _CURRENCY_ALIASES,
-    _UNIT_SYMBOLS,
-    _UNIT_FACTORS,
     _DEFAULT_DATE_FORMATS,
     _DEFAULT_FALSE,
     _DEFAULT_NULL_VALUES,
     _DEFAULT_TRUE,
-    _PERIOD_RE
+    _PERIOD_RE,
+    _UNIT_FACTORS,
+    _UNIT_SYMBOLS,
 )
+from hermes.normalization.errors import RuleConfigurationError, RuleExecutionError, TransformationError
+from hermes.normalization.rule import NormalizationRule
 
 
 def _string_expr(
@@ -63,6 +63,7 @@ def _map_column(
     default = pl.col(col) if default is None else default
     return df.with_columns(lookup.replace_strict(table, default=default).alias(col))
 
+
 @lru_cache(maxsize=1)
 def _country_aliases() -> dict[str, str]:
 
@@ -82,9 +83,7 @@ def _country_aliases() -> dict[str, str]:
     return aliases
 
 
-
 class Rename(NormalizationRule):
-
     def __init__(self, rename: dict[str, str]) -> None:
         self.rename_map = dict(rename)
         self.validate()
@@ -103,9 +102,7 @@ class Rename(NormalizationRule):
         return {"name": self.name, "rename": self.rename_map}
 
 
-
 class Cast(NormalizationRule):
-
     def __init__(self, target: str | dict[str, str], type_name: str | None = None, *, strict: bool = True) -> None:
         self.strict = strict
         casts = {target: type_name} if isinstance(target, str) else dict(target)
@@ -149,7 +146,6 @@ class Cast(NormalizationRule):
 
 
 class NormalizeString(NormalizationRule):
-
     def __init__(
         self,
         field: str,
@@ -193,7 +189,6 @@ class NormalizeString(NormalizationRule):
 
 
 class NormalizeNull(NormalizationRule):
-
     def __init__(self, fields: str | list[str] | None = None, null_values: tuple[str, ...] | None = None) -> None:
         self.fields = [fields] if isinstance(fields, str) else fields
         self.null_values = tuple(null_values) if null_values is not None else _DEFAULT_NULL_VALUES
@@ -222,7 +217,6 @@ class NormalizeNull(NormalizationRule):
 
 
 class NormalizeBoolean(NormalizationRule):
-
     def __init__(
         self,
         field: str,
@@ -254,9 +248,7 @@ class NormalizeBoolean(NormalizationRule):
         return {"name": self.name, "field": self.field, "mapping": self.mapping}
 
 
-
 class NormalizeDate(NormalizationRule):
-
     def __init__(self, field: str, formats: tuple[str, ...] | None = None, *, errors: str = "null") -> None:
         self.field = field
         self.formats = tuple(formats) if formats else _DEFAULT_DATE_FORMATS
@@ -298,7 +290,6 @@ def _str_to_datetime(col: str, fmt: str) -> pl.Expr:
 
 
 class NormalizeCountry(NormalizationRule):
-
     def __init__(self, field: str, extra_aliases: dict[str, str] | None = None) -> None:
         self.field = field
         self.aliases = dict(_country_aliases())
@@ -321,7 +312,6 @@ class NormalizeCountry(NormalizationRule):
 
 
 class NormalizeCurrency(NormalizationRule):
-
     def __init__(self, field: str, extra_aliases: dict[str, str] | None = None) -> None:
         self.field = field
         self.aliases = dict(_CURRENCY_ALIASES)
@@ -343,7 +333,6 @@ class NormalizeCurrency(NormalizationRule):
 
 
 class NormalizeUnit(NormalizationRule):
-
     def __init__(self, field: str, extra_aliases: dict[str, str] | None = None) -> None:
         self.field = field
         self.aliases = dict(_UNIT_SYMBOLS)
@@ -366,7 +355,6 @@ class NormalizeUnit(NormalizationRule):
 
 
 class ConvertUnit(NormalizationRule):
-
     def __init__(
         self,
         field: str,
@@ -409,7 +397,6 @@ class ConvertUnit(NormalizationRule):
 
 
 class NormalizeIdentifier(NormalizationRule):
-
     def __init__(
         self,
         field: str,
@@ -452,7 +439,6 @@ class NormalizeIdentifier(NormalizationRule):
 
 
 class NormalizeName(NormalizationRule):
-
     def __init__(
         self,
         field: str,
@@ -502,7 +488,6 @@ class NormalizeName(NormalizationRule):
 
 
 class MapValue(NormalizationRule):
-
     def __init__(self, field: str, mapping: dict[Any, Any], *, case_insensitive: bool = False) -> None:
         self.field = field
         self.mapping = dict(mapping)
@@ -528,6 +513,7 @@ class MapConcept(MapValue):
     Behavior is identical to :class:`MapValue`; the class exists so semantic
     category mapping reads distinctly from literal value mapping.
     """
+
 
 def _parse_period(value: str) -> str | None:
     v = value.strip()
@@ -557,7 +543,6 @@ def _parse_period(value: str) -> str | None:
 
 
 class ParsePeriod(NormalizationRule):
-    
     def __init__(self, field: str) -> None:
         self.field = field
 
@@ -573,7 +558,6 @@ class ParsePeriod(NormalizationRule):
 
 
 class StripCharacters(NormalizationRule):
-    
     def __init__(self, field: str, characters: str) -> None:
         if not characters:
             raise RuleConfigurationError("StripCharacters: characters must not be empty")
@@ -597,7 +581,6 @@ class StripCharacters(NormalizationRule):
 
 
 class Round(NormalizationRule):
-    
     def __init__(self, field: str, precision: int = 2, *, half_up: bool = False) -> None:
         self.field = field
         self.precision = precision
@@ -631,4 +614,3 @@ def _round_half_up(precision: int):
         return math.floor(value * factor + 0.5) / factor
 
     return fn
-

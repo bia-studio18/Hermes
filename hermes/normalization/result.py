@@ -4,7 +4,6 @@ from typing import Any
 
 @dataclass(slots=True)
 class Change:
-
     rule: str
     field: str | None = None
     old_value: Any = None
@@ -25,7 +24,6 @@ class Change:
 
 @dataclass(slots=True)
 class RuleResult:
-
     rule: str
     success: bool = True
 
@@ -43,10 +41,7 @@ class RuleResult:
         return {
             "rule": self.rule,
             "success": self.success,
-            "changes": [
-                change.to_dict()
-                for change in self.changes
-            ],
+            "changes": [change.to_dict() for change in self.changes],
             "errors": self.errors,
             "warnings": self.warnings,
             "statistics": self.statistics,
@@ -54,12 +49,7 @@ class RuleResult:
         }
 
     def summary(self) -> str:
-        return (
-            f"{self.rule}: "
-            f"{'success' if self.success else 'failed'}, "
-            f"{self.total_changes} changes"
-        )
-
+        return f"{self.rule}: {'success' if self.success else 'failed'}, {self.total_changes} changes"
 
 
 @dataclass(slots=True)
