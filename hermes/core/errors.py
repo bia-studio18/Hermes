@@ -17,6 +17,7 @@ class RateLimitError(AcquisitionError):
         super().__init__(message)
         self.retry_after = retry_after
 
+
 class TimeoutError(AcquisitionError):
     """Request timed out."""
 

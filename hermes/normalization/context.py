@@ -2,7 +2,6 @@ from typing import Any
 
 
 class NormalizationContext:
-
     def __init__(self, **values: Any) -> None:
         self._values: dict[str, Any] = dict(values)
 

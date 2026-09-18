@@ -5,26 +5,25 @@ from rich.console import Console
 
 from hermes.api.data import profile
 from hermes.cli.cmds.profile import (
-    kv_panel,
-    fmt,
     columns_table,
-    top_values_table,
+    kv_panel,
     quality_panel,
+    top_values_table,
 )
 from hermes.credentials.manager import (
-    get_cred,
     delete_cred,
+    get_cred,
     list_creds,
     set_cred,
 )
 from hermes.credentials.storage import init_credentials
-
 
 app = typer.Typer(
     name="hermes",
     help="Foundational intelligence data platform.",
     no_args_is_help=True,
 )
+
 
 @app.command()
 def version():
@@ -53,19 +52,18 @@ def profile_data(
     if report.source:
         summary.append(("Source", report.source))
 
-    summary.extend([
-        ("Rows", f"{report.row_count:,}"),
-        ("Columns", str(report.column_count)),
-    ])
+    summary.extend(
+        [
+            ("Rows", f"{report.row_count:,}"),
+            ("Columns", str(report.column_count)),
+        ]
+    )
 
     if report.date_range:
         summary.append(
             (
                 "Date range",
-                ", ".join(
-                    f"{c}: {lo} → {hi}"
-                    for c, (lo, hi) in report.date_range.items()
-                ),
+                ", ".join(f"{c}: {lo} → {hi}" for c, (lo, hi) in report.date_range.items()),
             )
         )
 
@@ -76,27 +74,22 @@ def profile_data(
         summary.append(
             (
                 "Retrieved",
-                report.retrieved_at.strftime(
-                    "%Y-%m-%d %H:%M:%S %Z"
-                ),
+                report.retrieved_at.strftime("%Y-%m-%d %H:%M:%S %Z"),
             )
         )
 
     console = Console()
 
-    console.print(
-        kv_panel("Profile Report", summary)
-    )
+    console.print(kv_panel("Profile Report", summary))
 
-    console.print(
-        columns_table(report)
-    )
+    console.print(columns_table(report))
 
     if top := top_values_table(report):
         console.print(top)
 
     if quality := quality_panel(report):
         console.print(quality)
+
 
 cred_app = typer.Typer(
     name="cred",
@@ -111,9 +104,7 @@ app.add_typer(cred_app)
 def init():
     path = init_credentials()
 
-    typer.echo(
-        f"Credentials initialized at {path}"
-    )
+    typer.echo(f"Credentials initialized at {path}")
 
 
 @cred_app.command("set")
@@ -132,9 +123,7 @@ def set_credential(
         value=value,
     )
 
-    typer.echo(
-        f"Credential '{name}' saved."
-    )
+    typer.echo(f"Credential '{name}' saved.")
 
 
 @cred_app.command("get")
@@ -153,9 +142,7 @@ def get_credential(
     if show:
         typer.echo(f"{name}: {value}")
     else:
-        typer.echo(
-            f"{name}: ********"
-        )
+        typer.echo(f"{name}: ********")
 
 
 @cred_app.command("list")
@@ -180,9 +167,7 @@ def delete_credential(
 
     delete_cred(name)
 
-    typer.echo(
-        f"Credential '{name}' deleted."
-    )
+    typer.echo(f"Credential '{name}' deleted.")
 
 
 if __name__ == "__main__":

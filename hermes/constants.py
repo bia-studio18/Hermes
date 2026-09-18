@@ -1,3 +1,7 @@
+import re
+
+import polars as pl
+
 SYMBOLS = [
     "BTCUSDT",
     "ETHUSDT",

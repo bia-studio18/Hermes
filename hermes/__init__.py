@@ -30,14 +30,7 @@ from hermes.core.errors import (
     ValidationError,
 )
 from hermes.core.result import Result
-
-from hermes.credentials.manager import (
-    list_creds,
-    has_cred,
-    set_cred,
-    get_cred,
-    delete_cred
-)
+from hermes.credentials.manager import delete_cred, get_cred, has_cred, list_creds, set_cred
 
 __all__ = [
     # Fetching

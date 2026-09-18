@@ -9,7 +9,7 @@ import polars as pl
 
 try:
     import pyarrow as pa
-except ImportError:  
+except ImportError:
     pa = None
 
 from hermes.normalization.context import NormalizationContext
@@ -19,7 +19,6 @@ from hermes.normalization.rule import NormalizationRule
 
 
 class NormalizationEngine:
-
     def __init__(self, rules: list[NormalizationRule] | None = None, context: NormalizationContext | None = None):
         self._rules: list[NormalizationRule] = []
         self.context = context or NormalizationContext()
@@ -60,7 +59,6 @@ class NormalizationEngine:
 
     def describe(self) -> list[dict[str, Any]]:
         return [rule.describe() for rule in self._rules]
-
 
     def normalize(self, data: Any, context: NormalizationContext | None = None) -> Any:
 

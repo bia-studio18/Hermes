@@ -3,7 +3,6 @@ from typing import Any
 
 
 class NormalizationRule(ABC):
-
     @property
     def name(self) -> str:
         return type(self).__name__
