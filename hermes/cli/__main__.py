@@ -125,7 +125,6 @@ def set_credential(
     value = typer.prompt(
         "Credential value",
         hide_input=True,
-        confirmation_prompt=True,
     )
 
     set_cred(
@@ -152,7 +151,7 @@ def get_credential(
     value = get_cred(name)
 
     if show:
-        typer.echo(value)
+        typer.echo(f"{name}: {value}")
     else:
         typer.echo(
             f"{name}: ********"
