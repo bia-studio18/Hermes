@@ -1,3 +1,5 @@
+from typing import Any
+
 from hermes.credentials.storage import (
     load_credentials,
     write_credentials,
