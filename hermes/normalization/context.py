@@ -1,10 +1,30 @@
-"""
-| Class / function       | What it does                      |
-| ---------------------- | --------------------------------- |
-| `NormalizationContext` | Runtime context for normalization |
-| `get()`                | Get context value                 |
-| `set()`                | Set context value                 |
-| `has()`                | Check whether value exists        |
-| `require()`            | Get required context value        |
-| `copy()`               | Copy context                      |
-"""
+from typing import Any
+
+
+class NormalizationContext:
+
+    def __init__(self, **values: Any) -> None:
+        self._values: dict[str, Any] = dict(values)
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return self._values.get(key, default)
+
+    def set(self, key: str, value: Any) -> None:
+        self._values[key] = value
+
+    def has(self, key: str) -> bool:
+        return key in self._values
+
+    def require(self, key: str) -> Any:
+        if key not in self._values:
+            raise KeyError(f"Context value {key!r} is not set")
+        return self._values[key]
+
+    def copy(self) -> "NormalizationContext":
+        return NormalizationContext(**self._values)
+
+    def to_dict(self) -> dict[str, Any]:
+        return dict(self._values)
+
+
+__all__ = ["NormalizationContext"]
