@@ -8,7 +8,7 @@ const FEATURES = [
     icon: Database,
     title: "Multi-source acquisition",
     description:
-      "Acquire data from 15+ sources — financial APIs, government portals and files — behind one uniform interface.",
+      "Fetch from 10 built-in connectors — financial APIs, government portals and files — sharing one caching and retry layer.",
   },
   {
     icon: FileStack,
@@ -20,13 +20,13 @@ const FEATURES = [
     icon: Network,
     title: "Entity resolution",
     description:
-      "Resolve companies, countries and persons across identifiers — from tickers and CIKs to ISO codes and aliases.",
+      "Resolve companies, countries and assets across identifiers — from tickers and CIKs to ISO codes and names.",
   },
   {
     icon: ServerCog,
     title: "Scalable storage",
     description:
-      "Serve structured and unstructured data at any size with pluggable storage, querying and export.",
+      "Parquet-backed caching, Dataset save/export, and clean Polars, Arrow and Pandas interchange.",
   },
 ];
 

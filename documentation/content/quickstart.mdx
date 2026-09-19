@@ -24,7 +24,7 @@ hermes version
 
 ### Profile a local file
 
-The fastest way to see Hermes in action — profile any CSV, Parquet, or JSON file:
+The fastest way to see Hermes in action — profile any CSV or Parquet file:
 
 ```python
 import hermes as hr
@@ -85,9 +85,9 @@ report = ds.inspect()
 print(f"rows: {report.row_count}, columns: {report.column_count}")
 
 # Access metadata
-print(ds.metadata_info)
-print(ds.provenance_info)
-print(ds.lineage_info)
+print(ds.metadata_info())
+print(ds.provenance_info())
+print(ds.lineage_info())
 ```
 
 ### Export data
@@ -139,7 +139,7 @@ asyncio.run(main())
 ```python
 from hermes.connectors import FRED
 
-fred = FRED(api="your_fred_key")  # FRED_API env var
+fred = FRED(api="your_fred_key")
 
 df = await fred.fetch(series_id="CPIAUCSL")  # Consumer Price Index
 print(df.head())

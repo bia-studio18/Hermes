@@ -39,36 +39,41 @@ Hermes installs the following dependencies automatically:
 
 ## Environment Variables
 
-Create a `.env` file in your project root (or export these in your shell):
+Create a `.env` file in your project root (or export these in your shell) to record your API keys:
 
 ```bash
-# Required for OpenSanctions connector
-OPEN_SANCTIONS_API=
-
-# Required for NewsData connector
-NEWS_DATA_API=
-
-# Required for FRED connector (Federal Reserve Economic Data)
+# FRED connector (Federal Reserve Economic Data)
 FRED_API=
 
-# Required for Finnhub connector (financial data)
+# Finnhub connector (financial data)
 FINNHUB_API=
 
-# Required for SEC EDGAR connector (User-Agent identification)
+# OpenSanctions connector
+OPEN_SANCTIONS_API=
+
+# SEC EDGAR connector (User-Agent identification)
 SEC_USERNAME=
 SEC_EMAIL=
+
+# Reserved (newsdata source)
+NEWS_DATA_API=
 ```
 
-| Variable | Used by | Notes |
-|----------|---------|-------|
-| `OPEN_SANCTIONS_API` | OpenSanctions connector | API key from [opensanctions.org](https://opensanctions.org) |
-| `NEWS_DATA_API` | Reserved (newsdata source) | Not yet wired to a connector; see `hermes.core.config.API_SOURCES` |
+> Note: these variables are the documented convention in `.env.example`. Hermes does not
+> auto-load `.env` files yet — connectors currently take keys explicitly as constructor
+> arguments. Pass them directly, e.g. `FRED(api="my_key")`, `FINNHUB(api="my_key")`,
+> `OpenSanction(api_key="my_key")`, `SECEDGAR(username="...", email="...")`.
+
+| Variable | Connector | Notes |
+|----------|-----------|-------|
 | `FRED_API` | FRED connector | API key from [fred.stlouisfed.org](https://fred.stlouisfed.org) |
 | `FINNHUB_API` | Finnhub connector | API key from [finnhub.io](https://finnhub.io) |
+| `OPEN_SANCTIONS_API` | OpenSanctions connector | API key from [opensanctions.org](https://opensanctions.org) |
 | `SEC_USERNAME` | SEC EDGAR connector | Your name for User-Agent header |
 | `SEC_EMAIL` | SEC EDGAR connector | Your email for User-Agent header |
+| `NEWS_DATA_API` | Reserved (newsdata source) | Not yet wired to a connector |
 
-Not all connectors require API keys. World Bank, IMF, Binance, YFinance, and bundled public datasets work without any configuration.
+Not all connectors require API keys. World Bank, IMF, Binance, and YFinance work without any configuration.
 
 ## Verify Installation
 

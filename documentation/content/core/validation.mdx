@@ -4,129 +4,128 @@ title: Validation
 
 # Validation
 
-The validation module checks data quality, schema compliance, and business rules. It produces structured reports that can be consumed programmatically or displayed to users.
+The validation module checks data quality against a set of rules and produces a structured `ValidationResult`. Rules observe data and report whether it satisfies conditions; they never modify the data.
 
 ## validate()
 
-The primary entry point for running validation checks:
+The primary entry point:
 
 ```python
 import polars as pl
-from hermes.validation import validate, NotNull
+from hermes.validation import validate, NotNull, RangeCheck
 
 data = pl.read_csv("data.csv")
 
 report = validate(
     data=data,
-    checks=[
+    rules=[
         NotNull("country_code"),
-        NotNull("value"),
+        RangeCheck("value", min=0, max=100),
     ],
 )
 
-print(report.summary())
+print(report.passed)     # True if every rule passed
+print(report.summary())  # human-readable summary
 ```
 
 ### Parameters
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `data` | `pl.DataFrame` | The DataFrame to validate |
-| `checks` | `list` | List of check instances to run |
+| `data` | `Any` | `pl.DataFrame`, `pl.LazyFrame`, `pyarrow.Table`, or dict/list of dicts |
+| `rules` | `list[ValidationRule] | None` | Rules to run |
+| `context` | `ValidationContext | None` | Shared context values |
 
-### Returns
+Rules run independently against the original input — they never feed results to each other.
 
-A `ValidationReport` with pass/fail status and detailed results.
+## ValidationResult
 
-## Built-in Checks
+| Field | Type | Description |
+|-------|------|-------------|
+| `success` | `bool` | The validation process completed without engine errors |
+| `passed` | `bool` | `success` and every rule passed |
+| `results` | `list[RuleResult]` | Per-rule outcomes |
+| `errors` | `list[str]` | Engine errors (e.g. a rule raised) |
+| `warnings` | `list[str]` | Rule warnings |
 
-### `NotNull(column)`
+Methods: `summary()` (formatted text), `to_dict()` (JSON-serializable), `bool(report)` is `passed`.
 
-Checks that a column contains no null values.
+### RuleResult
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `rule` | `str` | Rule name |
+| `passed` | `bool` | Whether the rule passed |
+| `statistics` | `dict` | Check-specific stats (e.g. null counts, violation counts) |
+| `violations` | `list[Violation]` | Offending values |
+| `message` | `str` | Human-readable result |
+| `warnings` | `list[str]` | Warnings |
+
+### Violation
+
+`Violation(field, row=None, value=None, expected=None, message="")` — a single offending value.
+
+## ValidationEngine
+
+For running a configured rule pipeline:
 
 ```python
+from hermes.validation import ValidationEngine, NotNull
+
+engine = ValidationEngine(rules=[NotNull("id")])
+engine.add_rule(RangeCheck("value", min=0))
+
+result = engine.validate(data)
+engine.rules                       # list of configured rules
+engine.describe()                  # rule metadata as dicts
+```
+
+## Built-in Rules
+
+All rules are exported from `hermes.validation`. Each exposes `name`, `check(data, context) -> RuleResult`, `validate()` (raises `RuleConfigurationError` if misconfigured), and `describe()`. Column-based rules take a `field` argument (the column name).
+
+| Rule | Constructor | Checks |
+|------|-------------|--------|
+| `NotNull` | `NotNull("col")` | Column has no nulls |
+| `Unique` | `Unique("col")` | Column values are unique |
+| `UniqueCombination` | `UniqueCombination(["a", "b"])` | Row tuples are unique |
+| `TypeCheck` | `TypeCheck("col", "float")` or `TypeCheck({"a": "float"})` | Column schema types |
+| `RangeCheck` | `RangeCheck("col", min=0, max=100)` | Numeric values within range |
+| `EnumCheck` | `EnumCheck("col", ["US", "GB"])` | Values are in an allowed set |
+| `RegexCheck` | `RegexCheck("col", r"\d{4}")` | Values match a regex |
+| `PatternCheck` | `PatternCheck("col", "pattern")` | Named pattern match |
+| `LengthCheck` | `LengthCheck("col", min=..., max=...)` | String lengths |
+| `DateRangeCheck` | `DateRangeCheck("date", min=..., max=...)` | Dates within range |
+| `DateOrderCheck` | `DateOrderCheck("start", "end")` | `start` is not later than `end` |
+| `SchemaCheck` | `SchemaCheck({"col": "type"})` | Column names/types match exactly |
+| `ColumnCheck` | `ColumnCheck(["a", "b"], allow_extra=True)` | Required columns present |
+| `RowCountCheck` | `RowCountCheck(min=None, max=None, exact=None)` | Row count bounds |
+| `NullRateCheck` | `NullRateCheck("col", max_rate=0.1)` | Null ratio below threshold |
+| `DuplicateCheck` | `DuplicateCheck(columns=None)` | Duplicate rows (whole row or subset) |
+| `CompletenessCheck` | `CompletenessCheck(["a"], min_rate=1.0)` | Combined completeness of columns |
+| `FreshnessCheck` | `FreshnessCheck("date", max_age="7d")` | Most recent value is not stale |
+| `ReferentialCheck` | `ReferentialCheck("col", reference_data=...)` | Values exist in a reference dataset |
+| `ForeignKeyCheck` | `ForeignKeyCheck("col", reference=...)` | Values match a reference column |
+| `ConstantCheck` | `ConstantCheck("col", expected=None)` | Column is constant |
+| `CardinalityCheck` | `CardinalityCheck("col", unique_min=..., unique_max=...)` | Distinct-count bounds |
+
+`register_pattern(name, compiled_regex)` registers named patterns used by `PatternCheck`.
+
+## Top-Level API
+
+```python
+import hermes as hr
 from hermes.validation import NotNull
 
-check = NotNull("country_code")
-result = check.run(data)
-
-print(result.passed)       # True/False
-print(result.violations)   # number of nulls
-print(result.message)      # human-readable description
+report = hr.validate(df, rules=[NotNull("country_code")])
 ```
-
-#### `ValidationResult`
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `passed` | `bool` | Whether the check passed |
-| `check` | `str` | Check name |
-| `column` | `str \| list[str] \| None` | Column(s) checked |
-| `statistics` | `dict[str, Any]` | Check-specific statistics |
-| `violations` | `int` | Number of violations |
-| `message` | `str` | Human-readable result message |
-
-## DataContract
-
-Define expected schema and constraints for a dataset:
-
-```python
-from hermes.validation.contracts import DataContract, Constraint
-
-contract = DataContract(
-    schema="economic.observation",
-    required_columns=["entity_id", "date", "indicator", "value"],
-    constraints=[
-        Constraint(field="value", constraint_type="range", params={"min": 0, "max": 100}),
-    ],
-    description="Economic observation dataset",
-)
-```
-
-### `DataContract` Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `schema_name` | `str \| None` | Expected schema name |
-| `required_columns` | `list[str]` | Columns that must exist |
-| `constraints` | `list[Constraint]` | Data constraints |
-| `description` | `str \| None` | Human-readable description |
-
-### `Constraint` Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `field` | `str` | Column name |
-| `constraint_type` | `str` | Type of constraint |
-| `params` | `dict` | Constraint parameters |
-
-## ValidationReport
-
-```python
-report = validate(data, checks=[...])
-
-print(report.passed)       # True if all checks passed
-print(report.checks)       # list of CheckResult
-print(report.errors)       # list of error messages
-print(report.warnings)     # list of warning messages
-print(report.summary())    # formatted text summary
-```
-
-### CheckResult
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | `str` | Check name |
-| `passed` | `bool` | Whether it passed |
-| `message` | `str \| None` | Result message |
-| `severity` | `str` | `"error"` or `"warning"` |
 
 ## Errors
 
 ```python
-from hermes.validation.errors import ValidationError
+from hermes.validation import (
+    ValidationError,          # base error
+    RuleConfigurationError,   # a rule is misconfigured
+    RuleExecutionError,       # a rule failed while running
+)
 ```
-
-| Exception | Description |
-|-----------|-------------|
-| `ValidationError` | Data failed validation checks |
