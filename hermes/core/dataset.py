@@ -20,7 +20,7 @@ class Dataset(BaseModel):
     name: str
     version: str = "0.0.1"
 
-    data_ref: str | Path
+    data_ref: str | Path | None = None
     schema_ref: str | None = None
     data: pl.DataFrame | None = None
 
@@ -155,6 +155,9 @@ class Dataset(BaseModel):
         raise TypeError(f"Cannot convert {type(data).__name__} to Arrow")
 
     def load(self):
+        if self.data_ref is None:
+            raise HermesError("Dataset has no data_ref; provide a data_ref or call hr.load(name)")
+
         ref = str(self.data_ref)
 
         if ref.startswith(("postgres://", "postgresql://")):

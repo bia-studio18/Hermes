@@ -43,7 +43,7 @@ class ParserEngine:
                 return "xml"
             if first in ("{", "["):
                 return "json"
-            # ponytail: suffix-only + first-char content sniffing, wrap str content in bytes for disambiguation
+
             return None
         if isinstance(source, (bytes, bytearray)):
             first_byte = bytes(source).lstrip()[:1]

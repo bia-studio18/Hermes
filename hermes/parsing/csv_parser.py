@@ -1,4 +1,5 @@
 import io
+from typing import Any, cast
 
 import polars as pl
 
@@ -13,7 +14,7 @@ class CSVParser:
                 src = io.BytesIO(bytes(src))
             elif isinstance(src, str) and "\n" in src:
                 src = io.BytesIO(src.encode())
-            return pl.read_csv(src, **kwargs)  # type: ignore[arg-type]
+            return pl.read_csv(cast(Any, src), **cast(Any, kwargs))
         except ParseError:
             raise
         except Exception as exc:

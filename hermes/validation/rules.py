@@ -1,11 +1,3 @@
-"""Concrete validation rules.
-
-Every rule *inspects* a :class:`polars.DataFrame` and returns a
-:class:`RuleResult`. Rules are read-only: they never modify the input data.
-"""
-
-from __future__ import annotations
-
 import datetime
 import re
 from typing import Any
@@ -106,10 +98,10 @@ def _to_reference_frame(reference: Any, rule: str) -> pl.DataFrame:
         return reference.collect()
     try:
         import pyarrow as pa
-    except ImportError:  # pragma: no cover - optional backend
+    except ImportError:
         pa = None
     if pa is not None and isinstance(reference, pa.Table):
-        return pl.DataFrame(pl.from_arrow(reference))  # type: ignore[arg-type]
+        return pl.DataFrame(pl.from_arrow(reference))
     if isinstance(reference, dict):
         return pl.DataFrame([reference])
     if isinstance(reference, (list, tuple)):
@@ -118,7 +110,6 @@ def _to_reference_frame(reference: Any, rule: str) -> pl.DataFrame:
 
 
 def _iso(value: Any) -> str | None:
-    """Stringify a scalar for stats (dates as ISO, everything else via str)."""
     if value is None:
         return None
     if isinstance(value, (datetime.datetime, datetime.date)):
@@ -140,10 +131,6 @@ def _duration(amount: str | datetime.timedelta) -> datetime.timedelta:
 def _reference_lookup(
     data: pl.DataFrame, field: str, reference: Any, reference_field: str, rule: str
 ) -> tuple[pl.DataFrame, int, int]:
-    """Return (missing rows with row index + value, matched_count, missing_count).
-
-    Missing rows are non-null source values absent from the reference field.
-    """
     ref = _to_reference_frame(reference, rule)
     if reference_field not in ref.columns:
         raise RuleExecutionError(f"{rule}: reference column {reference_field!r} not found in reference dataset")
@@ -161,14 +148,7 @@ def _reference_lookup(
     return missing, matched.height, missing.height
 
 
-# ---------------------------------------------------------------------------
-# Rules
-# ---------------------------------------------------------------------------
-
-
 class NotNull(ValidationRule):
-    """Check that a column contains no null values."""
-
     def __init__(self, field: str, *, max_violations: int = _DEFAULT_MAX_VIOLATIONS) -> None:
         self.field = field
         self.max_violations = max_violations
@@ -189,8 +169,6 @@ class NotNull(ValidationRule):
 
 
 class Unique(ValidationRule):
-    """Check that one column contains unique (non-null) values."""
-
     def __init__(self, field: str, *, max_violations: int = _DEFAULT_MAX_VIOLATIONS) -> None:
         self.field = field
         self.max_violations = max_violations
@@ -215,8 +193,6 @@ class Unique(ValidationRule):
 
 
 class UniqueCombination(ValidationRule):
-    """Check uniqueness across multiple columns together."""
-
     def __init__(self, fields: list[str], *, max_violations: int = _DEFAULT_MAX_VIOLATIONS) -> None:
         self.fields = list(fields)
         self.max_violations = max_violations
@@ -248,8 +224,6 @@ class UniqueCombination(ValidationRule):
 
 
 class TypeCheck(ValidationRule):
-    """Verify that fields have the expected data type (never casts)."""
-
     def __init__(self, target: str | dict[str, str], type_name: str | None = None) -> None:
         if isinstance(target, str):
             if type_name is None:
@@ -282,11 +256,6 @@ class TypeCheck(ValidationRule):
 
 
 class RangeCheck(ValidationRule):
-    """Verify numeric values fall within an allowed range.
-
-    Null values are not counted as range violations (use NotNull for null checks).
-    """
-
     def __init__(
         self,
         field: str,
@@ -354,8 +323,6 @@ class RangeCheck(ValidationRule):
 
 
 class EnumCheck(ValidationRule):
-    """Verify values belong to an allowed set (nulls excluded)."""
-
     def __init__(self, field: str, allowed: list[Any], *, max_violations: int = _DEFAULT_MAX_VIOLATIONS) -> None:
         self.field = field
         self.allowed = list(allowed)
@@ -384,8 +351,6 @@ class EnumCheck(ValidationRule):
 
 
 class RegexCheck(ValidationRule):
-    """Verify string values match a regular expression (nulls excluded)."""
-
     def __init__(self, field: str, pattern: str, *, max_violations: int = _DEFAULT_MAX_VIOLATIONS) -> None:
         self.field = field
         self.pattern = pattern
@@ -418,8 +383,6 @@ class RegexCheck(ValidationRule):
 
 
 class LengthCheck(ValidationRule):
-    """Validate string length (nulls excluded)."""
-
     def __init__(
         self,
         field: str,
@@ -487,12 +450,6 @@ def _parse_datetime_bound(value: Any, field: str, rule: str) -> datetime.datetim
 
 
 class DateRangeCheck(ValidationRule):
-    """Verify dates fall within an allowed date range.
-
-    The column must already be a date/datetime type; parsing malformed dates
-    belongs to normalization, not validation.
-    """
-
     def __init__(
         self, field: str, min: Any = None, max: Any = None, *, max_violations: int = _DEFAULT_MAX_VIOLATIONS
     ) -> None:
@@ -553,12 +510,6 @@ class DateRangeCheck(ValidationRule):
 
 
 class DateOrderCheck(ValidationRule):
-    """Check chronological ordering.
-
-    ``DateOrderCheck("date")`` verifies the sequence is non-decreasing.
-    ``DateOrderCheck("start", "end")`` verifies start <= end row-wise.
-    """
-
     def __init__(self, first: str, second: str | None = None, *, max_violations: int = _DEFAULT_MAX_VIOLATIONS) -> None:
         self.first = first
         self.second = second
@@ -621,8 +572,6 @@ def _json_safe_value(value: Any) -> Any:
 
 
 class SchemaCheck(ValidationRule):
-    """Validate column presence and types against an expected schema."""
-
     def __init__(self, expected: dict[str, str]) -> None:
         self.expected = dict(expected)
         if not self.expected:
@@ -656,8 +605,6 @@ class SchemaCheck(ValidationRule):
 
 
 class RowCountCheck(ValidationRule):
-    """Validate the number of records."""
-
     def __init__(self, min: int | None = None, max: int | None = None, exact: int | None = None) -> None:
         self.min = min
         self.max = max
@@ -691,8 +638,6 @@ class RowCountCheck(ValidationRule):
 
 
 class ColumnCheck(ValidationRule):
-    """Check which columns exist (presence only; types are SchemaCheck's job)."""
-
     def __init__(self, required: list[str], *, allow_extra: bool = True) -> None:
         self.required = list(required)
         self.allow_extra = allow_extra
@@ -713,8 +658,6 @@ class ColumnCheck(ValidationRule):
 
 
 class NullRateCheck(ValidationRule):
-    """Ensure the null percentage of a field is within an allowed threshold."""
-
     def __init__(self, field: str, max_rate: float) -> None:
         self.field = field
         self.max_rate = max_rate
@@ -743,8 +686,6 @@ class NullRateCheck(ValidationRule):
 
 
 class DuplicateCheck(ValidationRule):
-    """Check for duplicate rows over all columns or a subset."""
-
     def __init__(self, columns: list[str] | None = None) -> None:
         self.columns = list(columns) if columns is not None else None
 
@@ -772,13 +713,6 @@ class DuplicateCheck(ValidationRule):
 
 
 class FreshnessCheck(ValidationRule):
-    """Verify a date/datetime column is recent enough.
-
-    ``now`` is resolved explicitly: the ``now`` constructor argument, then the
-    context value ``now``, then ``datetime.now`` at UTC. Naive timestamp columns
-    compare against naive ``now`` to avoid mixed-tz comparisons.
-    """
-
     def __init__(self, field: str, max_age: str | datetime.timedelta, now: datetime.datetime | None = None) -> None:
         self.field = field
         self.max_age = max_age
@@ -830,8 +764,6 @@ class FreshnessCheck(ValidationRule):
 
 
 class CompletenessCheck(ValidationRule):
-    """Check whether required fields are populated together in each row."""
-
     def __init__(self, required: list[str], min_rate: float = 1.0) -> None:
         self.required = list(required)
         self.min_rate = min_rate
@@ -864,8 +796,6 @@ class CompletenessCheck(ValidationRule):
 
 
 class ReferentialCheck(ValidationRule):
-    """Verify values reference existing values in another dataset/collection."""
-
     def __init__(
         self,
         field: str,
@@ -908,11 +838,6 @@ class ReferentialCheck(ValidationRule):
 
 
 class ForeignKeyCheck(ValidationRule):
-    """Validate foreign-key relationships against a reference dataset.
-
-    Shares mechanism with ReferentialCheck but keeps a distinct concept.
-    """
-
     def __init__(
         self,
         column: str,
@@ -967,14 +892,12 @@ _PATTERNS: dict[str, str] = {
 
 
 def register_pattern(name: str, regex: str) -> None:
-    """Register a named pattern for PatternCheck."""
-    re.compile(regex)  # validate now, fail fast
+
+    re.compile(regex)
     _PATTERNS[name] = regex
 
 
 class PatternCheck(ValidationRule):
-    """Validate values against a named or configurable pattern."""
-
     def __init__(self, field: str, pattern: str, *, max_violations: int = _DEFAULT_MAX_VIOLATIONS) -> None:
         self.field = field
         self.pattern_name = pattern
@@ -1017,8 +940,6 @@ def _pattern_regex(name: str) -> str:
 
 
 class ConstantCheck(ValidationRule):
-    """Check whether a column contains only one unique value."""
-
     def __init__(self, field: str, expected: Any = None) -> None:
         self.field = field
         self.expected = expected
@@ -1040,8 +961,6 @@ class ConstantCheck(ValidationRule):
 
 
 class CardinalityCheck(ValidationRule):
-    """Check the number of distinct (non-null) values in a column."""
-
     def __init__(
         self, field: str, min: int = 1, max: int | None = None, *, max_violations: int = _DEFAULT_MAX_VIOLATIONS
     ) -> None:

@@ -1,5 +1,3 @@
-"""Normalization engine: executes a configured pipeline of rules over data."""
-
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Mapping

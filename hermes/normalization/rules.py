@@ -508,11 +508,7 @@ class MapValue(NormalizationRule):
 
 
 class MapConcept(MapValue):
-    """Map source-specific concepts/categories to canonical concepts.
-
-    Behavior is identical to :class:`MapValue`; the class exists so semantic
-    category mapping reads distinctly from literal value mapping.
-    """
+    pass
 
 
 def _parse_period(value: str) -> str | None:
@@ -524,7 +520,7 @@ def _parse_period(value: str) -> str | None:
         return None
     prefix_leading, year, qtr, prefix_swapped, qtr_swapped, year_swapped = m.groups()
 
-    if prefix_swapped:  # e.g. "Q1 2025", "FQ1 2025", "FY 2025"
+    if prefix_swapped:
         order = prefix_swapped.upper()
         if order == "Q":
             return f"{year_swapped}Q{qtr_swapped}"

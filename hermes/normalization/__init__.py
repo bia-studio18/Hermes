@@ -39,7 +39,6 @@ __all__ = [
     "RuleConfigurationError",
     "RuleExecutionError",
     "TransformationError",
-    # Rules
     "Rename",
     "Cast",
     "NormalizeString",
