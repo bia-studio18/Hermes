@@ -7,6 +7,7 @@ from typing import Any
 HERMES_HOME = Path.home() / ".hermes-plt"
 CREDENTIALS_FILE = HERMES_HOME / "credentials.json"
 
+
 class CredentialError(Exception):
     """Base exception for credential errors."""
 

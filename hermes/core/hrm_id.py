@@ -3,6 +3,7 @@ import time
 
 BASE62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
+
 def base62_encode(number: int) -> str:
     if number == 0:
         return BASE62[0]

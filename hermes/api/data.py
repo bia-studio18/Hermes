@@ -14,7 +14,7 @@ from hermes.normalization.engine import NormalizationEngine
 from hermes.normalization.rule import NormalizationRule
 from hermes.parsing.engine import ParserEngine
 from hermes.validation.engine import validate
-from hermes.validation.reports import ValidationReport
+from hermes.validation.result import ValidationResult
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +46,8 @@ def normalize(
     return engine.normalize(data)
 
 
-def validate_data(data: pl.DataFrame, rules: list) -> ValidationReport:
-    return validate(data=data, checks=rules)
+def validate_data(data: object, rules: list | None = None) -> ValidationResult:
+    return validate(data=data, rules=rules)
 
 
 def transform(data: object, fn: object | None = None, **kwargs: object) -> Result:
