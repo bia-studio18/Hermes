@@ -170,13 +170,13 @@ Registered connectors (exported from `hermes.connectors`):
 | Connector | Class | API key required |
 |-----------|-------|------------------|
 | Binance | `Binance` | No |
-| Finnhub | `FINNHUB` | Yes (`FINNHUB_API`) |
-| FRED | `FRED` | Yes (`FRED_API`) |
+| Finnhub | `FINNHUB` | Yes — passed as `api=` (see `FINNHUB_API` in `.env.example`) |
+| FRED | `FRED` | Yes — passed as `api=` |
 | GDELT | `GDELT` | No (stub) |
 | IMF | `IMF` | No |
-| OpenSanctions | `OpenSanction` | Yes (`OPEN_SANCTIONS_API`) |
+| OpenSanctions | `OpenSanction` | Yes — passed as `api_key=` |
 | Public datasets | `PUBLIC_DATASET` | No |
-| SEC EDGAR | `SECEDGAR` | Uses `SEC_USERNAME` / `SEC_EMAIL` |
+| SEC EDGAR | `SECEDGAR` | Username/email passed as `username=` / `email=` (User-Agent) |
 | World Bank | `World_bank` | No |
 | Yahoo Finance | `Yfinance` | No |
 

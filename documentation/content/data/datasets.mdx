@@ -93,10 +93,10 @@ for col in metadata.columns:
 ## Accessing Metadata
 
 ```python
-ds.metadata_info     # -> MetaData
-ds.provenance_info   # -> Provenance
-ds.lineage_info      # -> Lineage
-ds.schema_info       # -> str | None
+ds.metadata_info()     # -> MetaData
+ds.provenance_info()   # -> Provenance
+ds.lineage_info()      # -> Lineage
+ds.schema_info()       # -> str | None (raises ValueError if no schema_ref is set)
 ```
 
 ## Exporting Data

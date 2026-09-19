@@ -1982,18 +1982,20 @@ External Source → Connector → Raw Data → Parse → Normalize → Validate
 
 ### E1. Core Dataset System
 
+*Status: core implemented — `Dataset`, `Result`, error taxonomy, and the metadata/provenance/lineage/version models exist. Save/export, load, inspect, profile work; catalog + query engines pending.*
+
 - [x] Create `Dataset` abstraction
 - [x] Define dataset identity
 - [x] Define dataset name
 - [x] Define dataset ID
-- [ ] Define dataset schema reference
+- [x] Define dataset schema reference
 - [x] Define dataset version
-- [ ] Define dataset metadata reference
-- [ ] Define provenance reference
-- [ ] Define lineage reference
-- [ ] Create standardized operation/result objects
-- [ ] Create standardized error handling
-- [ ] Ensure datasets are independent of specific storage engines
+- [x] Define dataset metadata reference
+- [x] Define provenance reference
+- [x] Define lineage reference
+- [x] Create standardized operation/result objects (`Result`, `ValidationResult`, `NormalizationResult`)
+- [x] Create standardized error handling (`HermesError` hierarchy)
+- [x] Ensure datasets are independent of specific storage engines
 
 Dataset requirements: contains schema info, metadata, provenance, lineage, version; supports
 lazy/eager execution where appropriate; integrates with Arrow, Polars, Pandas, DuckDB; operations
@@ -2001,6 +2003,8 @@ lazy/eager execution where appropriate; integrates with Arrow, Polars, Pandas, D
 return consistent `Dataset`/result types.
 
 ### E2. Acquisition Engine
+
+*Status: partial — `RawCache` (Parquet disk cache with TTL/keys/stats) and `Client` (aiohttp, retries, backoff, error mapping, streaming) implemented and used by all connectors. NOT implemented: source registry, sync state, pagination helpers, `fetch/ingest/source/connect/read/stream` API.*
 
 - [ ] Define `Source`: configuration, credentials, capabilities, metadata, lifecycle
 - [ ] Implement `fetch()`, `ingest()`, `source()`, `connect()`, `read()`, `stream()`
@@ -2019,47 +2023,56 @@ return consistent `Dataset`/result types.
 
 ### E3. Parsing Engine
 
-- [ ] Define `Parser` contract: input contract, output contract, registration, selection
-- [ ] Implement `parse()`, `detect_format()`, `read_raw()`, `decode()`
-- [ ] Formats: CSV, JSON, JSONL, XML, Parquet, Arrow, compressed files
+*Status: IMPLEMENTED. `ParserEngine.parse()`/`detect_format()` real; CSV/JSON/JSONL/Parquet/XML parsers return `pl.DataFrame`; powers `hr.parse()` and `Dataset.load()`. Not ended: Arrow/compressed files, nested-JSON flattening, malformed-record classification (single `ParseError`).*
+
+- [x] Define `Parser` contract: input contract, output contract, registration, selection
+- [x] Implement `parse()`, `detect_format()`, `read_raw()`, `decode()`
+- [x] Formats: CSV, JSON, JSONL, XML, Parquet
+- [ ] Formats: Arrow, compressed files
 - [ ] Nested JSON and lists-of-records support
 - [ ] Intermediate record representation (`records.py`)
 - [ ] Preserve source fields and raw values
 - [ ] Handle malformed records; define parser errors and warnings
 - [ ] Allow connector-specific parsers; keep source-specific logic inside connectors
-- [ ] Prevent generic parser from containing SEC/GDELT business logic
-- [ ] Parser does not perform semantic normalization, entity resolution, or contain domain mappings
+- [x] Prevent generic parser from containing SEC/GDELT business logic
+- [x] Parser does not perform semantic normalization, entity resolution, or contain domain mappings
 
 ### E4. Schema / Data Contract Engine
 
-- [ ] Define schema model: fields, types, nullable, required, constraints
+*Status: partial. `Schema`/`FieldDef` models + 7 canonical schemas defined (`economic.observation`, `financial.observation`, `market.observation`, `geopolitical.event`, `security.event`, `entity`, `document`). NOT implemented: registry, compatibility, inference, migration, top-level API.*
+
+- [x] Define schema model: fields, types, nullable, required, constraints
 - [ ] Schema versioning and serialization
 - [ ] Implement `schema()`, `register_schema()`, `infer_schema()`, `validate_schema()`,
       `compare_schema()`, `migrate_schema()`, `metadata()`, `set_metadata()`
 - [ ] Schema registry, compatibility checking, evolution, version tracking, migration
-- [ ] Initial canonical schemas registered: entity, economic, financial, market, geopolitical,
+- [x] Initial canonical schemas registered: entity, economic, financial, market, geopolitical,
       security, document
 
 ### E5. Normalization Engine
 
-- [ ] Define normalization interface; source→canonical mapping
-- [ ] Type, unit, temporal, geographic, identifier normalization
+*Status: IMPLEMENTED. `NormalizationEngine` (normalize/normalize_record/normalize_stream/normalize_report) + 17 rules (Rename, Cast, NormalizeString/Null/Boolean/Date/Country/Currency/Unit, ConvertUnit, NormalizeIdentifier/Name, MapValue, MapConcept, ParsePeriod, StripCharacters, Round). Not ended: automated lineage recording of normalization steps.*
+
+- [x] Define normalization interface; source→canonical mapping
+- [x] Type, unit, temporal, geographic, identifier normalization
 - [ ] Implement `normalize()`, `map()`, `cast()`, `standardize()`, `convert_units()`, `align_time()`,
       `clean()`
-- [ ] ISO date/time conventions; consistent timezone handling
-- [ ] Standard country codes; consistent numeric types; unit conversion framework
-- [ ] Currency normalization; missing-value conventions; duplicate handling
-- [ ] Source-specific mappings remain outside generic Core
+- [x] ISO date/time conventions; consistent timezone handling
+- [x] Standard country codes; consistent numeric types; unit conversion framework
+- [x] Currency normalization; missing-value conventions; duplicate handling
+- [x] Source-specific mappings remain outside generic Core
 - [ ] Normalization is deterministic; steps recorded in lineage
-- [ ] Normalization rules reusable (`rules.py`: date, numeric, string cleanup, null, unit, identifier)
+- [x] Normalization rules reusable (`rules.py`: date, numeric, string cleanup, null, unit, identifier)
 
 ### E6. Quality Engine
 
-- [ ] Define quality-check and validation-rule interfaces
+*Status: `validate()` + 22 rules implemented; `profile()` (stats, quality info, frequency/date-range/anomaly detection) implemented. Not ended: `ValidationReport` score/model, severity levels, the additional `check_*` wrappers.*
+
+- [x] Define quality-check and validation-rule interfaces
 - [ ] Define quality report, score/model, severity levels, warning vs error behavior
 - [ ] Implement `validate()`, `check()`, `check_quality()`, `check_completeness()`,
       `check_freshness()`, `check_integrity()`
-- [ ] Checks: null, type, range, required-field, constraint, schema, primary-key, foreign-key,
+- [x] Checks: null, type, range, required-field, constraint, schema, primary-key, foreign-key,
       referential-integrity, unit, date, duplicates
 - [ ] Create `ValidationReport`; separate errors from warnings
 - [ ] Profiling: row count, column count, types, null %, unique, duplicates, min/max, basic stats,
@@ -2071,12 +2084,14 @@ return consistent `Dataset`/result types.
 
 ### E7. Metadata System
 
-- [ ] Dataset-level and column-level metadata models
+*Status: partial — `MetaData`, `ColumnMetadata`, `QualityInfo`, `InspectReport` models + `profile()`/`inspect()`/`get_freqs()`/`date_ranges()`/`anomaly_count()` implemented.*
+
+- [x] Dataset-level and column-level metadata models
 - [ ] Type, row/column counts, null stats, unique stats, date range, frequency detection,
       entity coverage, source information, retrieval timestamp, last-observation timestamp,
       expected update frequency, quality information
 - [ ] Implement `get_metadata()`, `inspect()`, `profile()`
-- [ ] Metadata does not modify the dataset
+- [x] Metadata does not modify the dataset
 
 ### E8. Provenance
 
@@ -2096,13 +2111,15 @@ return consistent `Dataset`/result types.
 
 ### E10. Entity System *(first-class pillar)*
 
-- [ ] Define `Entity` and `EntityMatch` models; canonical entity representation
-- [ ] Define `Resolver` interface: `resolve()`, `identify()`, `match()`, `link()`, `entity()`
+*Status: partial — `Entity`/`EntityMatch` models, `Resolver` ABC, `countries` (249 ISO-3 codes, `iso3_to_iso2`, `check_iso3`) and `get_cik()` implemented. NOT implemented: `EntityRegistry`, `resolve_entity/country/company` top-level API, aliases, person resolution, ~100k-entity registry.*
+
+- [x] Define `Entity` and `EntityMatch` models; canonical entity representation
+- [x] Define `Resolver` interface: `resolve()`, `identify()`, `match()`, `link()`, `entity()`
 - [ ] Registry: `register()`, `get()`, `resolve()`, `list_types()`
 - [ ] Aliases: `add_alias()`, `resolve_alias()`, `list_aliases()`
-- [ ] Countries: canonical IDs, ISO-2/ISO-3/name/numeric-code resolution, aliases,
+- [x] Countries: canonical IDs, ISO-2/ISO-3/name/numeric-code resolution, aliases,
       historical/source-specific identifiers, `resolve_country()`
-- [ ] Companies: canonical IDs, name, ticker, CIK, LEI, ISIN, source-specific IDs, aliases,
+- [x] Companies: canonical IDs, name, ticker, CIK, LEI, ISIN, source-specific IDs, aliases,
       `resolve_company()`
 - [ ] Persons: canonical IDs, name/identifier resolution, aliases (defense/persons scope)
 - [ ] Implement `resolve_entity()`
@@ -2147,9 +2164,11 @@ Corporate/financial/defense/healthcare identifiers can be added independently.
 
 ### E15. Export
 
+*Status: partial — `export()` real (csv/json/parquet) and `Dataset.save()`/`.export()` incl. to_polars/to_arrow/to_pandas. NOT implemented: `to_duckdb()`, metadata-preserving export.*
+
 - [ ] Define exporter interface and configuration; export metadata
 - [ ] Implement `export()`, `to_arrow()`, `to_polars()`, `to_pandas()`, `to_duckdb()`
-- [ ] Formats: Parquet, CSV, JSON, JSONL, Arrow
+- [x] Formats: Parquet, CSV, JSON, JSONL, Arrow
 - [ ] Preserve metadata/schema/provenance where supported
 
 ### E16. Dataset Versioning
@@ -2182,6 +2201,8 @@ Corporate/financial/defense/healthcare identifiers can be added independently.
 
 ### E20. Inspection / Developer Experience
 
+*Status: partial — `inspect()` and `profile()` implemented (data API + Dataset methods); CLI `profile_data` works. Not ended: `get_metadata`/`get_provenance`/`get_lineage` wrappers, catalog schema/lineage inspection CLI.*
+
 - [ ] Implement `inspect()`: dimensions, schema, metadata, sample records, quality, lineage,
       provenance, version
 - [ ] CLI: dataset inspection, schema inspection, profile, validation, lineage, dataset catalog
@@ -2207,6 +2228,8 @@ Corporate/financial/defense/healthcare identifiers can be added independently.
 - [ ] Dataset ↔ Polars, Pandas, DuckDB (SQL execution, parquet querying), NumPy where appropriate
 
 ### E24. Public API
+
+*Status: partial — real: `parse`, `normalize`, `validate`, `profile`, `inspect`, `get_freqs`, `date_ranges`, `anomaly_count`, `Dataset`, `Result`, credentials (`set_cred`/`get_cred`/`has_cred`/`list_creds`/`delete_cred`). Scaffolded (raise `NotImplementedError`): `fetch`, `ingest`, `read`, `sync`, `transform`, `resolve_entity/country/company`, `list_datasets`/`get_dataset`/`search_datasets`, `get_schema`/`register_schema`/`compare_schema`/`migrate`, `save`/`load`/`query`/`materialize`, `configure`/`get_config`.*
 
 ```python
 hr.fetch()            hr.ingest()           hr.read()             hr.sync()
@@ -2502,22 +2525,23 @@ provenance/lineage; (2) `resolve_company("AAPL").financials` returning a provena
 
 | Area | Checklist | Status |
 |---|---|---|
-| Core Dataset | E1 | ~35% (Dataset + load/inspect/profile/conversions real; save/export + tests pending) |
-| Acquisition | E2 | ~20% (cache done; client/retry/rate/pagination/sync pending) |
-| Parsing | E3 | ~15% (module skeleton + parsers exist; engine dispatch pending) |
-| Schemas / Contracts | E4 | ~10% (field/schema models; registry + engines pending) |
-| Normalization | E5 | ~10% |
-| Quality | E6 | ~10% (profile real in `api/data.py`; validation pending) |
-| Metadata | E7 | ~15% (InspectReport/MetaData real; extractor pending) |
-| Provenance / Lineage | E8/E9 | ~10% (models exist; capture pending) |
-| Entities | E10 | ~15% (countries/companies helpers real; registry/resolver/aliases pending) |
-| Dataset Catalog | E11 | ~10% |
-| Storage / Query / Export | E12–15 | ~10% (export/utils real; storage/query pending) |
-| Versioning / Migration | E16/E17 | ~10% (models exist) |
-| Public API + CLI | E20/E24 | ~5% (facade wired, bodies pending; CLI profile_data works) |
-| Connectors on engine | Phase 9 | ~30% (connectors work standalone; contract pending) |
+| Core Dataset | E1 | **DONE** — Dataset + load/inspect/profile/save/export/conversions + Result + error taxonomy real |
+| Acquisition | E2 | ~40% (`RawCache` + `Client` (retries/backoff/error mapping/streaming) real; pagination/sync/Source API pending) |
+| Parsing | E3 | **DONE** — engine + csv/json/jsonl/parquet/xml parsers real |
+| Schemas / Contracts | E4 | ~40% (Schema/FieldDef + 7 canonical schemas defined; registry + engines pending) |
+| Normalization | E5 | **DONE** — engine + 17 rules real |
+| Quality | E6 | ~60% (validate + 22 rules real; profile real; score model + check_* wrappers pending) |
+| Metadata | E7 | ~60% (MetaData/ColumnMetadata/QualityInfo/InspectReport + profile/inspect real; get_metadata wrapper pending) |
+| Provenance / Lineage | E8/E9 | ~25% (models + Dataset info methods real; automatic capture pending) |
+| Entities | E10 | ~30% (Entity/EntityMatch/Resolver + countries/get_cik real; registry + resolve API pending) |
+| Dataset Catalog | E11 | ~5% (stubs) |
+| Storage / Query / Export | E12–15 | ~25% (export/utils + Dataset.save/export real; storage backends/query stubs) |
+| Versioning / Migration | E16/E17 | ~10% (DataVersion model exists) |
+| Public API + CLI | E20/E24 | ~50% (data API real: parse/normalize/validate/profile/inspect/freqs/ranges/anomalies; credentials real; CLI profile_data + cred real; fetch/schema/storage wrappers stubs) |
+| Scheduler | — | **DONE** — cron/interval job scheduler in `hermes.core.scheduler` |
+| Connectors on engine | Phase 9 | ~40% (9 connectors work with shared cache/client; GDELT is a stub; contract pending) |
 | Provider layer | Phase 10 | ~5% (entities skeleton) |
-| Hardening / Testing / Docs | E25/E26/E28 | ~20% (tests pass; platform + docs pending) |
+| Hardening / Testing / Docs | E25/E26/E28 | ~35% (385 tests pass; docs being brought in line; platform hardening pending) |
 
 ---
 

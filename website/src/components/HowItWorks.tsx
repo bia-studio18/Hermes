@@ -146,59 +146,50 @@ export function HowItWorks() {
                 <span className="text-offwhite">hermes</span>{" "}
                 <span className="text-[#4aa89e]">as</span>{" "}
                 <span className="text-offwhite">hr</span>
-                {"\n\n"}
-                <span className="text-offwhite">data</span>{" "}
-                <span className="text-teal">=</span>{" "}
-                <span className="text-offwhite">hr</span>
-                <span className="text-gray">.</span>
-                <span className="text-teal">fetch</span>
-                <span className="text-gray">(</span>
-                {"\n    "}
-                <span className="text-gray">dataset=</span>
-                <span className="text-[#b3a1e6]">&quot;world_bank&quot;</span>
-                <span className="text-gray">,</span>
-                {"\n    "}
-                <span className="text-gray">indicators=</span>
-                <span className="text-gray">[</span>
-                <span className="text-[#b3a1e6]">&quot;GDP&quot;</span>
-                <span className="text-gray">,</span>{" "}
-                <span className="text-[#b3a1e6]">&quot;CPI&quot;</span>
-                <span className="text-gray">],</span>
-                {"\n    "}
-                <span className="text-gray">countries=</span>
-                <span className="text-gray">[</span>
-                <span className="text-[#b3a1e6]">&quot;US&quot;</span>
-                <span className="text-gray">,</span>{" "}
-                <span className="text-[#b3a1e6]">&quot;DE&quot;</span>
-                <span className="text-gray">,</span>{" "}
-                <span className="text-[#b3a1e6]">&quot;JP&quot;</span>
-                <span className="text-gray">],</span>
                 {"\n"}
-                <span className="text-gray">)</span>
+                <span className="text-[#4aa89e]">import</span>{" "}
+                <span className="text-offwhite">polars</span>{" "}
+                <span className="text-[#4aa89e]">as</span>{" "}
+                <span className="text-offwhite">pl</span>
                 {"\n\n"}
                 <span className="text-offwhite">df</span>{" "}
                 <span className="text-teal">=</span>{" "}
-                <span className="text-offwhite">hr</span>
+                <span className="text-offwhite">pl</span>
                 <span className="text-gray">.</span>
-                <span className="text-teal">normalize</span>
+                <span className="text-teal">read_csv</span>
                 <span className="text-gray">(</span>
-                <span className="text-offwhite">data</span>
+                <span className="text-[#b3a1e6]">&quot;gdp.csv&quot;</span>
                 <span className="text-gray">)</span>
-                {"\n"}
-                <span className="text-offwhite">df</span>{" "}
+                {"\n\n"}
+                <span className="text-orange">report</span>{" "}
                 <span className="text-teal">=</span>{" "}
                 <span className="text-offwhite">hr</span>
                 <span className="text-gray">.</span>
-                <span className="text-teal">validate</span>
+                <span className="text-teal">profile</span>
                 <span className="text-gray">(</span>
                 <span className="text-offwhite">df</span>
                 <span className="text-gray">)</span>
                 {"\n"}
-                <span className="text-offwhite">df</span>
+                <span className="text-offwhite">ds</span>{" "}
+                <span className="text-teal">=</span>{" "}
+                <span className="text-offwhite">hr</span>
                 <span className="text-gray">.</span>
-                <span className="text-teal">store</span>
+                <span className="text-teal">Dataset</span>
                 <span className="text-gray">(</span>
-                <span className="text-[#b3a1e6]">&quot;postgres://...&quot;</span>
+                <span className="text-[#b3a1e6]">name=&quot;gdp&quot;</span>
+                <span className="text-gray">,</span>{" "}
+                <span className="text-[#b3a1e6]">data_ref=&quot;gdp.csv&quot;</span>
+                <span className="text-gray">,</span>{" "}
+                <span className="text-[#b3a1e6]">data=df</span>
+                <span className="text-gray">)</span>
+                {"\n"}
+                <span className="text-offwhite">ds</span>
+                <span className="text-gray">.</span>
+                <span className="text-teal">save</span>
+                <span className="text-gray">(</span>
+                <span className="text-[#b3a1e6]">&quot;output&quot;</span>
+                <span className="text-gray">,</span>{" "}
+                <span className="text-[#b3a1e6]">format=&quot;parquet&quot;</span>
                 <span className="text-gray">)</span>
               </code>
             </pre>
