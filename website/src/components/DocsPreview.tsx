@@ -91,7 +91,7 @@ export function DocsPreview() {
                   $
                 </span>
                 <code className="whitespace-nowrap text-gray-bright">
-                  pip install hermes
+                  pip install hermes-plt
                 </code>
                 <span className="ml-auto h-2 w-2 shrink-0 rounded-full border border-teal" aria-hidden="true" />
               </div>

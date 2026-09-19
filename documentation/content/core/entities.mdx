@@ -4,22 +4,24 @@ title: Entities
 
 # Entities
 
-The entities module provides country and company resolution — mapping between ISO codes, ticker symbols, CIK numbers, and human-readable names.
+The entities module provides country and company resolution primitives — mapping between ISO codes, ticker symbols, CIK numbers, and human-readable names.
+
+> **Status:** helper functions (`countries`, `iso3_to_iso2`, `check_iso3`, `get_cik`) and the `Entity`/`EntityMatch` models are implemented. The top-level `hr.resolve_*` functions and `EntityRegistry` are **scaffolded and raise `NotImplementedError`**.
 
 ## Top-Level API
 
 ```python
 import hermes as hr
 
-# Resolve a country
-result = hr.resolve_country("USA")
-
-# Resolve a company
-result = hr.resolve_company("AAPL")
-
-# General entity resolution
+# General entity resolution -- dispatched by entity_type
 result = hr.resolve_entity("Apple Inc.", entity_type="company")
+
+# NOT IMPLEMENTED -- resolve_country/resolve_company raise NotImplementedError
+result = hr.resolve_country("USA")
+result = hr.resolve_company("AAPL")
 ```
+
+`hr.resolve_entity(query, entity_type)` routes to `resolve_company`/`resolve_country` when `entity_type` is `"company"`/`"country"` — both of which currently raise `NotImplementedError`. These are scheduled for implementation; the low-level helpers below already provide country/code and ticker→CIK lookup.
 
 ## Countries
 
@@ -30,8 +32,8 @@ A list of 249 ISO-3 country codes:
 ```python
 from hermes.entities.countries import countries
 
-print(len(countries))  # 249
-print(countries[:5])   # ['AFG', 'ALA', 'ALB', 'DZA', 'ASM']
+len(countries)      # 249
+countries[:5]       # ['AFG', 'ALA', 'ALB', 'DZA', 'ASM']
 ```
 
 ### `iso3_to_iso2(iso3_code) -> str`
@@ -46,7 +48,7 @@ iso3_to_iso2("GBR")  # -> "GB"
 iso3_to_iso2("JPN")  # -> "JP"
 ```
 
-Returns `"Not Found"` if the code is invalid.
+Returns `"Not Found"` for an invalid code.
 
 ### `check_iso3(code)`
 
@@ -56,7 +58,7 @@ Validate an ISO-3 code. Raises `RuntimeError` if invalid:
 from hermes.entities.countries import check_iso3
 
 check_iso3("USA")  # passes
-check_iso3("XYZ")  # raises RuntimeError("The XYZ is not iso3")
+check_iso3("XYZ")  # RuntimeError: The XYZ is not iso3
 ```
 
 ## Companies
@@ -68,12 +70,11 @@ Resolve a stock ticker to its SEC CIK number:
 ```python
 from hermes.entities.companies import get_cik
 
-get_cik("AAPL")  # -> "CIK0320193"
-get_cik("MSFT")  # -> "CIK0001045810"
-get_cik("ZZZZ") # -> "Not Found"
+get_cik("AAPL")   # -> "CIK0000320193"
+get_cik("ZZZZ")   # -> "Not Found"
 ```
 
-Uses the `sec-cik-mapper` library to map tickers to CIK numbers.
+Uses the `sec-cik-mapper` library to map tickers (case-insensitive) to CIK numbers.
 
 ## Entity Models
 
@@ -102,9 +103,25 @@ match = EntityMatch(entity=entity, score=0.95, match_type="exact")
 
 Used by resolvers to return ranked matches for entity queries.
 
+## Resolver
+
+Abstract base class for entity resolvers. Implement `resolve`, `identify`, and `match`:
+
+```python
+from hermes.entities import Resolver
+from hermes.entities.models import Entity, EntityMatch
+
+class MyResolver(Resolver):
+    def resolve(self, query: str) -> Entity | None: ...
+    def identify(self, data: object) -> object: ...
+    def match(self, query: str, threshold: float = 0.8) -> list[EntityMatch]: ...
+```
+
+`Resolver` cannot be instantiated directly — use a concrete subclass.
+
 ## EntityRegistry
 
-Registry for managing entity resolvers by type:
+NOT IMPLEMENTED — all methods raise `NotImplementedError`. The intended interface:
 
 ```python
 from hermes.entities import EntityRegistry
@@ -115,22 +132,3 @@ registry.get("company")                    # -> Resolver | None
 registry.resolve("AAPL", entity_type="company")
 registry.list_types()                      # -> list[str]
 ```
-
-## Resolver
-
-Abstract base class for entity resolvers. Implement `resolve`, `identify`, and `match`:
-
-```python
-from abc import ABC, abstractmethod
-from hermes.entities.models import Entity, EntityMatch
-
-class MyResolver(ABC):
-    @abstractmethod
-    def resolve(self, query: str) -> Entity | None: ...
-    @abstractmethod
-    def identify(self, data: object) -> object: ...
-    @abstractmethod
-    def match(self, query: str, threshold: float = 0.8) -> list[EntityMatch]: ...
-```
-
-`Resolver` cannot be instantiated directly — use a concrete subclass.

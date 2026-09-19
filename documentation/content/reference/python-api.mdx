@@ -66,7 +66,7 @@ result = hr.sync("world_bank", fetch_fn=my_fetch, interval="1h")
 
 ### `hr.profile(data=None, path=None, source=None) -> MetaData`
 
-Full statistical profile of a DataFrame or file.
+Full statistical profile of a DataFrame or file. When using `path`, the file must be CSV or Parquet.
 
 ```python
 metadata = hr.profile(df)
@@ -105,27 +105,38 @@ Count IQR-based anomalies per numeric column.
 anomalies = hr.anomaly_count(df, threshold=1.5)
 ```
 
-### `hr.parse(data, **kwargs) -> Result`
+### `hr.parse(data, format=None, **kwargs) -> Result`
 
- {/* TODO: verify against source — parse() raises NotImplementedError */}
+Parse a file, path, bytes, or string into a DataFrame. Format is auto-detected; see [Parsing](/core/parsing).
 
-### `hr.normalize(data, **kwargs) -> Result`
+```python
+result = hr.parse("data.csv")          # Result; .data is the pl.DataFrame
+result = hr.parse(path, format="json")
+```
 
- {/* TODO: verify against source — normalize() raises NotImplementedError */}
+### `hr.normalize(data, rules=None, report=False, context=None)`
 
-### `hr.validate_data(data, rules) -> ValidationReport`
+Run normalization rules over data; returns the same container type as the input. With `report=True`, returns a `NormalizationResult`. See [Normalization](/core/normalization).
 
-Run validation checks against a DataFrame.
+```python
+from hermes.normalization import NormalizeCountry
+
+out = hr.normalize(df, rules=[NormalizeCountry("country")])
+```
+
+### `hr.validate(data, rules=None, context=None) -> ValidationResult`
+
+Run validation rules against a DataFrame. See [Validation](/core/validation).
 
 ```python
 from hermes.validation import NotNull
 
-report = hr.validate_data(df, checks=[NotNull("country_code")])
+report = hr.validate(df, rules=[NotNull("country_code")])
 ```
 
 ### `hr.transform(data, fn=None, **kwargs) -> Result`
 
- {/* TODO: verify against source — transform() raises NotImplementedError */}
+NOT IMPLEMENTED — raises `NotImplementedError`.
 
 ## Datasets
 
@@ -138,92 +149,102 @@ ds = hr.Dataset(name="gdp", data_ref="gdp.csv", data=df)
 ```
 
 **Methods:**
-- `ds.load()` — Load data from `data_ref`
+- `ds.load()` — Load data from `data_ref` (CSV, JSON, JSONL, Parquet, XML, or `sqlite://`)
 - `ds.inspect()` — Quick inspection
 - `ds.profile()` — Full statistical profile
-- `ds.save(path, format)` — Write to disk
-- `ds.export(format)` — Export to bytes
+- `ds.save(path, format)` — Write to disk (parquet/csv/json)
+- `ds.export(format)` — Export to bytes (parquet/csv/json) or dataframe
 - `ds.to_polars()` — Convert to Polars DataFrame
 - `ds.to_arrow()` — Convert to PyArrow Table
 - `ds.to_pandas()` — Convert to Pandas DataFrame
-
-**Properties:**
-- `ds.metadata_info` — `MetaData`
-- `ds.provenance_info` — `Provenance`
-- `ds.lineage_info` — `Lineage`
-- `ds.schema_info` — `str | None`
+- `ds.metadata_info()` — `MetaData`
+- `ds.provenance_info()` — `Provenance`
+- `ds.lineage_info()` — `Lineage`
+- `ds.schema_info()` — `str | None` (raises if no schema set)
 
 ### `hr.list_datasets() -> Result`
 
- {/* TODO: verify against source — scaffolded */}
+NOT IMPLEMENTED — scaffolded.
 
 ### `hr.get_dataset(dataset_id) -> Result`
 
- {/* TODO: verify against source — scaffolded */}
+NOT IMPLEMENTED — scaffolded.
 
 ### `hr.search_datasets(query) -> Result`
 
- {/* TODO: verify against source — scaffolded */}
+NOT IMPLEMENTED — scaffolded.
 
 ## Entities
 
+### `hr.resolve_entity(query, entity_type=None)`
+
+Dispatch by `entity_type` to `resolve_company`/`resolve_country`, both of which are NOT IMPLEMENTED (raise `NotImplementedError`). Low-level helpers (`get_cik`, `iso3_to_iso2`, `check_iso3`) work — see [Entities](/core/entities).
+
 ### `hr.resolve_country(query) -> Result`
 
- {/* TODO: verify against source — scaffolded */}
+NOT IMPLEMENTED — raises `NotImplementedError`.
 
 ### `hr.resolve_company(query) -> Result`
 
- {/* TODO: verify against source — scaffolded */}
-
-### `hr.resolve_entity(query, entity_type=None) -> Result`
-
- {/* TODO: verify against source — scaffolded */}
+NOT IMPLEMENTED — raises `NotImplementedError`.
 
 ## Schemas
 
 ### `hr.get_schema(name, version=None) -> Result`
 
- {/* TODO: verify against source — scaffolded */}
+NOT IMPLEMENTED — scaffolded.
 
 ### `hr.register_schema(schema) -> Result`
 
- {/* TODO: verify against source — scaffolded */}
+NOT IMPLEMENTED — scaffolded.
 
 ### `hr.compare_schema(schema_a, schema_b) -> Result`
 
- {/* TODO: verify against source — scaffolded */}
+NOT IMPLEMENTED — scaffolded.
 
 ### `hr.migrate(data, from_schema, to_schema) -> Result`
 
- {/* TODO: verify against source — scaffolded */}
+NOT IMPLEMENTED — scaffolded.
 
 ## Storage
 
 ### `hr.save(data, path, format="parquet") -> Result`
 
- {/* TODO: verify against source — scaffolded */}
+NOT IMPLEMENTED — scaffolded. Use `Dataset.save()` instead.
 
 ### `hr.load(path) -> Result`
 
- {/* TODO: verify against source — scaffolded */}
+NOT IMPLEMENTED — scaffolded. Use `Dataset` + `Dataset.load()` instead.
 
 ### `hr.query(data, **kwargs) -> Result`
 
- {/* TODO: verify against source — scaffolded */}
+NOT IMPLEMENTED — scaffolded.
 
 ### `hr.materialize(data, target) -> Result`
 
- {/* TODO: verify against source — scaffolded */}
+NOT IMPLEMENTED — scaffolded.
 
 ## Configuration
 
 ### `hr.configure(api_keys=None, **settings) -> HermesConfig`
 
- {/* TODO: verify against source — configure() raises NotImplementedError */}
+NOT IMPLEMENTED — raises `NotImplementedError`.
 
 ### `hr.get_config() -> HermesConfig`
 
- {/* TODO: verify against source — get_config() raises NotImplementedError */}
+NOT IMPLEMENTED — raises `NotImplementedError`.
+
+## Credentials
+
+Credential storage is implemented and persisted to `~/.hermes-plt/credentials.json`:
+
+```python
+hr.set_cred("fred", "api_key_value")    # or: hermes cred set fred
+hr.get_cred("fred")                     # -> "api_key_value"
+hr.has_cred("fred")                     # -> True
+hr.list_creds()                         # -> ["fred"]
+hr.delete_cred("fred")
+```
 
 ## Error Hierarchy
 
@@ -262,6 +283,8 @@ result.is_failure()     # True if status=failure or errors present
 result.raise_if_failure()  # Raises RuntimeError if errors
 ```
 
+A `Result` is returned by `hr.parse()` and by the (scaffolded) fetch/ingest/read/sync wrappers.
+
 ### `MetaData`
 
 See [Metadata](/core/metadata) for full field reference.
@@ -269,19 +292,20 @@ See [Metadata](/core/metadata) for full field reference.
 ### `Provenance`
 
 ```python
-provenance = ds.provenance_info
+provenance = ds.provenance_info()
 provenance.source          # str: data source
 provenance.endpoint        # str | None: API endpoint
 provenance.retrieved_at    # datetime | None
 provenance.connector       # str | None: connector name
 provenance.connector_version  # str | None
 provenance.raw_checksum    # str | None
+provenance.parser_version / normalizer_version / schema_version  # str | None
 ```
 
 ### `Lineage`
 
 ```python
-lineage = ds.lineage_info
+lineage = ds.lineage_info()
 lineage.steps              # list[LineageStep]
 lineage.trace()            # -> list[LineageStep]
 lineage.last_operation()   # -> LineageStep | None
@@ -308,5 +332,5 @@ version = DataVersion(
     schema_hash="def456",
     parent_version="v0.0.1",
 )
-version.is_compatible(other_version)  # True if same schema_hash
+version.is_compatible(other_version)  # True if both have same schema_hash
 ```

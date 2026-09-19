@@ -4,15 +4,9 @@ title: Parsing
 
 # Parsing
 
-The parsing module converts raw data from various formats into structured intermediate records.
-
-<Callout type="warning">
-The parsing engine is scaffolded. The public API surface is defined but most methods raise `NotImplementedError`. This page documents the designed interface.
-</Callout>
+The parsing module converts raw data (files, bytes, strings) into a `polars.DataFrame`. It is fully implemented and powers both the engine and the top-level `hr.parse()`.
 
 ## ParserEngine
-
-The central parsing orchestrator.
 
 ```python
 from hermes.parsing import ParserEngine
@@ -20,73 +14,66 @@ from hermes.parsing import ParserEngine
 engine = ParserEngine()
 ```
 
-### Methods
+### `detect_format(source) -> str | None`
 
-#### `detect_format(source) -> str`
-
-Detect the format of the input data. Returns a format string.
+Detect the format of the input. Detection uses the file extension first (`.csv`, `.json`, `.jsonl`/`.ndjson`, `.parquet`, `.xml`), then falls back to content sniffing for string/bytes input (XML for `<`, JSON for `{`/`[`).
 
 ```python
-format = engine.detect_format("data.csv")  # -> "csv"
+engine.detect_format("data.csv")   # -> "csv"
+engine.detect_format("<root>")     # -> "xml"
+engine.detect_format('{"a": 1}')   # -> "json"
 ```
 
-#### `parse(raw_data, format=None) -> object`
+Returns `None` if the format cannot be determined.
 
-Parse raw data into structured records. Optionally specify the format explicitly.
+### `parse(raw_data, format=None, **kwargs) -> pl.DataFrame`
+
+Parse raw data into a `polars.DataFrame`. If `format` is omitted, it is detected automatically. Raises `ParseError` for unsupported or undetectable formats.
 
 ```python
-result = engine.parse(raw_data)
-result = engine.parse(raw_data, format="json")
+df = engine.parse("data.csv")
+df = engine.parse('{"a": 1}', format="json")
+df = engine.parse(b"\x89PARQUET...", format="parquet")
 ```
 
-#### `parse_csv(raw_data) -> object`
-#### `parse_json(raw_data) -> object`
-#### `parse_parquet(raw_data) -> object`
-#### `parse_xml(raw_data) -> object`
-
-Format-specific parsers.
+Supported formats: `csv`, `json`, `jsonl`, `parquet`, `xml`.
 
 ## Format Parsers
 
-Individual parsers for each supported format:
+Individual parsers are dispatched by the engine — you rarely need them directly. Each implements `parse(raw_data, **kwargs) -> pl.DataFrame`:
 
-| Parser | Class | Supported Formats |
-|--------|-------|-------------------|
-| `CSVParser` | `hermes.parsing.csv_parser` | CSV |
-| `JSONParser` | `hermes.parsing.json_parser` | JSON, JSONL |
-| `ParquetParser` | `hermes.parsing.parquet_parser` | Parquet |
-| `XMLParser` | `hermes.parsing.xml_parser` | XML |
+| Parser | Class | Formats |
+|--------|-------|---------|
+| CSV | `hermes.parsing.csv_parser.CSVParser` | CSV |
+| JSON | `hermes.parsing.json_parser.JSONParser` | JSON, JSONL |
+| Parquet | `hermes.parsing.parquet_parser.ParquetParser` | Parquet |
+| XML | `hermes.parsing.xml_parser.XMLParser` | XML |
 
-Each implements `parse(raw_data, **kwargs) -> object`.
-
-## IntermediateRecord
-
-The canonical intermediate representation produced by parsers:
+## Top-Level API
 
 ```python
-from hermes.parsing import IntermediateRecord
+import hermes as hr
 
-record = IntermediateRecord(
-    fields={"country": "US", "value": 2.5},
-    source_format="csv",
-    raw_values={"country": "US", "value": "2.5"},
-)
+result = hr.parse("data.csv")     # Result; .data is the DataFrame
+result = hr.parse(path, format="json")
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `fields` | `dict[str, object]` | Parsed field values |
-| `source_format` | `str` | Original format (csv, json, etc.) |
-| `raw_values` | `dict[str, object]` | Raw unparsed values |
+`hr.parse()` returns a `Result`: `.data` holds the parsed `polars.DataFrame` and `.statistics` includes row/column counts. On failure the `Result` has status `"failure"` and `errors` populated.
+
+The `Dataset.load()` method also routes through `ParserEngine`, so any supported file format works:
+
+```python
+ds = hr.Dataset(name="gdp", data_ref="gdp.csv")
+ds.load()  # reads the CSV into ds.data
+```
 
 ## Errors
 
 ```python
-from hermes.parsing.errors import ParseError, UnsupportedFormatError, MalformedRecordError
+from hermes.parsing import ParseError
+from hermes.core.errors import ParseError  # same class
 ```
 
 | Exception | Description |
 |-----------|-------------|
-| `ParseError` | Base parsing error |
-| `UnsupportedFormatError` | Source format not supported |
-| `MalformedRecordError` | Individual record is malformed |
+| `ParseError` | Unsupported or undetectable format; parser failure |

@@ -76,15 +76,17 @@ hermes profile_data gdp.csv
 | `hr.inspect(df)` | Fast glance: row/column counts and column types |
 | `hr.get_freqs`, `hr.date_ranges`, `hr.anomaly_count` | Frequency detection, temporal range detection, IQR anomaly counts |
 | `hr.Dataset` | The Hermes core object (see below) |
-| `Dataset.load()`, `.inspect()`, `.profile()` | Load from parquet/csv/json and analyze |
+| `Dataset.load()`, `.inspect()`, `.profile()` | Load from parquet/csv/json/jsonl/xml and analyze |
 | `Dataset.to_polars()/to_arrow()/to_pandas()` | Interchange with the Python data stack |
 | `Dataset.save()` / `.export()` | Persist (parquet/csv/json) or export to another system |
 | `Dataset.metadata_info/ provenance_info / lineage_info / schema_info` | The beginning of Hermes' provenance story |
-| `hr.configure / get_config` | Logging and configuration |
+| `hr.parse()` / `hr.normalize()` / `hr.validate()` | Parsing engine (csv/json/jsonl/parquet/xml) plus 17 normalization rules and 22 validation rules |
+| Credentials | `hr.set_cred()/get_cred()/has_cred()/list_creds()/delete_cred()` and the `hermes cred` CLI |
+| Scheduler | `@hermes.core.scheduler.schedule` cron/interval jobs |
 | Error taxonomy | `HermesError`, `ParseError`, `SchemaError`, `NormalizationError`, `ValidationError`, `StorageError`, `QueryError`, `AcquisitionError` and more |
-| CLI | `hermes version`, `hermes info`, `hermes profile_data <path>` |
-| Connectors (10, experimental) | Binance, Finnhub, FRED, IMF, SEC EDGAR, World Bank, YFinance, OpenSanctions, GDELT, public datasets — currently internal, being ported onto the engine (see roadmap) |
-| Tests | 200+ unit tests covering connectors, scheduler, features, and the data API |
+| CLI | `hermes version`, `hermes info`, `hermes profile_data <path>`, `hermes cred ...` |
+| Connectors (10, experimental) | Binance, Finnhub, FRED, IMF, SEC EDGAR, World Bank, YFinance, OpenSanctions, GDELT (stub), public datasets — currently internal, being ported onto the engine (see roadmap) |
+| Tests | 385 unit tests covering connectors, scheduler, features, parsing, normalization, validation, and the data API |
 
 ### The Dataset object
 
@@ -94,9 +96,9 @@ never just a file — it is a file **plus its story**:
 ```python
 ds = hr.Dataset(name="gdp", data_ref="gs/imports-1985-2024.csv", data=df)
 ds.profile()
-ds.schema_info  # schema reference
-ds.lineage_info  # steps that produced the data
-ds.provenance_info  # where the data came from
+ds.schema_info()  # schema reference
+ds.lineage_info()  # steps that produced the data
+ds.provenance_info()  # where the data came from
 ```
 
 Over the coming releases, provenance, lineage, validation and versioning will be captured

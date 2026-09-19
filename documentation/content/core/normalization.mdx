@@ -4,92 +4,121 @@ title: Normalization
 
 # Normalization
 
-The normalization module converts parsed data into a consistent, canonical representation with standardized types, units, and naming conventions.
-
-<Callout type="warning">
-The normalization engine is scaffolded. The public API surface is defined but most methods raise `NotImplementedError`. This page documents the designed interface.
-</Callout>
+The normalization module converts data into a consistent, canonical representation by running a pipeline of rules: type casting, string cleanup, null handling, date parsing, country/currency/unit standardization, unit conversion, and more. Every rule produces a `polars.DataFrame` from a `polars.DataFrame`; rules never mutate the input.
 
 ## NormalizationEngine
 
 ```python
-from hermes.normalization import NormalizationEngine
+from hermes.normalization import NormalizationEngine, NormalizeDate, Cast
 
-engine = NormalizationEngine()
+engine = NormalizationEngine(
+    rules=[
+        Cast({"value": "float", "year": "int"}),
+        NormalizeDate("date"),
+    ]
+)
 ```
 
 ### Methods
 
-#### `normalize(data, mappings=None) -> object`
-
-Apply field mappings to normalize column names and types.
-
-```python
-result = engine.normalize(data, mappings=[...])
-```
-
-#### `apply_rules(data, rules) -> object`
-
-Apply a list of normalization rules to the data.
-
-```python
-result = engine.apply_rules(data, rules=[...])
-```
-
-#### `cast_types(data, schema) -> object`
-
-Cast columns to match a target schema.
+| Method | Description |
+|--------|-------------|
+| `normalize(data, context=None)` | Run all rules; returns the same container type as the input (DataFrame → DataFrame, LazyFrame → LazyFrame, pyarrow → pyarrow, dict → dict, list of dicts → list of dicts) |
+| `normalize_report(data, context=None)` | Run and return a `NormalizationResult` with per-rule changes and errors |
+| `normalize_record(record, context=None)` | Normalize a single `dict` |
+| `normalize_stream(records, context=None)` | Lazily normalize an iterable of `dict`s |
+| `add_rule(rule)` / `add_rules(rules)` | Register rule(s) (validates configuration) |
+| `remove_rule(rule \| name)` / `clear_rules()` | Remove rule(s) |
+| `rules` | Property: configured rules |
+| `describe()` | Rule metadata as dicts |
 
 ```python
-result = engine.cast_types(data, schema=target_schema)
+import polars as pl
+
+df = pl.DataFrame({"value": ["1.5", "2.5"], "date": ["2024-01-01", "2024-02-01"]})
+
+out = engine.normalize(df)
+print(out.schema)  # value: Float64, date: Date
+
+report = engine.normalize_report(df)
+print(report.success, report.changes)
 ```
 
-## FieldMapping
-
-Defines how a source field maps to a target field:
+## Top-Level API
 
 ```python
-from hermes.normalization import FieldMapping
+import hermes as hr
 
-mapping = FieldMapping(
-    source_field="gdp_growth",
-    target_field="gdp_growth_yoy",
-    transform=None,      # optional callable
-    dtype="float",       # optional target type
-    default=None,        # default value if missing
-)
+out = hr.normalize(df, rules=[NormalizeCountry("country")])
+
+report = hr.normalize(df, rules=[...], report=True)  # -> NormalizationResult
 ```
+
+## Built-in Rules
+
+All rules are exported from `hermes.normalization`. Each implements `apply(data: pl.DataFrame, context) -> pl.DataFrame` and raises `RuleConfigurationError` if misconfigured.
+
+### Renaming and casting
+
+| Rule | Constructor | Description |
+|------|-------------|-------------|
+| `Rename` | `Rename({"old": "new"})` | Rename columns |
+| `Cast` | `Cast("col", "float")` or `Cast({"a": "float", "b": "int"})` | Cast column types; `strict=True` fails on uncastable values |
+
+### Strings, nulls, booleans
+
+| Rule | Constructor | Description |
+|------|-------------|-------------|
+| `NormalizeString` | `NormalizeString("name", case="lower", strip=True, ...)` | Trim, case-fold, and collapse whitespace |
+| `NormalizeNull` | `NormalizeNull(fields=None, null_values=("", "NA", ...))` | Convert sentinel values to null |
+| `NormalizeBoolean` | `NormalizeBoolean("flag", true_values=..., false_values=...)` | Map strings to booleans |
+| `StripCharacters` | `StripCharacters("col", "-_")` | Remove characters from a string column |
+| `Round` | `Round("value", precision=2)` | Round numeric columns |
+
+### Dates and periods
+
+| Rule | Constructor | Description |
+|------|-------------|-------------|
+| `NormalizeDate` | `NormalizeDate("date", formats=None, errors="null")` | Parse dates to a `Date` column from supported formats |
+| `ParsePeriod` | `ParsePeriod("period")` | Parse fiscal/period strings (e.g. `"Q1 2024"`) |
+
+### Geographic, currency, units
+
+| Rule | Constructor | Description |
+|------|-------------|-------------|
+| `NormalizeCountry` | `NormalizeCountry("country", extra_aliases=None)` | Normalize country codes/names |
+| `NormalizeCurrency` | `NormalizeCurrency("currency", extra_aliases=None)` | Normalize currency codes |
+| `NormalizeUnit` | `NormalizeUnit("unit", extra_aliases=None)` | Normalize unit strings |
+| `ConvertUnit` | `ConvertUnit("col", from_unit="km", to_unit="m")` | Convert between units |
+
+### Identifiers and values
+
+| Rule | Constructor | Description |
+|------|-------------|-------------|
+| `NormalizeIdentifier` | `NormalizeIdentifier("id", ...)` | Normalize identifier formats |
+| `NormalizeName` | `NormalizeName("name", ...)` | Normalize person/company names |
+| `MapValue` | `MapValue("col", {"US": "USA"}, case_insensitive=False)` | Remap column values |
+| `MapConcept` | `MapConcept("col", concept_mapping)` | Remap values based on a concept table (subclass of `MapValue`) |
+
+## NormalizationResult
+
+Returned by `normalize_report()`:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `source_field` | `str` | Name in the source data |
-| `target_field` | `str` | Name in the normalized output |
-| `transform` | `Callable \| None` | Optional transformation function |
-| `dtype` | `str \| None` | Target data type |
-| `default` | `object` | Default value when source is missing |
-
-## Normalization Rules
-
-Built-in rule classes for common normalization patterns:
-
-| Rule | Description |
-|------|-------------|
-| `DateNormalizationRule` | Standardize date formats to ISO 8601 |
-| `NumericNormalizationRule` | Cast and validate numeric columns |
-| `CountryCodeRule` | Normalize country codes (ISO-2/ISO-3) |
-| `StringCleanupRule` | Strip whitespace, normalize case |
-| `NullNormalizationRule` | Handle missing values |
-| `TimezoneNormalizationRule` | Normalize timezone-aware timestamps |
-
-Each rule implements `apply(data) -> data`.
+| `data` | `Any \| None` | The normalized data (or `None` on failure) |
+| `success` | `bool` | Whether all rules ran without error |
+| `rules` | `list[str]` | Rule names executed |
+| `changes` | `int` | Number of cells changed |
+| `errors` / `warnings` | `list[str]` | Diagnostic messages |
 
 ## Errors
 
 ```python
-from hermes.normalization.errors import NormalizationError, ConversionError
+from hermes.normalization import (
+    NormalizationError,     # base error
+    RuleConfigurationError, # a rule is misconfigured
+    RuleExecutionError,     # a rule failed while running
+    TransformationError,    # a cast/transform failed
+)
 ```
-
-| Exception | Description |
-|-----------|-------------|
-| `NormalizationError` | Base normalization error |
-| `ConversionError` | Type conversion failed |

@@ -8,36 +8,44 @@ Hermes configuration covers API keys, cache settings, and runtime options.
 
 ## Environment Variables
 
-Create a `.env` file in your project root:
+Create a `.env` file in your project root to record your API keys:
 
 ```bash
-# OpenSanctions
-OPEN_SANCTIONS_API=your_api_key
-
-# NewsData
-NEWS_DATA_API=your_api_key
-
 # FRED (Federal Reserve Economic Data)
 FRED_API=your_api_key
 
 # Finnhub (financial data)
 FINNHUB_API=your_api_key
 
+# OpenSanctions
+OPEN_SANCTIONS_API=your_api_key
+
 # SEC EDGAR (User-Agent identification)
 SEC_USERNAME=Your Name
 SEC_EMAIL=your@email.com
+```
+
+These are the documented convention (see `.env.example`). Hermes does not auto-load `.env` files yet — connectors take keys explicitly as constructor arguments:
+
+```python
+from hermes.connectors import FRED, FINNHUB, OpenSanction, SECEDGAR
+
+fred = FRED(api="your_key")
+finnhub = FINNHUB(api="your_key")
+sanctions = OpenSanction(api_key="your_key")
+sec = SECEDGAR(username="Your Name", email="your@email.com")
 ```
 
 ### Required Variables
 
 | Variable | Connector | Description |
 |----------|-----------|-------------|
-| `OPEN_SANCTIONS_API` | OpenSanctions | API key from [opensanctions.org](https://opensanctions.org) |
-| `NEWS_DATA_API` | Reserved (newsdata) | Not yet wired to a connector |
 | `FRED_API` | FRED | API key from [fred.stlouisfed.org](https://fred.stlouisfed.org) |
 | `FINNHUB_API` | Finnhub | API key from [finnhub.io](https://finnhub.io) |
+| `OPEN_SANCTIONS_API` | OpenSanctions | API key from [opensanctions.org](https://opensanctions.org) |
 | `SEC_USERNAME` | SEC EDGAR | Your name for User-Agent header |
 | `SEC_EMAIL` | SEC EDGAR | Your email for User-Agent header |
+| `NEWS_DATA_API` | Reserved (newsdata) | Not yet wired to a connector |
 
 ### Connectors Without API Keys
 

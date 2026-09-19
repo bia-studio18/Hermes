@@ -1,6 +1,21 @@
-class NormalizationError(Exception):
-    """Failed to normalize data."""
+from hermes.core.errors import NormalizationError
 
 
-class ConversionError(NormalizationError):
-    """Type conversion failed."""
+class RuleConfigurationError(NormalizationError):
+    pass
+
+
+class RuleExecutionError(NormalizationError):
+    pass
+
+
+class TransformationError(RuleExecutionError):
+    pass
+
+
+__all__ = [
+    "NormalizationError",
+    "RuleConfigurationError",
+    "RuleExecutionError",
+    "TransformationError",
+]

@@ -1,6 +1,6 @@
 [project]
 name = "hermes-plt"
-version = "0.2.16"
+version = "0.2.17"
 description = "Foundational intelligence data platform for acquiring, validating, normalizing, storing, and serving intelligence datasets"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -23,9 +23,9 @@ dependencies = [
     "pyarrow>=25.0.0",
     "pydantic",
     "pycountry>=24.6.1",
-    "sec-cik-mapper>=1.1.23",
     "yfinance>=1.6.0",
     "typer>=0.27.2",
+    "sec-cik-mapper>=2.1.0",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -55,6 +55,7 @@ dev = [
     "pytest-cov>=7.1.0",
     "ruff>=0.16.0",
     "nest-asyncio>=1.6.0",
+    "ipykernel>=7.3.0",
 ]
 
 [tool.pytest.ini_options]
@@ -77,6 +78,7 @@ ignore = ["S101", "N801", "N805", "N806", "N818", "E701", "E402"]
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101", "E501", "N802", "N806", "F841", "F401"]
 "hermes/features/country_risk_features/*" = ["E501", "N801", "N805", "N806", "E731"]
+"hermes/parsing/xml_parser.py" = ["S314"]
 
 [tool.ruff.format]
 quote-style = "double"

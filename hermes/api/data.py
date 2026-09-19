@@ -9,22 +9,45 @@ import polars.selectors as cs
 from hermes.core.errors import HermesError
 from hermes.core.metadata import ColumnMetadata, InspectReport, MetaData, QualityInfo
 from hermes.core.result import Result
+from hermes.normalization.context import NormalizationContext
+from hermes.normalization.engine import NormalizationEngine
+from hermes.normalization.rule import NormalizationRule
+from hermes.parsing.engine import ParserEngine
 from hermes.validation.engine import validate
-from hermes.validation.reports import ValidationReport
+from hermes.validation.result import ValidationResult
 
 logger = logging.getLogger(__name__)
 
 
-def parse(data: object, **kwargs: object) -> Result:
-    raise NotImplementedError()
+def parse(data: object, format: str | None = None, **kwargs: object) -> Result:
+    try:
+        df = ParserEngine().parse(data, format=format, **kwargs)
+        return Result(
+            status="success",
+            data=df,
+            statistics={"rows": df.height, "columns": df.width},
+        )
+    except HermesError as exc:
+        result = Result(status="failure", data=None)
+        result.add_error(exc)
+        return result
 
 
-def normalize(data: object, **kwargs: object) -> Result:
-    raise NotImplementedError()
+def normalize(
+    data: object,
+    rules: list[NormalizationRule] | None = None,
+    report: bool = False,
+    context: NormalizationContext | None = None,
+) -> object:
+
+    engine = NormalizationEngine(rules=rules or [], context=context)
+    if report:
+        return engine.normalize_report(data)
+    return engine.normalize(data)
 
 
-def validate_data(data: pl.DataFrame, rules: list) -> ValidationReport:
-    return validate(data=data, checks=rules)
+def validate_data(data: object, rules: list | None = None) -> ValidationResult:
+    return validate(data=data, rules=rules)
 
 
 def transform(data: object, fn: object | None = None, **kwargs: object) -> Result:

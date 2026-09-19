@@ -1,3 +1,7 @@
+import re
+
+import polars as pl
+
 SYMBOLS = [
     "BTCUSDT",
     "ETHUSDT",
@@ -141,3 +145,143 @@ YFINANCE_MAX_PERIOD = {
 }
 
 SUPPORTED_STOCK_FREQS = ["1m", "5m", "15m", "30m", "1h", "1d", "1w", "1M"]
+_COUNTRY_COMMON_ALIASES: dict[str, str] = {
+    "united states": "US",
+    "united states of america": "US",
+    "usa": "US",
+    "u.s.": "US",
+    "us": "US",
+    "u.s.a.": "US",
+    "united kingdom": "GB",
+    "great britain": "GB",
+    "uk": "GB",
+    "gb": "GB",
+    "uae": "AE",
+    "united arab emirates": "AE",
+    "saudi arabia": "SA",
+    "korea": "KR",
+    "south korea": "KR",
+    "rep. of korea": "KR",
+    "russia": "RU",
+    "federation of russia": "RU",
+}
+_CURRENCY_ALIASES: dict[str, str] = {
+    "$": "USD",
+    "us$": "USD",
+    "usd": "USD",
+    "us dollar": "USD",
+    "dollar": "USD",
+    "dollars": "USD",
+    "€": "EUR",
+    "eur": "EUR",
+    "euro": "EUR",
+    "euros": "EUR",
+    "£": "GBP",
+    "gbp": "GBP",
+    "pound": "GBP",
+    "pounds": "GBP",
+    "¥": "JPY",
+    "jpy": "JPY",
+    "yen": "JPY",
+    "₹": "INR",
+    "inr": "INR",
+    "rupee": "INR",
+    "rupees": "INR",
+    "rs": "PKR",
+    "pkr": "PKR",
+    "pakistani rupee": "PKR",
+    "cny": "CNY",
+    "rmb": "CNY",
+    "chf": "CHF",
+    "aed": "AED",
+    "sar": "SAR",
+}
+
+_UNIT_SYMBOLS: dict[str, str] = {
+    "kg": "kg",
+    "kilogram": "kg",
+    "kilograms": "kg",
+    "g": "g",
+    "gram": "g",
+    "grams": "g",
+    "mg": "mg",
+    "milligram": "mg",
+    "milligrams": "mg",
+    "t": "t",
+    "ton": "t",
+    "tonne": "t",
+    "tonnes": "t",
+    "metric ton": "t",
+    "m": "m",
+    "meter": "m",
+    "metre": "m",
+    "meters": "m",
+    "metres": "m",
+    "cm": "cm",
+    "centimeter": "cm",
+    "centimetre": "cm",
+    "centimeters": "cm",
+    "mm": "mm",
+    "millimeter": "mm",
+    "millimetre": "mm",
+    "km": "km",
+    "kilometer": "km",
+    "kilometre": "km",
+    "l": "L",
+    "liter": "L",
+    "litre": "L",
+    "liters": "L",
+    "litres": "L",
+    "ml": "mL",
+    "milliliter": "mL",
+    "millilitre": "mL",
+    "%": "%",
+    "percent": "%",
+    "pct": "%",
+}
+
+_UNIT_FACTORS: dict[str, float] = {
+    "kg": 1.0,
+    "g": 1e-3,
+    "mg": 1e-6,
+    "t": 1e3,
+    "m": 1.0,
+    "cm": 1e-2,
+    "mm": 1e-3,
+    "km": 1e3,
+    "L": 1.0,
+    "mL": 1e-3,
+}
+
+_CAST_TYPES = {
+    "string": pl.String,
+    "integer": pl.Int64,
+    "int": pl.Int64,
+    "float": pl.Float64,
+    "double": pl.Float64,
+    "boolean": pl.Boolean,
+    "bool": pl.Boolean,
+    "date": pl.Date,
+    "datetime": pl.Datetime,
+}
+
+_DEFAULT_NULL_VALUES = ("", " ", "NULL", "null", "N/A", "NA", "None", "NaN", "nan")
+_DEFAULT_TRUE = ("true", "t", "yes", "y", "1", "1.0")
+_DEFAULT_FALSE = ("false", "f", "no", "n", "0", "0.0")
+
+_DEFAULT_DATE_FORMATS = (
+    "%Y-%m-%d",
+    "%m/%d/%Y",
+    "%d/%m/%Y",
+    "%Y.%m.%d",
+    "%Y-%m-%dT%H:%M:%S",
+    "%Y-%m-%d %H:%M:%S",
+    "%B %d, %Y",
+    "%b %d, %Y",
+    "%d %B %Y",
+)
+
+_PERIOD_RE = re.compile(
+    r"^\s*(?:(FY|FQ|Q)\s*)?(\d{4})\s*(?:-\s*)?(?:Q\s*)?([1-4])?\s*$|^\s*(FY|FQ|Q)\s*([1-4])\s+(\d{4})\s*$",
+    re.IGNORECASE,
+)
