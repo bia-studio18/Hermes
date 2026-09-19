@@ -16,10 +16,8 @@ const fadeUp = {
 export function Hero() {
   return (
     <section className="relative overflow-hidden">
-      {/* Decorative texture */}
       <div className="absolute inset-0" aria-hidden="true">
         <MapTexture />
-        {/* Faint grid lines */}
         <div
           className="absolute inset-0 opacity-[0.35]"
           style={{
