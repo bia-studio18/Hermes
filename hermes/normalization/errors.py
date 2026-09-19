@@ -2,15 +2,15 @@ from hermes.core.errors import NormalizationError
 
 
 class RuleConfigurationError(NormalizationError):
-    """A rule is configured incorrectly (e.g. unknown cast target type)."""
+    pass
 
 
 class RuleExecutionError(NormalizationError):
-    """A rule failed while applying to data (e.g. a target column is missing)."""
+    pass
 
 
 class TransformationError(RuleExecutionError):
-    """A value-level conversion failed during rule execution."""
+    pass
 
 
 __all__ = [

@@ -1,15 +1,7 @@
-"""Optional runtime context passed to validation rules during execution."""
-
 from typing import Any
 
 
 class ValidationContext:
-    """Carries optional runtime information (e.g. ``now`` for freshness checks).
-
-    Rules read from the context via :meth:`get` / :meth:`require`; it is
-    entirely optional and never mutated by rules.
-    """
-
     def __init__(self, **values: Any) -> None:
         self._values: dict[str, Any] = dict(values)
 

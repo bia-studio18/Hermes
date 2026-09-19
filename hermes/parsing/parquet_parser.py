@@ -1,4 +1,5 @@
 import io
+from typing import Any, cast
 
 import polars as pl
 
@@ -11,7 +12,7 @@ class ParquetParser:
             src = raw_data
             if isinstance(src, (bytes, bytearray)):
                 src = io.BytesIO(src)
-            return pl.read_parquet(src, **kwargs)  # type: ignore[arg-type]
+            return pl.read_parquet(cast(Any, src), **cast(Any, kwargs))
         except ParseError:
             raise
         except Exception as exc:

@@ -17,8 +17,7 @@ class XMLParser:
             else:
                 content = str(raw_data)
 
-            # ponytail: stdlib ET, expand-entity firmware not guarded; swap to defusedxml if untrusted input
-            root = ET.fromstring(content)  # noqa: S314
+            root = ET.fromstring(content)
             children = list(root)
             if children and all(len(child) == 0 for child in children):
                 records = [root]

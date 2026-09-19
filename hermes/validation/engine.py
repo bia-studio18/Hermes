@@ -1,9 +1,3 @@
-"""Validation engine: runs a pipeline of rules against the same data.
-
-Every rule inspects the same original input; rules never feed results to each
-other and never modify the data.
-"""
-
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
@@ -13,7 +7,7 @@ import polars as pl
 
 try:
     import pyarrow as pa
-except ImportError:  # pragma: no cover - optional backend
+except ImportError:
     pa = None
 
 from hermes.validation.context import ValidationContext
@@ -70,7 +64,7 @@ class ValidationEngine:
             except ValidationError as exc:
                 errors.append(f"{rule.name}: {exc}")
                 continue
-            except Exception as exc:  # unexpected failure is still an engine error
+            except Exception as exc:
                 errors.append(f"{rule.name}: {exc}")
                 continue
             results.append(result)
@@ -90,7 +84,7 @@ class ValidationEngine:
         if isinstance(data, pl.LazyFrame):
             return data.collect()
         if pa is not None and isinstance(data, pa.Table):
-            return pl.DataFrame(pl.from_arrow(data))  # type: ignore[arg-type]
+            return pl.DataFrame(pl.from_arrow(data))
         if isinstance(data, Mapping):
             return pl.DataFrame([dict(data)])
         if isinstance(data, (list, tuple)):
@@ -106,7 +100,7 @@ def validate(
     rules: list[ValidationRule] | None = None,
     context: ValidationContext | None = None,
 ) -> ValidationResult:
-    """Run a list of rules against *data* and return the aggregate result."""
+
     return ValidationEngine(rules=rules or [], context=context).validate(data, context)
 
 

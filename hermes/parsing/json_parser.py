@@ -1,5 +1,6 @@
 import io
 from pathlib import Path
+from typing import Any, cast
 
 import polars as pl
 
@@ -15,8 +16,8 @@ class JSONParser:
             elif isinstance(src, str) and ("\n" in src or src.lstrip().startswith(("{", "["))):
                 src = io.BytesIO(src.encode())
             if self._is_jsonl(src):
-                return pl.read_ndjson(src, **kwargs)  # type: ignore[arg-type]
-            return pl.read_json(src, **kwargs)  # type: ignore[arg-type]
+                return pl.read_ndjson(cast(Any, src), **cast(Any, kwargs))
+            return pl.read_json(cast(Any, src), **cast(Any, kwargs))
         except ParseError:
             raise
         except Exception as exc:
@@ -32,5 +33,5 @@ class JSONParser:
             source = bytes(source).decode(errors="replace")
         text = str(source).lstrip()
         lines = [line for line in text.splitlines() if line.strip()]
-        # ponytail: naive one-object-per-line detection, multi-line jsonl records will misdetect
+
         return len(lines) > 1 and all(line.lstrip().startswith("{") for line in lines)

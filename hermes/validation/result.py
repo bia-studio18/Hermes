@@ -1,17 +1,9 @@
-"""Validation result dataclasses.
-
-The canonical representation is a Python dataclass; ``to_dict()`` produces a
-JSON-serializable view where practical.
-"""
-
 from dataclasses import dataclass, field
 from typing import Any
 
 
 @dataclass(slots=True)
 class Violation:
-    """A single offending value found by a rule."""
-
     field: str
     row: int | None = None
     value: Any = None
@@ -30,8 +22,6 @@ class Violation:
 
 @dataclass(slots=True)
 class RuleResult:
-    """Outcome of a single rule."""
-
     rule: str
     passed: bool
     statistics: dict[str, Any] = field(default_factory=dict)
@@ -55,12 +45,6 @@ class RuleResult:
 
 @dataclass(slots=True)
 class ValidationResult:
-    """Aggregate outcome of a validation run.
-
-    ``success`` means the validation process itself completed without engine
-    errors. ``passed`` means every rule passed and there were no engine errors.
-    """
-
     success: bool = True
     passed: bool = True
     results: list[RuleResult] = field(default_factory=list)

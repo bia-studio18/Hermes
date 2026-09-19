@@ -10,10 +10,10 @@ from hermes.api.data import (
     transform,
     validate,
 )
-from hermes.api.datasets import get_dataset, list_datasets, search_datasets
+from hermes.api.datasets import get_dataset, search_datasets
 from hermes.api.entities import resolve_company, resolve_country, resolve_entity
 from hermes.api.schemas import compare_schema, get_schema, migrate, register_schema
-from hermes.api.storage import load, materialize, query, save
+from hermes.api.storage import delete, exists, list_datasets, load, save, storage_info
 from hermes.core.config import configure, get_config
 from hermes.core.dataset import Dataset
 from hermes.core.errors import (
@@ -57,7 +57,6 @@ __all__ = [
     "anomaly_count",
     # Datasets
     "Dataset",
-    "list_datasets",
     "get_dataset",
     "search_datasets",
     # Entities
@@ -72,8 +71,10 @@ __all__ = [
     # Storage
     "save",
     "load",
-    "query",
-    "materialize",
+    "exists",
+    "delete",
+    "list_datasets",
+    "storage_info",
     # Config
     "configure",
     "get_config",
