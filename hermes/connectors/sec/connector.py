@@ -8,15 +8,16 @@ from hermes.acquisition.cache import RawCache
 from hermes.connectors.base import BaseConnector
 from hermes.core.errors import AcquisitionError
 from hermes.entities.companies import get_cik
+from hermes.credentials.manager import get_cred
 
 logger = logging.getLogger(__name__)
 
 
 class SECEDGAR(BaseConnector):
-    def __init__(self, username: str, email: str, cache: RawCache | None = None):
+    def __init__(self, cache: RawCache | None = None):
         super().__init__(cache)
-        self._email = email
-        self._username = username
+        self._email = get_cred('sec_email')
+        self._username = get_cred('sec_username')
         self._url = "https://data.sec.gov/api/xbrl/companyfacts"
 
     async def _fetch(self, symbol: str, retries: int = 3, timeout: float = 30.0):
