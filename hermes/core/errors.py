@@ -5,6 +5,10 @@ class HermesError(Exception):
 class AcquisitionError(HermesError):
     """Failed to acquire data from source."""
 
+    def __init__(self, message: str = "", status_code: int | None = None) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+
 
 class ServerError(AcquisitionError):
     """The remote server returned a 5xx error (retryable)."""
@@ -56,3 +60,7 @@ class ConnectorNotFoundError(HermesError):
 
 class AuthenticationError(HermesError):
     """Missing or invalid credentials."""
+
+    def __init__(self, message: str = "", status_code: int | None = None) -> None:
+        super().__init__(message)
+        self.status_code = status_code

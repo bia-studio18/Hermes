@@ -1,51 +1,42 @@
-import asyncio
 import logging
 from datetime import timedelta
 from functools import partial
 
-import aiohttp
 import polars as pl
 
 from hermes.acquisition.cache import RawCache
+from hermes.connectors.base import BaseConnector
 from hermes.connectors.fred.parser import observations_to_dataframe
+from hermes.core.errors import AcquisitionError
+from hermes.normalization import NormalizeDate
+from hermes.validation import NotNull
 
 logger = logging.getLogger(__name__)
 
 
-class FRED:
+class FRED(BaseConnector):
     def __init__(self, api: str, cache: RawCache | None = None):
-        self._cache = cache or RawCache()
+        super().__init__(cache)
         self._url = "https://api.stlouisfed.org/fred/series/observations"
         self._api = api
 
     async def _fetch(self, series_id: str, timeout: float = 30.0, retries: int = 3) -> pl.DataFrame:
         params = {"series_id": series_id, "api_key": self._api, "file_type": "json"}
 
-        r = None
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as client:
-            for attempt in range(retries):
-                try:
-                    resp = await client.get(url=self._url, params=params)
-                    resp.raise_for_status()
-                    r = await resp.json()
-                    break
-                except TimeoutError:
-                    if attempt == retries - 1:
-                        raise
-                    await asyncio.sleep(2**attempt)
-                except aiohttp.ClientResponseError as e:
-                    if e.status == 404:
-                        logger.warning("404")
-                        return r
-                    logger.error(f"HTTP error: {e.status}")
-                    raise
+        try:
+            r = await self._get_json(self._url, params=params, timeout=timeout, retries=retries)
+        except AcquisitionError as e:
+            if self._not_found(e):
+                logger.warning("404: series_id=%s", series_id)
+                return None
+            raise
 
         return observations_to_dataframe(r, series_id)
 
     async def fetch(self, series_id: str, timeout: float = 30.0, retries: int = 3, force: bool = False) -> pl.DataFrame:
         cached_params = {"series_id": series_id}
 
-        return await self._cache.get_or_fetch(
+        df = await self._cache.get_or_fetch(
             source="fred",
             params=cached_params,
             fetch_fn=partial(
@@ -57,3 +48,8 @@ class FRED:
             force=force,
             ttl=timedelta(days=30),
         )
+        if df is None:
+            return df
+        df = self._normalize(df, [NormalizeDate("date")])
+        self._validate(df, [NotNull("date"), NotNull("value")], "fred")
+        return df

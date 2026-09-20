@@ -1,22 +1,33 @@
-import asyncio
 import logging
 from datetime import timedelta
 from functools import partial
 
-import aiohttp
 import polars as pl
 
 from hermes.acquisition.cache import RawCache
+from hermes.connectors.base import BaseConnector
 from hermes.connectors.world_bank.mappings import WORLD_BANK_BASE_URL
 from hermes.connectors.world_bank.parser import records_to_dataframe
+from hermes.core.errors import AcquisitionError
+from hermes.normalization import NormalizeCountry, NormalizeDate
+from hermes.validation import NotNull
 
 logger = logging.getLogger(__name__)
 
+_EMPTY_SCHEMA = {
+    "date": pl.String,
+    "indicator_id": pl.String,
+    "indicator_name": pl.String,
+    "country": pl.String,
+    "value": pl.String,
+    "source": pl.String,
+}
 
-class World_bank:
+
+class World_bank(BaseConnector):
     def __init__(self, cache: RawCache | None = None):
+        super().__init__(cache)
         self.url = WORLD_BANK_BASE_URL
-        self._cache = cache or RawCache()
 
     async def _fetch(
         self,
@@ -39,33 +50,15 @@ class World_bank:
             params["frequency"] = frequency
             params["mrv"] = most_recent
 
-        r = None
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as client:
-            for attempt in range(retries):
-                try:
-                    resp = await client.get(url=url, params=params)
-                    resp.raise_for_status()
-                    r = await resp.json()
-                    break
-                except TimeoutError:
-                    if attempt == retries - 1:
-                        raise
-                    await asyncio.sleep(2**attempt)
-                except aiohttp.ClientResponseError as e:
-                    logger.error(f"HTTP error: {e.status}")
-                    raise
+        try:
+            r = await self._get_json(url, params=params, timeout=timeout, retries=retries)
+        except AcquisitionError as e:
+            logger.error("HTTP error: %s", e)
+            raise
+
         if len(r) < 2 or not r[1]:
             logger.info(f"No data: country={country_code}, indicator={indicator_code}")
-            return pl.DataFrame(
-                schema={
-                    "date": pl.String,
-                    "indicator_id": pl.String,
-                    "indicator_name": pl.String,
-                    "country": pl.String,
-                    "value": pl.String,
-                    "source": pl.String,
-                }
-            )
+            return pl.DataFrame(schema=_EMPTY_SCHEMA)
 
         _, records = r[0], r[1]
 
@@ -91,7 +84,7 @@ class World_bank:
             "per_page": per_page,
         }
 
-        return await self._cache.get_or_fetch(
+        df = await self._cache.get_or_fetch(
             source="world_bank",
             params=cache_params,
             fetch_fn=partial(
@@ -108,3 +101,6 @@ class World_bank:
             force=force,
             ttl=timedelta(days=7),  # WB data updates weekly
         )
+        df = self._normalize(df, [NormalizeDate("date"), NormalizeCountry("country")])
+        self._validate(df, [NotNull("date"), NotNull("country"), NotNull("value")], "world_bank")
+        return df

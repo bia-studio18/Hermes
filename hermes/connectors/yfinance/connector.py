@@ -7,19 +7,21 @@ import polars as pl
 import yfinance as yf
 
 from hermes.acquisition.cache import RawCache
+from hermes.connectors.base import BaseConnector
 from hermes.connectors.yfinance.mappings import YfinanceEndpoint
 from hermes.connectors.yfinance.parser import history_to_dataframe
 from hermes.constants import YFINANCE_INTERVAL_MAP
+from hermes.validation import NotNull
 
 logger = logging.getLogger(__name__)
 
 
-class Yfinance:
+class Yfinance(BaseConnector):
     def __init__(
         self,
         cache: RawCache | None = None,
     ):
-        self._cache = cache or RawCache()
+        super().__init__(cache)
 
     async def _fetch(
         self,
@@ -83,4 +85,6 @@ class Yfinance:
 
         df = await asyncio.get_event_loop().run_in_executor(None, _sync_history)
 
-        return history_to_dataframe(df)
+        df = history_to_dataframe(df)
+        self._validate(df, [NotNull("timestamp_ms"), NotNull("close")], "yfinance")
+        return df

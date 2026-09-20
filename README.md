@@ -80,13 +80,14 @@ hermes profile_data gdp.csv
 | `Dataset.to_polars()/to_arrow()/to_pandas()` | Interchange with the Python data stack |
 | `Dataset.save()` / `.export()` | Persist (parquet/csv/json) or export to another system |
 | `Dataset.metadata_info/ provenance_info / lineage_info / schema_info` | The beginning of Hermes' provenance story |
-| `hr.parse()` / `hr.normalize()` / `hr.validate()` | Parsing engine (csv/json/jsonl/parquet/xml) plus 17 normalization rules and 22 validation rules |
+| `hr.parse()` / `hr.normalize()` / `hr.validate()` | Parsing engine (csv/json/jsonl/parquet/xml) plus 17 normalization and 19 validation rules |
+| Storage: `hr.save` / `hr.load` / `hr.exists` / `hr.delete` / `hr.list_datasets` / `hr.storage_info` | Filesystem backend persisting Dataset + metadata as Parquet, with `StorageInfo` (records, columns, created/modified, checksums) |
 | Credentials | `hr.set_cred()/get_cred()/has_cred()/list_creds()/delete_cred()` and the `hermes cred` CLI |
 | Scheduler | `@hermes.core.scheduler.schedule` cron/interval jobs |
 | Error taxonomy | `HermesError`, `ParseError`, `SchemaError`, `NormalizationError`, `ValidationError`, `StorageError`, `QueryError`, `AcquisitionError` and more |
 | CLI | `hermes version`, `hermes info`, `hermes profile_data <path>`, `hermes cred ...` |
-| Connectors (10, experimental) | Binance, Finnhub, FRED, IMF, SEC EDGAR, World Bank, YFinance, OpenSanctions, GDELT (stub), public datasets — currently internal, being ported onto the engine (see roadmap) |
-| Tests | 385 unit tests covering connectors, scheduler, features, parsing, normalization, validation, and the data API |
+| Connectors (10, experimental) | Binance, Finnhub, FRED, IMF, SEC EDGAR, World Bank, YFinance, OpenSanctions, GDELT (stub), public datasets — all ported onto one `BaseConnector` contract that reuses the acquisition engine (retry / rate-limit / auth handling), and applies normalization, validation and provenance to every source |
+| Tests | 425 unit tests covering connectors, scheduler, features, parsing, normalization, validation, storage, and the data API |
 
 ### The Dataset object
 
@@ -117,7 +118,7 @@ of truth — architecture, subsystem spec, engineering guide, roadmap and strate
 | **Phase 1 — Core foundation** | Full dataset lifecycle: `parse → normalize → validate → profile → Dataset → save → query → export`; automatic provenance & lineage capture; dataset catalog |
 | **Phase 2 — Data contracts** | Versioned schema registry with 7 canonical schemas (economic, financial, market, geopolitical, security, entity, document); normalization engine; validation engine; entity resolution (countries, companies, aliases) |
 | **Phase 3 — Data in** | Acquisition engine (retry, rate limiting, pagination, sync state); parser engine for CSV / JSON / XML / Parquet; public `fetch / ingest / read` API |
-| **Phase 4 — Connectors** | All 10 existing connectors ported onto one `Connector` contract + registry, with canonical-schema output, provenance and validation on every source |
+| **Phase 4 — Connectors** | Connector registry + canonical-schema output for the 10 ported connectors (all already share one `BaseConnector` contract with provenance, normalization and validation on every source) |
 | **Phase 5 — Scale** | DuckDB query engine, dataset versioning / snapshots / diff, export matrix, benchmarks at 10–100M rows |
 
 The pipeline we are building:

@@ -1,20 +1,21 @@
-import asyncio
 import logging
 from datetime import UTC, datetime, timedelta
 from functools import partial
 
-import aiohttp
 import polars as pl
 
 from hermes.acquisition.cache import RawCache
+from hermes.connectors.base import BaseConnector
 from hermes.connectors.finnhub.mappings import BASE_URL, ENDPOINTS, FinnhubEndpoint
 from hermes.connectors.finnhub.parser import candles_to_dataframe
 from hermes.constants import FINNHUB_MAX_DAYS
+from hermes.core.errors import AcquisitionError
+from hermes.validation import NotNull
 
 logger = logging.getLogger(__name__)
 
 
-class FINNHUB:
+class FINNHUB(BaseConnector):
     BASE_URL = BASE_URL
 
     ENDPOINTS = ENDPOINTS
@@ -24,8 +25,8 @@ class FINNHUB:
         api: str,
         cache: RawCache | None = None,
     ):
+        super().__init__(cache, retry_auth=True)
         self._api = api
-        self._cache = cache or RawCache()
         self._url = self.BASE_URL
 
     def build_url(
@@ -72,29 +73,14 @@ class FINNHUB:
             params["from"] = _from
             params["to"] = _to
 
-        r = None
-
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as client:
-            for attempt in range(retries):
-                try:
-                    resp = await client.get(url=_url, params=params)
-                    resp.raise_for_status()
-                    r = await resp.json()
-                    break
-                except TimeoutError:
-                    if attempt == retries - 1:
-                        raise
-                    await asyncio.sleep(2**attempt)
-                except aiohttp.ClientResponseError as e:
-                    if e.status == 404:
-                        logger.warning("404")
-                        return r
-                    if e.status == 403:
-                        logger.error("error 403")
-                        continue
-                    logger.error(f"HTTP error: {e.status}")
-                    raise
-        return r
+        try:
+            return await self._get_json(_url, params=params, timeout=timeout, retries=retries)
+        except AcquisitionError as e:
+            if self._not_found(e):
+                logger.warning("404")
+                return None
+            logger.error("HTTP error: %s", e)
+            raise
 
     async def fetch(
         self,
@@ -170,4 +156,6 @@ class FINNHUB:
                 all_candles.extend(candles)
             chunk_start = chunk_end + 1
 
-        return candles_to_dataframe(all_candles)
+        df = candles_to_dataframe(all_candles)
+        self._validate(df, [NotNull("close")], "finnhub")
+        return df

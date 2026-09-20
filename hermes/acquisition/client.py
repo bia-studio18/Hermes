@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import builtins
 import logging
 from collections.abc import AsyncIterator
 from typing import Any
@@ -28,6 +29,7 @@ class Client:
         max_backoff: float = 60.0,
         headers: dict[str, str] | None = None,
         connector: aiohttp.BaseConnector | None = None,
+        retry_auth: bool = False,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.timeout = aiohttp.ClientTimeout(total=timeout)
@@ -35,6 +37,7 @@ class Client:
         self.backoff_factor = backoff_factor
         self.max_backoff = max_backoff
         self.headers = headers or {}
+        self.retry_auth = retry_auth
         self._connector = connector
         self._session: aiohttp.ClientSession | None = None
 
@@ -103,20 +106,31 @@ class Client:
                 ) as resp:
                     await self._raise_for_status(resp, url)
                     return await self._decode(resp)
-            except (aiohttp.ClientError, TimeoutError, ServerError, RateLimitError) as exc:
-                attempt += 1
-                if attempt > self.max_retries:
+            except AuthenticationError as exc:
+                if not self.retry_auth:
                     raise
-                delay = self._retry_delay(attempt, exc)
-                logger.debug(
-                    "Request %s attempt %d failed (%s): retrying in %.2fs",
-                    url,
-                    attempt,
-                    type(exc).__name__,
-                    delay,
-                )
-                if delay > 0:
-                    await asyncio.sleep(delay)
+                err: Exception = exc
+            except (
+                aiohttp.ClientError,
+                TimeoutError,
+                ServerError,
+                RateLimitError,
+                builtins.TimeoutError,
+            ) as exc:
+                err = exc
+            attempt += 1
+            if attempt > self.max_retries:
+                raise err
+            delay = self._retry_delay(attempt, err)
+            logger.debug(
+                "Request %s attempt %d failed (%s): retrying in %.2fs",
+                url,
+                attempt,
+                type(err).__name__,
+                delay,
+            )
+            if delay > 0:
+                await asyncio.sleep(delay)
 
     async def stream(
         self,
@@ -155,20 +169,22 @@ class Client:
             return
         body = await resp.text(errors="replace")
         if resp.status in (401, 403):
-            raise AuthenticationError(f"Auth error {resp.status} on {url}: {body[:500]}")
+            raise AuthenticationError(f"Auth error {resp.status} on {url}: {body[:500]}", status_code=resp.status)
         if resp.status == 429:
             raw = resp.headers.get("Retry-After")
             try:
                 retry_after = float(raw) if raw else None
             except ValueError:
                 retry_after = None
-            raise RateLimitError(
+            error = RateLimitError(
                 f"Rate limited on {url} (status 429). Retry-After={raw}. {body[:500]}",
                 retry_after=retry_after,
             )
+            error.status_code = resp.status
+            raise error
         if resp.status >= 500:
-            raise ServerError(f"Server error {resp.status} on {url}: {body[:500]}")
-        raise AcquisitionError(f"HTTP {resp.status} on {url}: {body[:500]}")
+            raise ServerError(f"Server error {resp.status} on {url}: {body[:500]}", status_code=resp.status)
+        raise AcquisitionError(f"HTTP {resp.status} on {url}: {body[:500]}", status_code=resp.status)
 
     def _retry_delay(self, attempt: int, error: Exception) -> float:
         if isinstance(error, RateLimitError) and error.retry_after is not None:

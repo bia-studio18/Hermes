@@ -4,22 +4,24 @@ import math
 from datetime import UTC, datetime, timedelta
 from functools import partial
 
-import aiohttp
 import polars as pl
 
 from hermes.acquisition.cache import RawCache
+from hermes.connectors.base import BaseConnector
 from hermes.connectors.binance.mappings import BINANCE_ENDPOINTS
 from hermes.connectors.binance.parser import klines_to_dataframe
 from hermes.constants import BINANCE_INTERVAL_MS
+from hermes.core.errors import AcquisitionError
+from hermes.validation import NotNull
 
 logger = logging.getLogger(__name__)
 
 
-class Binance:
+class Binance(BaseConnector):
     def __init__(self, cache: RawCache | None = None):
+        super().__init__(cache, retry_auth=True)
         self._spot_url = "https://api.binance.com"
         self._future_url = "https://fapi.binance.com"
-        self._cache = cache or RawCache()
         self._ENDPOINTS = BINANCE_ENDPOINTS
 
     def _build_url(
@@ -78,28 +80,14 @@ class Binance:
             end_time=end_time,
         )
 
-        r = None
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as client:
-            for attempt in range(retries):
-                try:
-                    resp = await client.get(url=url, params=params)
-                    resp.raise_for_status()
-                    r = await resp.json()
-                    break
-                except TimeoutError:
-                    if attempt == retries - 1:
-                        raise
-                    await asyncio.sleep(2**attempt)
-                except aiohttp.ClientResponseError as e:
-                    if e.status == 404:
-                        logger.warning("404")
-                        return r
-                    if e.status == 403:
-                        logger.error("error 403")
-                        continue
-                    logger.error(f"HTTP error: {e.status}")
-                    raise
-        return r
+        try:
+            return await self._get_json(url, params=params, timeout=timeout, retries=retries)
+        except AcquisitionError as e:
+            if self._not_found(e):
+                logger.warning("404")
+                return None
+            logger.error("HTTP error: %s", e)
+            raise
 
     async def fetch(
         self,
@@ -191,4 +179,6 @@ class Binance:
             else:
                 logger.warning(f"History fetch error: {r}")
 
-        return klines_to_dataframe(all_candles)
+        df = klines_to_dataframe(all_candles)
+        self._validate(df, [NotNull("open_time"), NotNull("close")], "binance")
+        return df

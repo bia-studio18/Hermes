@@ -2,36 +2,23 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import aiohttp
 import pytest
 
 from hermes.connectors.imf import IMF
+from hermes.core.errors import AcquisitionError
 from hermes.entities.countries import iso3_to_iso2
 
 
-def _mock_aiohttp_response(json_data, status=200):
-    """Create a mock aiohttp response."""
-    mock_resp = AsyncMock()
-    mock_resp.status = status
-    mock_resp.json = AsyncMock(return_value=json_data)
-    mock_resp.raise_for_status = MagicMock()
-
-    if status >= 400:
-        mock_resp.raise_for_status.side_effect = aiohttp.ClientResponseError(
-            request_info=MagicMock(),
-            history=(),
-            status=status,
-        )
-    return mock_resp
-
-
-def _mock_session(mock_resp):
-    """Create a mock aiohttp ClientSession that returns the given response."""
-    mock_session = AsyncMock()
-    mock_session.get = AsyncMock(return_value=mock_resp)
-    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_session.__aexit__ = AsyncMock(return_value=False)
-    return mock_session
+def _mock_client(client_cls, payload=None, error=None, effects=None):
+    client = MagicMock()
+    if effects is not None:
+        client.get = AsyncMock(side_effect=effects)
+    elif error is not None:
+        client.get = AsyncMock(side_effect=error)
+    else:
+        client.get = AsyncMock(return_value=payload)
+    client_cls.return_value.__aenter__.return_value = client
+    return client
 
 
 @pytest.fixture
@@ -85,10 +72,9 @@ class TestIso3ToIso2:
 class TestIMF:
     async def test_fetch_success(self, sample_sdmx_response):
         imf = IMF(cache=None)
-        mock_resp = _mock_aiohttp_response(sample_sdmx_response)
-        mock_session = _mock_session(mock_resp)
 
-        with patch("hermes.connectors.imf.connector.aiohttp.ClientSession", return_value=mock_session):
+        with patch("hermes.connectors.base.Client") as client_cls:
+            _mock_client(client_cls, payload=sample_sdmx_response)
             df = await imf._fetch("USA", "IMF.STA", "PPI", "PPI.IX.A")
             assert not df.is_empty()
             assert df["value"].item(0) == 110.5
@@ -110,27 +96,24 @@ class TestIMF:
                 "dataSets": [{}],
             }
         }
-        mock_resp = _mock_aiohttp_response(mock_response)
-        mock_session = _mock_session(mock_resp)
 
-        with patch("hermes.connectors.imf.connector.aiohttp.ClientSession", return_value=mock_session):
+        with patch("hermes.connectors.base.Client") as client_cls:
+            _mock_client(client_cls, payload=mock_response)
             df = await imf._fetch("USA", "IMF.STA", "PPI", "PPI.IX.A")
             assert df.is_empty()
 
     async def test_fetch_404(self):
         imf = IMF(cache=None)
-        mock_resp = _mock_aiohttp_response({}, status=404)
-        mock_session = _mock_session(mock_resp)
 
-        with patch("hermes.connectors.imf.connector.aiohttp.ClientSession", return_value=mock_session):
+        with patch("hermes.connectors.base.Client") as client_cls:
+            _mock_client(client_cls, error=AcquisitionError("404", status_code=404))
             df = await imf._fetch("USA", "IMF.STA", "BAD", "X")
             assert df.is_empty()
 
     async def test_fetch_http_error(self):
         imf = IMF(cache=None)
-        mock_resp = _mock_aiohttp_response({}, status=500)
-        mock_session = _mock_session(mock_resp)
 
-        with patch("hermes.connectors.imf.connector.aiohttp.ClientSession", return_value=mock_session):
-            with pytest.raises(aiohttp.ClientResponseError):
+        with patch("hermes.connectors.base.Client") as client_cls:
+            _mock_client(client_cls, error=AcquisitionError("500", status_code=500))
+            with pytest.raises(AcquisitionError):
                 await imf._fetch("USA", "IMF.STA", "PPI", "PPI.IX.A")

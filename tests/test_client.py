@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import threading
+import time
 from collections.abc import Callable
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
@@ -135,6 +136,31 @@ class TestClientRequests:
         async with Client(base_url=http_server, max_retries=5) as c:
             with pytest.raises(AuthenticationError):
                 await c.get("/secure")
+
+    async def test_auth_error_retried_when_configured(self, http_server):
+        _Handler.routes[("GET", "/secure")] = [
+            (403, {"Content-Type": "text/plain"}, b"denied"),
+            _json_response({"ok": True}),
+        ]
+        async with Client(base_url=http_server, max_retries=3, backoff_factor=0.01, retry_auth=True) as c:
+            result = await c.get("/secure")
+        assert result == {"ok": True}
+
+    async def test_builtin_timeout_is_retried(self):
+        import asyncio
+        from unittest.mock import AsyncMock, MagicMock
+
+        cm = MagicMock()
+        cm.__aenter__ = AsyncMock(side_effect=TimeoutError("timeout"))
+        cm.__aexit__ = AsyncMock(return_value=False)
+        session = MagicMock()
+        session.closed = False
+        session.request.return_value = cm
+        c = Client(max_retries=2, backoff_factor=0.01)
+        c._session = session  # type: ignore[assignment]
+        with pytest.raises(TimeoutError):
+            await c.get("/items")
+        assert session.request.call_count == 3
 
     async def test_rate_limit_error_raised(self, http_server):
         _Handler.routes[("GET", "/items")] = (

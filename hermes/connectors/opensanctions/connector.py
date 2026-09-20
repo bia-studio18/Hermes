@@ -1,22 +1,21 @@
-import asyncio
 import logging
 from datetime import timedelta
 from functools import partial
 
-import aiohttp
-
 from hermes.acquisition.cache import RawCache
+from hermes.connectors.base import BaseConnector
+from hermes.core.errors import AcquisitionError
 from hermes.entities.countries import iso3_to_iso2
 
 logger = logging.getLogger(__name__)
 
 
-class OpenSanction:
+class OpenSanction(BaseConnector):
     def __init__(self, api_key: str, cache: RawCache | None = None):
         self._base_url = "https://api.opensanctions.org"
         self._api_key = api_key
         self._headers = {"Authorization": f"ApiKey {api_key}", "Accept": "application/json"}
-        self._cache = cache or RawCache()
+        super().__init__(cache, headers=self._headers)
 
     async def _fetch(
         self,
@@ -61,43 +60,14 @@ class OpenSanction:
         logger.info(f"Fetching from: {url}")
         logger.info(f"Params: {params}")
 
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as client:
-            for attempt in range(retries):
-                try:
-                    resp = await client.get(url=url, params=params, headers=self._headers)
-                    resp.raise_for_status()
-                    data = await resp.json()
-                    logger.info(f"Fetched {data.get('total', {}).get('value', 0)} results")
-                    return data
-
-                except TimeoutError:
-                    if attempt == retries - 1:
-                        logger.error(f"Timeout after {retries} attempts")
-                        raise
-                    wait_time = 2**attempt
-                    logger.warning(f"Timeout, retrying in {wait_time}s...")
-                    await asyncio.sleep(wait_time)
-
-                except aiohttp.ClientResponseError as e:
-                    if e.status == 404:
-                        logger.error(f"Dataset '{dataset}' not found")
-                        return {}
-                    if e.status == 422:
-                        logger.error(f"OpenSanctions 422: {e.message} (url={e.request_info.url})")
-                    if attempt == retries - 1:
-                        raise
-                    wait_time = 2**attempt
-                    logger.warning(f"HTTP {e.status}, retrying in {wait_time}s...")
-                    await asyncio.sleep(wait_time)
-
-                except Exception as e:
-                    if attempt == retries - 1:
-                        raise
-                    wait_time = 2**attempt
-                    logger.warning(f"Error: {e}, retrying in {wait_time}s...")
-                    await asyncio.sleep(wait_time)
-
-        return {}
+        try:
+            return await self._get_json(url, params=params, timeout=timeout, retries=retries)
+        except AcquisitionError as e:
+            if self._not_found(e):
+                logger.error(f"Dataset '{dataset}' not found")
+                return {}
+            logger.error("HTTP error: %s", e)
+            raise
 
     async def fetch(
         self,

@@ -6,31 +6,19 @@ import aiohttp
 import pytest
 
 from hermes.connectors.world_bank import World_bank
+from hermes.core.errors import AcquisitionError
 
 
-def _mock_aiohttp_response(json_data, status=200):
-    """Create a mock aiohttp response."""
-    mock_resp = AsyncMock()
-    mock_resp.status = status
-    mock_resp.json = AsyncMock(return_value=json_data)
-    mock_resp.raise_for_status = MagicMock()
-
-    if status >= 400:
-        mock_resp.raise_for_status.side_effect = aiohttp.ClientResponseError(
-            request_info=MagicMock(),
-            history=(),
-            status=status,
-        )
-    return mock_resp
-
-
-def _mock_session(mock_resp):
-    """Create a mock aiohttp ClientSession that returns the given response."""
-    mock_session = AsyncMock()
-    mock_session.get = AsyncMock(return_value=mock_resp)
-    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_session.__aexit__ = AsyncMock(return_value=False)
-    return mock_session
+def _mock_client(client_cls, payload=None, error=None, effects=None):
+    client = MagicMock()
+    if effects is not None:
+        client.get = AsyncMock(side_effect=effects)
+    elif error is not None:
+        client.get = AsyncMock(side_effect=error)
+    else:
+        client.get = AsyncMock(return_value=payload)
+    client_cls.return_value.__aenter__.return_value = client
+    return client
 
 
 class TestWorldBank:
@@ -47,10 +35,9 @@ class TestWorldBank:
                 }
             ],
         ]
-        mock_resp = _mock_aiohttp_response(mock_response)
-        mock_session = _mock_session(mock_resp)
 
-        with patch("hermes.connectors.world_bank.connector.aiohttp.ClientSession", return_value=mock_session):
+        with patch("hermes.connectors.base.Client") as client_cls:
+            _mock_client(client_cls, payload=mock_response)
             df = await wb._fetch("USA", "NY.GDP.MKTP.KD.ZG")
             assert not df.is_empty()
             assert df["value"].item(0) == 2.5
@@ -60,30 +47,25 @@ class TestWorldBank:
     async def test_fetch_no_data(self):
         wb = World_bank(cache=None)
         mock_response = [{"page": 1, "pages": 1}, []]
-        mock_resp = _mock_aiohttp_response(mock_response)
-        mock_session = _mock_session(mock_resp)
 
-        with patch("hermes.connectors.world_bank.connector.aiohttp.ClientSession", return_value=mock_session):
+        with patch("hermes.connectors.base.Client") as client_cls:
+            _mock_client(client_cls, payload=mock_response)
             df = await wb._fetch("XYZ", "SOME.IND")
             assert df.is_empty()
 
     async def test_fetch_http_error(self):
         wb = World_bank(cache=None)
-        mock_resp = _mock_aiohttp_response({}, status=404)
-        mock_session = _mock_session(mock_resp)
 
-        with patch("hermes.connectors.world_bank.connector.aiohttp.ClientSession", return_value=mock_session):
-            with pytest.raises(aiohttp.ClientResponseError):
+        with patch("hermes.connectors.base.Client") as client_cls:
+            _mock_client(client_cls, error=AcquisitionError("404", status_code=404))
+            with pytest.raises(AcquisitionError):
                 await wb._fetch("USA", "BAD")
 
     async def test_fetch_retry_on_timeout(self):
         wb = World_bank(cache=None)
-        mock_session = AsyncMock()
-        mock_session.get = AsyncMock(side_effect=aiohttp.ClientError("timeout"))
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("hermes.connectors.world_bank.connector.aiohttp.ClientSession", return_value=mock_session):
+        with patch("hermes.connectors.base.Client") as client_cls:
+            _mock_client(client_cls, error=aiohttp.ClientError("timeout"))
             with pytest.raises(aiohttp.ClientError):
                 await wb._fetch("USA", "NY.GDP.MKTP.KD.ZG", retries=1)
 
@@ -100,12 +82,11 @@ class TestWorldBank:
                 }
             ],
         ]
-        mock_resp = _mock_aiohttp_response(mock_response)
-        mock_session = _mock_session(mock_resp)
 
-        with patch("hermes.connectors.world_bank.connector.aiohttp.ClientSession", return_value=mock_session):
+        with patch("hermes.connectors.base.Client") as client_cls:
+            client = _mock_client(client_cls, payload=mock_response)
             df1 = await wb.fetch("USA", "GDP.PROT")
             df2 = await wb.fetch("USA", "GDP.PROT")
-            assert mock_session.get.call_count == 1
+            assert client.get.await_count == 1
             assert not df1.is_empty()
             assert not df2.is_empty()

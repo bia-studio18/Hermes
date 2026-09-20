@@ -1,22 +1,22 @@
-import asyncio
 import logging
 from datetime import timedelta
 from functools import partial
 
-import aiohttp
 import polars as pl
 
 from hermes.acquisition.cache import RawCache
+from hermes.connectors.base import BaseConnector
+from hermes.core.errors import AcquisitionError
 from hermes.entities.companies import get_cik
 
 logger = logging.getLogger(__name__)
 
 
-class SECEDGAR:
+class SECEDGAR(BaseConnector):
     def __init__(self, username: str, email: str, cache: RawCache | None = None):
+        super().__init__(cache)
         self._email = email
         self._username = username
-        self._cache = cache or RawCache()
         self._url = "https://data.sec.gov/api/xbrl/companyfacts"
 
     async def _fetch(self, symbol: str, retries: int = 3, timeout: float = 30.0):
@@ -25,26 +25,14 @@ class SECEDGAR:
 
         headers = {"User-Agent": f"{self._username} {self._email}"}
 
-        r = None
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as client:
-            for attempt in range(retries):
-                try:
-                    resp = await client.get(url=url, headers=headers)
-                    resp.raise_for_status()
-                    r = await resp.json()
-                    break
-                except TimeoutError:
-                    if attempt == retries - 1:
-                        raise
-                    await asyncio.sleep(2**attempt)
-                except aiohttp.ClientResponseError as e:
-                    if e.status == 404:
-                        logger.warning("404")
-                        return r
-                    logger.error(f"HTTP error: {e.status}")
-                    raise
-
-        return r
+        try:
+            return await self._get_json(url, headers=headers, timeout=timeout, retries=retries)
+        except AcquisitionError as e:
+            if self._not_found(e):
+                logger.warning("404: cik=%s", cik)
+                return None
+            logger.error("HTTP error: %s", e)
+            raise
 
     async def fetch(
         self,
