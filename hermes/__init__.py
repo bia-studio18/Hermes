@@ -31,8 +31,18 @@ from hermes.core.errors import (
 )
 from hermes.core.result import Result
 from hermes.credentials.manager import delete_cred, get_cred, has_cred, list_creds, set_cred
+from hermes.features.financial.crpto import CryptoHistory
+from hermes.features.financial.filling import CompanyFilling
+from hermes.features.financial.fundamental import CompanyFundamental
+from hermes.features.financial.technical import TechnicalFeatures
+
 
 __all__ = [
+    # Features
+    "CryptoHistory",
+    "CompanyFilling",
+    "CompanyFundamental",
+    "TechnicalFeatures"
     # Fetching
     "fetch",
     "fetch_raw",

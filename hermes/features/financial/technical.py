@@ -8,7 +8,7 @@ from hermes.connectors.binance import Binance
 from hermes.features.financial.models.technical import TechnicalSnapshot
 
 
-class TAfeatures:
+class TechnicalFeatures:
     def __init__(self):
         self.binance = Binance()
 

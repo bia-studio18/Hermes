@@ -1,0 +1,1 @@
+//! Reserved for embedding / vector-space operations (future).

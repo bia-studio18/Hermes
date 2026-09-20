@@ -107,7 +107,7 @@ def _extract_funds_per_period(facts: dict, periods: list[dict], symbol: str) -> 
     return result_rows
 
 
-class CompanyFiling:
+class CompanyFilling:
     def __init__(
         self,
         finnhub_api: str,
