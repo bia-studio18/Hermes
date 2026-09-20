@@ -22,7 +22,7 @@ def _mock_client(client_cls, payload=None, error=None, effects=None):
 
 class TestSECEDGAR:
     async def test_fetch_success(self):
-        sec = SECEDGAR(username="test-user", email="test@example.com", cache=None)
+        sec = SECEDGAR(cache=None)
         mock_response = {
             "facts": {
                 "us-gaap": {
@@ -44,7 +44,7 @@ class TestSECEDGAR:
             assert "facts" in result
 
     async def test_fetch_404(self):
-        sec = SECEDGAR(username="test-user", email="test@example.com", cache=None)
+        sec = SECEDGAR(cache=None)
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, error=AcquisitionError("404", status_code=404))
@@ -52,7 +52,7 @@ class TestSECEDGAR:
             assert result is None
 
     async def test_fetch_http_error(self):
-        sec = SECEDGAR(username="test-user", email="test@example.com", cache=None)
+        sec = SECEDGAR(cache=None)
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, error=AcquisitionError("500", status_code=500))
@@ -60,7 +60,7 @@ class TestSECEDGAR:
                 await sec._fetch(symbol="AAPL")
 
     async def test_fetch_retry_on_timeout(self):
-        sec = SECEDGAR(username="test-user", email="test@example.com", cache=None)
+        sec = SECEDGAR(cache=None)
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, error=TimeoutError("timeout"))
@@ -68,7 +68,7 @@ class TestSECEDGAR:
                 await sec._fetch(symbol="AAPL", retries=1)
 
     async def test_fetch_sends_user_agent(self):
-        sec = SECEDGAR(username="test-user", email="test@example.com", cache=None)
+        sec = SECEDGAR(cache=None)
 
         with patch("hermes.connectors.base.Client") as client_cls:
             client = _mock_client(client_cls, payload={"facts": {"us-gaap": {}}})
@@ -78,7 +78,7 @@ class TestSECEDGAR:
             assert "test@example.com" in headers["User-Agent"]
 
     async def test_fetch_returns_data(self, tmp_cache):
-        sec = SECEDGAR(username="test-user", email="test@example.com", cache=tmp_cache)
+        sec = SECEDGAR(cache=tmp_cache)
         mock_response = {"facts": {"us-gaap": {"Revenues": {"units": {"USD": [{"val": 100}]}}}}}
 
         with patch("hermes.connectors.base.Client") as client_cls:

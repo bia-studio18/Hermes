@@ -8,9 +8,9 @@ from hermes.acquisition.cache import RawCache
 from hermes.connectors.base import BaseConnector
 from hermes.connectors.fred.parser import observations_to_dataframe
 from hermes.core.errors import AcquisitionError
+from hermes.credentials.manager import get_cred
 from hermes.normalization import NormalizeDate
 from hermes.validation import NotNull
-from hermes.credentials.manager import get_cred
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class FRED(BaseConnector):
     def __init__(self, api: str, cache: RawCache | None = None):
         super().__init__(cache)
         self._url = "https://api.stlouisfed.org/fred/series/observations"
-        self._api = get_cred('fred')
+        self._api = get_cred("fred")
 
     async def _fetch(self, series_id: str, timeout: float = 30.0, retries: int = 3) -> pl.DataFrame:
         params = {"series_id": series_id, "api_key": self._api, "file_type": "json"}

@@ -8,6 +8,22 @@ import pytest
 from hermes.acquisition.cache import RawCache
 
 
+@pytest.fixture(autouse=True)
+def _mock_cred_manager(monkeypatch):
+    _creds = {
+        "finnhub": "test-key",
+        "fred": "test-key",
+        "opensanction": "test-key",
+        "sec_email": "test@example.com",
+        "sec_username": "test-user",
+    }
+
+    def _fake_load_credentials():
+        return _creds
+
+    monkeypatch.setattr("hermes.credentials.manager.load_credentials", _fake_load_credentials)
+
+
 @pytest.fixture
 def tmp_cache(tmp_path: Path) -> RawCache:
     return RawCache(cache_dir=str(tmp_path / "hermes_cache"))

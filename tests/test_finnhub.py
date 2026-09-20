@@ -22,7 +22,7 @@ def _mock_client(client_cls, payload=None, error=None, effects=None):
 
 class TestFinnhubBuildUrl:
     def test_valid_endpoints(self):
-        finn = FINNHUB(api="test-key", cache=None)
+        finn = FINNHUB(cache=None)
         for endpoint in [
             "quote",
             "profile",
@@ -41,19 +41,19 @@ class TestFinnhubBuildUrl:
             assert url.startswith("https://finnhub.io/api/v1/")
 
     def test_quote_url(self):
-        finn = FINNHUB(api="test-key", cache=None)
+        finn = FINNHUB(cache=None)
         url = finn.build_url("quote")
         assert url.endswith("/quote")
 
     def test_invalid_endpoint(self):
-        finn = FINNHUB(api="test-key", cache=None)
+        finn = FINNHUB(cache=None)
         with pytest.raises(ValueError, match="Unsupported endpoint"):
             finn.build_url("nonexistent")
 
 
 class TestFinnhubFetch:
     async def test_fetch_quote(self):
-        finn = FINNHUB(api="test-key", cache=None)
+        finn = FINNHUB(cache=None)
         mock_response = {"c": 150.0, "d": 2.5, "dp": 1.69, "h": 152.0, "l": 148.0, "o": 149.0, "pc": 147.5}
 
         with patch("hermes.connectors.base.Client") as client_cls:
@@ -62,7 +62,7 @@ class TestFinnhubFetch:
             assert result["c"] == 150.0
 
     async def test_fetch_profile(self):
-        finn = FINNHUB(api="test-key", cache=None)
+        finn = FINNHUB(cache=None)
         mock_response = {"ticker": "AAPL", "name": "Apple Inc.", "exchange": "NASDAQ"}
 
         with patch("hermes.connectors.base.Client") as client_cls:
@@ -71,12 +71,12 @@ class TestFinnhubFetch:
             assert result["ticker"] == "AAPL"
 
     async def test_fetch_candles_requires_params(self):
-        finn = FINNHUB(api="test-key", cache=None)
+        finn = FINNHUB(cache=None)
         with pytest.raises(ValueError, match="requires resolution"):
             await finn._fetch(endpoint="candles", symbol="AAPL")
 
     async def test_fetch_404(self):
-        finn = FINNHUB(api="test-key", cache=None)
+        finn = FINNHUB(cache=None)
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, error=AcquisitionError("404", status_code=404))
@@ -84,7 +84,7 @@ class TestFinnhubFetch:
             assert result is None
 
     async def test_fetch_http_error(self):
-        finn = FINNHUB(api="test-key", cache=None)
+        finn = FINNHUB(cache=None)
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, error=AcquisitionError("500", status_code=500))
@@ -92,7 +92,7 @@ class TestFinnhubFetch:
                 await finn._fetch(endpoint="quote", symbol="AAPL")
 
     async def test_fetch_returns_data(self, tmp_cache):
-        finn = FINNHUB(api="test-key", cache=tmp_cache)
+        finn = FINNHUB(cache=tmp_cache)
         mock_response = {"c": 150.0, "d": 2.5}
 
         with patch("hermes.connectors.base.Client") as client_cls:

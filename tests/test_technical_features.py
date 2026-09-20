@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import numpy as np
 import pytest
 
-from hermes.features.financial.technical import TAfeatures
+from hermes.features.financial.technical import TechnicalFeatures as TAfeatures
 
 
 class TestSafeDiv:

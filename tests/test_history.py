@@ -25,7 +25,7 @@ from hermes.features.financial.crpto import (
     _rolling_slope,
     _rsi,
 )
-from hermes.features.financial.filling import CompanyFiling as FAHistory
+from hermes.features.financial.filling import CompanyFilling as FAHistory
 
 
 class TestFreqMappings:

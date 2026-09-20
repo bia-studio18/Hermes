@@ -5,8 +5,8 @@ from functools import partial
 from hermes.acquisition.cache import RawCache
 from hermes.connectors.base import BaseConnector
 from hermes.core.errors import AcquisitionError
-from hermes.entities.countries import iso3_to_iso2
 from hermes.credentials.manager import get_cred
+from hermes.entities.countries import iso3_to_iso2
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 class OpenSanction(BaseConnector):
     def __init__(self, cache: RawCache | None = None):
         self._base_url = "https://api.opensanctions.org"
-        self._api_key = get_cred('opensanction')
-        self._headers = {"Authorization": f"ApiKey {api_key}", "Accept": "application/json"}
+        self._api_key = get_cred("opensanction")
+        self._headers = {"Authorization": f"ApiKey {self._api_key}", "Accept": "application/json"}
         super().__init__(cache, headers=self._headers)
 
     async def _fetch(

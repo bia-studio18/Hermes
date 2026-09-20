@@ -17,8 +17,8 @@ class FAfeatures:
         self.finn_api = finnhub_api
         self.sec_email = sec_email
         self.sec_username = sec_username
-        self.finn: FINNHUB = FINNHUB(api=finnhub_api)
-        self.sec: SECEDGAR = SECEDGAR(username=sec_username, email=sec_email)
+        self.finn: FINNHUB = FINNHUB()
+        self.sec: SECEDGAR = SECEDGAR()
         self.fred: FRED = FRED(api=fred_api)
         self._yf = Yfinance()
 

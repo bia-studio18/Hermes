@@ -10,8 +10,8 @@ from hermes.connectors.finnhub.mappings import BASE_URL, ENDPOINTS, FinnhubEndpo
 from hermes.connectors.finnhub.parser import candles_to_dataframe
 from hermes.constants import FINNHUB_MAX_DAYS
 from hermes.core.errors import AcquisitionError
-from hermes.validation import NotNull
 from hermes.credentials.manager import get_cred
+from hermes.validation import NotNull
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class FINNHUB(BaseConnector):
         cache: RawCache | None = None,
     ):
         super().__init__(cache, retry_auth=True)
-        self._api = get_cred('finnhub')
+        self._api = get_cred("finnhub")
         self._url = self.BASE_URL
 
     def build_url(

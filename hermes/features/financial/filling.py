@@ -115,8 +115,8 @@ class CompanyFilling:
         sec_username: str,
         fred_api: str,
     ):
-        self.finn = FINNHUB(api=finnhub_api)
-        self.sec = SECEDGAR(username=sec_username, email=sec_email)
+        self.finn = FINNHUB()
+        self.sec = SECEDGAR()
         self.yf = Yfinance()
 
     async def get_candle_history(
@@ -186,7 +186,7 @@ class CompanyFilling:
             rows = _extract_funds_per_period(facts, periods, symbol)
             if rows:
                 df_sym = pl.DataFrame(rows)
-                df_sym = CompanyFiling._compute_fundamental_features(df_sym)
+                df_sym = CompanyFilling._compute_fundamental_features(df_sym)
                 all_dfs.append(df_sym)
 
         if not all_dfs:

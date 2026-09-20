@@ -30,7 +30,7 @@ class TestIso3ToIso2:
 
 class TestOpenSanction:
     async def test_fetch_success(self, tmp_cache):
-        os = OpenSanction(cache=tmp_cache, api_key="test-key")
+        os = OpenSanction(cache=tmp_cache)
 
         with patch("hermes.connectors.base.Client") as client_cls:
             client = _mock_client(client_cls, payload={"results": []})
@@ -38,7 +38,7 @@ class TestOpenSanction:
             assert client.get.await_count == 1
 
     async def test_fetch_404(self, tmp_cache):
-        os = OpenSanction(cache=tmp_cache, api_key="test-key")
+        os = OpenSanction(cache=tmp_cache)
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, error=AcquisitionError("404", status_code=404))
@@ -46,7 +46,7 @@ class TestOpenSanction:
             assert result == {}
 
     async def test_fetch_http_error(self, tmp_cache):
-        os = OpenSanction(cache=tmp_cache, api_key="test-key")
+        os = OpenSanction(cache=tmp_cache)
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, error=AcquisitionError("500", status_code=500))
@@ -54,6 +54,6 @@ class TestOpenSanction:
                 await os.fetch("USA", dataset="default", limit=0)
 
     async def test_no_dataset_raises(self, tmp_cache):
-        os = OpenSanction(cache=tmp_cache, api_key="test-key")
+        os = OpenSanction(cache=tmp_cache)
         with pytest.raises(ValueError, match="dataset parameter is empty"):
             await os.fetch("USA", dataset="", limit=0)

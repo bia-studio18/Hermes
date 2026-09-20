@@ -36,13 +36,12 @@ from hermes.features.financial.filling import CompanyFilling
 from hermes.features.financial.fundamental import CompanyFundamental
 from hermes.features.financial.technical import TechnicalFeatures
 
-
 __all__ = [
     # Features
     "CryptoHistory",
     "CompanyFilling",
     "CompanyFundamental",
-    "TechnicalFeatures"
+    "TechnicalFeatures",
     # Fetching
     "fetch",
     "fetch_raw",
