@@ -10,12 +10,6 @@ def _backend() -> FilesystemStorage:
 
 
 def save(dataset: Dataset, name: str | None = None, overwrite: bool = False) -> Result:
-    """Persist *dataset* to storage and return a Result referencing it.
-
-    On failure (e.g. the dataset already exists and overwrite=False), returns a
-    failure Result with the error recorded. Use ``result.raise_if_failure()``
-    to surface the underlying exception.
-    """
     try:
         info = _backend().save(dataset, name=name, overwrite=overwrite)
         return Result(
