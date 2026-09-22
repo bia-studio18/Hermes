@@ -1,6 +1,5 @@
 from hermes.connectors.public_data.connector import sec_mapping
 
-
 """
  each company should have these feild
 
@@ -26,7 +25,7 @@ from hermes.connectors.public_data.connector import sec_mapping
 
 
 def get_cik(ticker: str) -> str:
-  return sec_mapping(symbol=ticker)
+    return sec_mapping(symbol=ticker)
 
 
 __all__ = ["get_cik"]

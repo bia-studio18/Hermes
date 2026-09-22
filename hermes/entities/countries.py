@@ -1,5 +1,3 @@
-import pycountry
-
 countries: list[str] = [
     "AFG",
     "ALA",
@@ -254,16 +252,15 @@ countries: list[str] = [
 
 
 def iso3_to_iso2(iso3_code: str) -> str:
-    result = pycountry.countries.get(alpha_3=iso3_code.upper())
-    if result is None:
-        return "Not Found"
-    return result.alpha_2
+    from hermes.connectors.public_data.connector import iso3_to_iso2 as _impl
+
+    return _impl(iso3_code)
 
 
 def check_iso3(code: str) -> None:
-    country = pycountry.countries.get(alpha_3=code.upper())
-    if not country:
-        raise RuntimeError(f"The {code} is not iso3")
+    from hermes.connectors.public_data.connector import check_iso3 as _impl
+
+    _impl(code)
 
 
 __all__ = ["countries", "iso3_to_iso2", "check_iso3"]
