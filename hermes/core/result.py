@@ -1,9 +1,9 @@
+from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
 
-
-class ResultError(BaseModel):
+@dataclass
+class ResultError:
     """Serializable error record attached to a ``Result``."""
 
     code: str
@@ -11,13 +11,14 @@ class ResultError(BaseModel):
     details: dict[str, Any] | None = None
 
 
-class Result(BaseModel):
+@dataclass
+class Result:
     status: Literal["success", "warning", "partial", "failure"]
     data: Any = None
     metadata: dict[str, Any] | None = None
     statistics: dict[str, Any] | None = None
-    errors: list[ResultError] = Field(default_factory=list)
-    warnings: list[str] = Field(default_factory=list)
+    errors: list[ResultError] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
     def add_error(self, error: BaseException, **details: Any) -> None:
         """Record an exception as a serializable :class:`ResultError`."""

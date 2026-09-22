@@ -1,9 +1,9 @@
+from dataclasses import dataclass
 from datetime import datetime
 
-from pydantic import BaseModel
 
-
-class Provenance(BaseModel):
+@dataclass
+class Provenance:
     source: str = ""
     endpoint: str | None = None
     retrieved_at: datetime | None = None

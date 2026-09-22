@@ -1,10 +1,10 @@
 import sqlite3
 import uuid
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import polars as pl
 import pyarrow as pa
-from pydantic import BaseModel, ConfigDict, Field
 
 from hermes.core.errors import HermesError
 from hermes.core.lineage import Lineage, LineageStep
@@ -13,20 +13,19 @@ from hermes.core.provenance import Provenance
 from hermes.core.versioning import DataVersion
 
 
-class Dataset(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    id: uuid.UUID = Field(default_factory=uuid.uuid4)
+@dataclass
+class Dataset:
     name: str
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
     version: str = "0.0.1"
 
     data_ref: str | Path | None = None
     schema_ref: str | None = None
     data: pl.DataFrame | None = None
 
-    metadata: MetaData = Field(default_factory=MetaData)
-    provenance: Provenance = Field(default_factory=Provenance)
-    lineage: Lineage = Field(default_factory=Lineage)
+    metadata: MetaData = field(default_factory=MetaData)
+    provenance: Provenance = field(default_factory=Provenance)
+    lineage: Lineage = field(default_factory=Lineage)
 
     data_version: DataVersion | None = None
 

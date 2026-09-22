@@ -1,12 +1,13 @@
-from pydantic import BaseModel, Field
+from dataclasses import dataclass
 
 
-class DatasetDescriptor(BaseModel):
+@dataclass
+class DatasetDescriptor:
     id: str
     name: str
     description: str = ""
     source: str = ""
-    schema_name: str | None = Field(default=None, alias="schema")
+    schema_name: str | None = None
     coverage: str | None = None
     frequency: str | None = None
     version: str = "0.0.1"

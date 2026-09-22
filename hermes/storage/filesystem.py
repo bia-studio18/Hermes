@@ -5,8 +5,11 @@ import os
 import re
 import shutil
 import uuid
+from dataclasses import asdict, fields, is_dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from types import UnionType
+from typing import Any, Union, cast, get_args, get_origin, get_type_hints
 
 import polars as pl
 
@@ -76,6 +79,46 @@ def _atomic_write(target: Path, writer) -> None:
         tmp.unlink(missing_ok=True)
 
 
+def _dump(obj: Any) -> str:
+    return json.dumps(asdict(obj), indent=2, default=str)
+
+
+def _convert(tp: Any, value: Any) -> Any:
+    if value is None:
+        return None
+    if tp is datetime and isinstance(value, str):
+        return datetime.fromisoformat(value)
+    if is_dataclass(tp) and isinstance(value, dict):
+        return _revive(tp, value)  # type: ignore[arg-type]
+    origin = get_origin(tp)
+    if origin is Union or origin is UnionType:
+        for arg in get_args(tp):
+            if arg is not type(None):
+                return _convert(arg, value)
+        return value
+    if origin is list:
+        (arg,) = get_args(tp) or (Any,)
+        return [_convert(arg, item) for item in value] if isinstance(value, list) else value
+    if origin is tuple:
+        args = get_args(tp)
+        if isinstance(value, list) and len(args) == 2:
+            return tuple(_convert(args[0], item) for item in value)
+        return value
+    if origin is dict:
+        _, vt = get_args(tp) or (Any, Any)
+        return {k: _convert(vt, item) for k, item in value.items()} if isinstance(value, dict) else value
+    return value
+
+
+def _revive(cls: Any, raw: Any) -> Any:
+    if not isinstance(raw, dict) or not is_dataclass(cls):
+        return raw
+    hints = get_type_hints(cls)
+    known = {f.name for f in fields(cls)}
+    kwargs = {k: _convert(hints[k], v) for k, v in raw.items() if k in known and k in hints}
+    return cast(type[Any], cls)(**kwargs)
+
+
 class FilesystemStorage(StorageBackend):
     def __init__(self, root: str | Path | None = None) -> None:
         root = root if root is not None else get_config().storage_root
@@ -118,7 +161,7 @@ class FilesystemStorage(StorageBackend):
             stored = self._build_metadata(dataset, target_name, rows, columns, column_schema, created)
             _atomic_write(
                 metadata_path,
-                lambda tmp: tmp.write_text(json.dumps(stored.model_dump(mode="json"), indent=2), encoding="utf-8"),
+                lambda tmp: tmp.write_text(_dump(stored), encoding="utf-8"),
             )
         except StorageError:
             if created_dir:
@@ -182,8 +225,8 @@ class FilesystemStorage(StorageBackend):
     def _load_metadata(self, name: str) -> StoredDatasetMetadata:
         path = self._metadata_path(name)
         try:
-            return StoredDatasetMetadata.model_validate(json.loads(path.read_text(encoding="utf-8")))
-        except (OSError, ValueError) as exc:
+            return _revive(StoredDatasetMetadata, json.loads(path.read_text(encoding="utf-8")))
+        except (OSError, ValueError, TypeError) as exc:
             raise StorageCorruptionError(f"metadata for dataset {name!r} is corrupt") from exc
 
     def _to_dataset(self, stored: StoredDatasetMetadata, data: pl.DataFrame, data_path: Path) -> Dataset:

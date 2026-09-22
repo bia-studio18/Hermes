@@ -4,7 +4,10 @@ from datetime import timedelta
 from functools import partial
 
 import polars as pl
-import yfinance as yf
+try:
+    import yfinance as yf
+except ImportError:
+    pass
 
 from hermes.acquisition.cache import RawCache
 from hermes.connectors.base import BaseConnector

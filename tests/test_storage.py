@@ -1,3 +1,4 @@
+import dataclasses
 import datetime
 import json
 
@@ -101,12 +102,12 @@ def test_roundtrip_data_schema_metadata(store):
     assert loaded.version == dataset.version
     assert loaded.data_ref is not None and loaded.data_ref.endswith("data.parquet")
     assert_frame_equal(loaded.data, dataset.data)
-    assert loaded.schema == dataset.schema
-    assert loaded.metadata.model_dump() == dataset.metadata.model_dump()
-    assert loaded.provenance.model_dump() == dataset.provenance.model_dump()
-    assert loaded.lineage.model_dump() == dataset.lineage.model_dump()
+    assert loaded.data.schema == dataset.data.schema
+    assert loaded.metadata == dataset.metadata
+    assert loaded.provenance == dataset.provenance
+    assert loaded.lineage == dataset.lineage
     assert loaded.data_version is not None
-    assert loaded.data_version.model_dump() == dataset.data_version.model_dump()
+    assert loaded.data_version == dataset.data_version
     assert loaded.schema_ref == dataset.schema_ref
 
 
@@ -356,7 +357,7 @@ def test_hr_save_overwrite(hr_store):
 def test_hr_storage_info_encodeable(hr_store):
     hr.save(make_dataset())
     info = hr.storage_info("world_bank_gdp")
-    json.dumps(info.model_dump(mode="json"))
+    json.dumps(dataclasses.asdict(info), default=str)
 
 
 def test_hr_load_missing_raises(hr_store):

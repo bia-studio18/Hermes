@@ -1,7 +1,8 @@
-from pydantic import BaseModel
+from dataclasses import dataclass
 
 
-class Filter(BaseModel):
+@dataclass
+class Filter:
     field: str
     operator: str
     value: object

@@ -1,17 +1,19 @@
-from pydantic import BaseModel
+from dataclasses import dataclass, field
 
 
-class Entity(BaseModel):
+@dataclass
+class Entity:
     id: str
     name: str
     entity_type: str
     country: str | None = None
-    identifiers: dict[str, str] = {}
-    aliases: list[str] = []
-    metadata: dict = {}
+    identifiers: dict[str, str] = field(default_factory=dict)
+    aliases: list[str] = field(default_factory=list)
+    metadata: dict = field(default_factory=dict)
 
 
-class EntityMatch(BaseModel):
+@dataclass
+class EntityMatch:
     entity: Entity
     score: float
     match_type: str

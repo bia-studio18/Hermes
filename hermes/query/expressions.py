@@ -1,9 +1,10 @@
-from pydantic import BaseModel
+from dataclasses import dataclass, field
 
 
-class Expression(BaseModel):
+@dataclass
+class Expression:
     operator: str
-    operands: list[object] = []
+    operands: list[object] = field(default_factory=list)
 
 
 def and_(*filters: object) -> Expression:

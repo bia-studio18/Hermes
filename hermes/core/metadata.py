@@ -1,13 +1,13 @@
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
-
-from pydantic import BaseModel
 
 from hermes.core.lineage import Lineage
 from hermes.core.provenance import Provenance
 
 
-class ColumnMetadata(BaseModel):
+@dataclass
+class ColumnMetadata:
     name: str
     dtype: str
     null_count: int = 0
@@ -18,19 +18,21 @@ class ColumnMetadata(BaseModel):
     mean: float | None = None
     median: float | None = None
     std: float | None = None
-    top_values: list[tuple[Any, Any]] = []
+    top_values: list[tuple[Any, Any]] = field(default_factory=list)
 
 
-class QualityInfo(BaseModel):
-    completeness: dict[str, float] = {}
+@dataclass
+class QualityInfo:
+    completeness: dict[str, float] = field(default_factory=dict)
     duplicate_count: int = 0
-    anomaly_count: dict[str, int] = {}
+    anomaly_count: dict[str, int] = field(default_factory=dict)
 
 
-class MetaData(BaseModel):
+@dataclass
+class MetaData:
     row_count: int = 0
     column_count: int = 0
-    columns: list[ColumnMetadata] = []
+    columns: list[ColumnMetadata] = field(default_factory=list)
     date_range: dict[str, tuple[Any, Any]] | None = None
     frequency: str | None = None
     source: str | None = None
@@ -39,7 +41,8 @@ class MetaData(BaseModel):
     quality: QualityInfo | None = None
 
 
-class InspectReport(BaseModel):
+@dataclass
+class InspectReport:
     dataset_id: str | None = None
     name: str | None = "dataset"
     version: str | None = None
@@ -48,10 +51,10 @@ class InspectReport(BaseModel):
     row_count: int | None = None
     column_count: int | None = None
 
-    columns: list[tuple[str, str]] = []
+    columns: list[tuple[str, str]] = field(default_factory=list)
 
     stored_metadata: MetaData | None = None
     provenance: Provenance | None = None
     lineage: Lineage | None = None
 
-    sample: list[dict[Any, Any]] = []
+    sample: list[dict[Any, Any]] = field(default_factory=list)

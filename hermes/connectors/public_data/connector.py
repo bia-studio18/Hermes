@@ -15,7 +15,7 @@ NATO_PATH = CURRENT_DIR / "lib" / "datasets" / "nato.csv"
 CRS_PATH = CURRENT_DIR / "lib" / "datasets" / "crs.csv"
 CVS_PATH = CURRENT_DIR / "lib" / "datasets" / "cvs.csv"
 SIPRI_PATH = CURRENT_DIR / "lib" / "datasets" / "sipri.csv"
-
+SEC_MAP = CURRENT_DIR / 'lib' / 'datasets' / 'cik.parquet'
 
 class PUBLIC_DATASET:
     def __init__(self) -> None:
@@ -75,3 +75,12 @@ class PUBLIC_DATASET:
         data = df.filter(pl.col("iso3") == country)
         data = data.with_columns(pl.col("year").cast(pl.Utf8).str.to_date())
         return data
+
+
+def sec_mapping(symbol: str) -> str:
+    _df = pl.scan_parquet(SEC_MAP)
+    df = _df.filter(pl.col('ticker') == symbol).collect()
+    return df['cik_str'].item()
+
+if __name__ == '__main__':
+    print(sec_mapping('AAPL')) # working

@@ -1,21 +1,23 @@
-from pydantic import BaseModel
+from dataclasses import dataclass, field
 
 
-class FieldDef(BaseModel):
+@dataclass
+class FieldDef:
     name: str
     dtype: str
     nullable: bool = True
     required: bool = False
     description: str | None = None
     unit: str | None = None
-    constraints: dict = {}
+    constraints: dict = field(default_factory=dict)
 
 
-class Schema(BaseModel):
+@dataclass
+class Schema:
     name: str
     version: str
-    fields: list[FieldDef] = []
-    primary_keys: list[str] = []
+    fields: list[FieldDef] = field(default_factory=list)
+    primary_keys: list[str] = field(default_factory=list)
     description: str | None = None
 
     def validate_data(self, data: object) -> None:

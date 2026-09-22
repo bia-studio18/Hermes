@@ -1,19 +1,20 @@
+from dataclasses import dataclass, field
 from datetime import datetime
 
-from pydantic import BaseModel, Field
 
-
-class LineageStep(BaseModel):
+@dataclass
+class LineageStep:
     operation: str
     input_ref: str | None = None
     output_ref: str | None = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-    params: dict = {}
+    timestamp: datetime = field(default_factory=datetime.utcnow)
+    params: dict = field(default_factory=dict)
     component_version: str | None = None
 
 
-class Lineage(BaseModel):
-    steps: list[LineageStep] = []
+@dataclass
+class Lineage:
+    steps: list[LineageStep] = field(default_factory=list)
 
     def add_step(self, step: LineageStep) -> None:
         self.steps.append(step)
