@@ -4,6 +4,7 @@ from datetime import timedelta
 from functools import partial
 
 import polars as pl
+
 try:
     import yfinance as yf
 except ImportError:

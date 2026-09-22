@@ -21,7 +21,11 @@ class SECEDGAR(BaseConnector):
         self._url = "https://data.sec.gov/api/xbrl/companyfacts"
 
     async def _fetch(self, symbol: str, retries: int = 3, timeout: float = 30.0):
-        cik = get_cik(ticker=symbol)
+        try:
+            cik = get_cik(ticker=symbol)
+        except ValueError:
+            logger.warning("unknown ticker: %s", symbol)
+            return None
         url = f"{self._url}/{cik}.json"
 
         headers = {"User-Agent": f"{self._username} {self._email}"}

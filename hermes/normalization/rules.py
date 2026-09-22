@@ -1,13 +1,11 @@
 import math
 import re
-from functools import lru_cache
 from typing import Any, Literal, cast
 
 import polars as pl
 
 from hermes.constants import (
     _CAST_TYPES,
-    _COUNTRY_COMMON_ALIASES,
     _CURRENCY_ALIASES,
     _DEFAULT_DATE_FORMATS,
     _DEFAULT_FALSE,
@@ -62,25 +60,6 @@ def _map_column(
     table = {str(k).lower(): v for k, v in mapping.items()} if case_insensitive else dict(mapping)
     default = pl.col(col) if default is None else default
     return df.with_columns(lookup.replace_strict(table, default=default).alias(col))
-
-
-@lru_cache(maxsize=1)
-def _country_aliases() -> dict[str, str]:
-
-    aliases = dict(_COUNTRY_COMMON_ALIASES)
-    try:
-        import pycountry
-    except ImportError:
-        return aliases
-    for country in pycountry.countries:
-        alpha2 = getattr(country, "alpha_2", None)
-        if not alpha2:
-            continue
-        for field in ("alpha_2", "alpha_3", "name", "official_name", "common_name"):
-            value = getattr(country, field, None)
-            if isinstance(value, str) and value:
-                aliases[value.lower()] = alpha2
-    return aliases
 
 
 class Rename(NormalizationRule):
@@ -292,6 +271,8 @@ def _str_to_datetime(col: str, fmt: str) -> pl.Expr:
 class NormalizeCountry(NormalizationRule):
     def __init__(self, field: str, extra_aliases: dict[str, str] | None = None) -> None:
         self.field = field
+        from hermes.connectors.public_data.connector import _country_aliases
+
         self.aliases = dict(_country_aliases())
         if extra_aliases:
             for alias, code in extra_aliases.items():
