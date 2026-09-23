@@ -18,9 +18,8 @@ classifiers = [
 ]
 dependencies = [
     "aiohttp>=3.14.3",
-    "polars>=1.44.1",
-    "pyarrow>=25.0.0",
-    "typer>=0.27.2",
+    "polars>=1.44.2",
+    "pyarrow>=25.0.1",
 ]
 
 [project.optional-dependencies]
