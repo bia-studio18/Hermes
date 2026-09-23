@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 import polars as pl
 import pytest
@@ -11,7 +11,7 @@ from hermes.features.country_risk_features.pipeline import pipeline
 class TestPipeline:
     @pytest.fixture
     def mock_eco(self):
-        mock = AsyncMock()
+        mock = MagicMock()
         mock.gdp_growth_yoy.return_value = 2.5
         mock.gdp_growth_qoq.return_value = 0.6
         mock.industrial_production_yoy.return_value = 3.1
@@ -34,7 +34,7 @@ class TestPipeline:
 
     @pytest.fixture
     def mock_geo(self):
-        mock = AsyncMock()
+        mock = MagicMock()
         mock.conflict_event_count_30d.return_value = 5
         mock.conflict_event_count_90d.return_value = 15
         mock.conflict_trend.return_value = "stable"
@@ -60,7 +60,7 @@ class TestPipeline:
 
     @pytest.fixture
     def mock_sec(self):
-        mock = AsyncMock()
+        mock = MagicMock()
         mock.military_spending_gdp.return_value = 3.5
         mock.military_spending_growth_yoy.return_value = 2.0
         mock.alliance_strength_score.return_value = 0.9
@@ -72,7 +72,7 @@ class TestPipeline:
 
     @pytest.fixture
     def mock_soc(self):
-        mock = AsyncMock()
+        mock = MagicMock()
         mock.social_stability_index.return_value = 0.75
         mock.human_rights_score.return_value = 0.8
         mock.fragile_state_index.return_value = 30.0
@@ -83,7 +83,7 @@ class TestPipeline:
 
     @pytest.fixture
     def mock_env(self):
-        mock = AsyncMock()
+        mock = MagicMock()
         mock.climate_vulnerability_score.return_value = 0.3
         mock.climate_readiness_score.return_value = 0.8
         mock.natural_disaster_risk.return_value = 0.4
@@ -105,8 +105,8 @@ class TestPipeline:
             p = pipeline(os_api="test-key")
             yield p
 
-    async def test_get_country_risk_features_schema(self, pipe):
-        result = await pipe.get_country_risk_features("USA")
+    def test_get_country_risk_features_schema(self, pipe):
+        result = pipe.get_country_risk_features("USA")
         assert isinstance(result, dict)
         assert result["country"] == "USA"
         assert "economic" in result
@@ -121,23 +121,23 @@ class TestPipeline:
         assert result["social"]["human_development_index"] == 0.92
         assert result["environmental"]["climate_vulnerability_score"] == 0.3
 
-    async def test_build_training_panel(self, pipe):
-        async def fn(c, mode="ML"):
+    def test_build_training_panel(self, pipe):
+        def fn(c, mode="ML"):
             return pl.DataFrame({"date": ["2023", "2024"], "value": [2.5, 1.9]})
 
         fns = [fn]
-        result = await pipe.build_training_panel(fns, ["USA"])
+        result = pipe.build_training_panel(fns, ["USA"])
         assert isinstance(result, pl.DataFrame)
         assert not result.is_empty()
 
-    async def test_build_training_panel_multiple_countries(self, pipe):
+    def test_build_training_panel_multiple_countries(self, pipe):
         fns = [
             pipe.eco.gdp_growth_yoy,
             pipe.eco.inflation_cpi_yoy,
         ]
-        result = await pipe.build_training_panel(fns, ["USA", "GBR"])
+        result = pipe.build_training_panel(fns, ["USA", "GBR"])
         assert isinstance(result, pl.DataFrame)
 
-    async def test_build_training_panel_no_countries(self, pipe):
-        result = await pipe.build_training_panel([], [])
+    def test_build_training_panel_no_countries(self, pipe):
+        result = pipe.build_training_panel([], [])
         assert result.is_empty()

@@ -28,7 +28,7 @@ class BaseConnector:
         self._retry_auth = retry_auth
         self._headers = dict(headers or {})
 
-    async def _get_json(
+    def _get_json(
         self,
         url: str,
         *,
@@ -38,8 +38,8 @@ class BaseConnector:
         retries: int = 3,
     ) -> Any:
         merged = {**self._headers, **(headers or {})}
-        async with Client(timeout=timeout, max_retries=retries, retry_auth=self._retry_auth) as client:
-            return await client.get(url, params=params, headers=merged)
+        with Client(timeout=timeout, max_retries=retries, retry_auth=self._retry_auth) as client:
+            return client.get(url, params=params, headers=merged)
 
     @staticmethod
     def _not_found(error: Exception) -> bool:

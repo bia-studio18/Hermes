@@ -29,7 +29,7 @@ class World_bank(BaseConnector):
         super().__init__(cache)
         self.url = WORLD_BANK_BASE_URL
 
-    async def _fetch(
+    def _fetch(
         self,
         country_code: str,
         indicator_code: str,
@@ -51,7 +51,7 @@ class World_bank(BaseConnector):
             params["mrv"] = most_recent
 
         try:
-            r = await self._get_json(url, params=params, timeout=timeout, retries=retries)
+            r = self._get_json(url, params=params, timeout=timeout, retries=retries)
         except AcquisitionError as e:
             logger.error("HTTP error: %s", e)
             raise
@@ -64,7 +64,7 @@ class World_bank(BaseConnector):
 
         return records_to_dataframe(records)
 
-    async def fetch(
+    def fetch(
         self,
         country_code: str,
         indicator_code: str,
@@ -84,7 +84,7 @@ class World_bank(BaseConnector):
             "per_page": per_page,
         }
 
-        df = await self._cache.get_or_fetch(
+        df = self._cache.get_or_fetch(
             source="world_bank",
             params=cache_params,
             fetch_fn=partial(

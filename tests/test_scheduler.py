@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -220,55 +219,43 @@ class TestScheduleDecorator:
 
 
 class TestExecute:
-    async def test_sync_function(self):
+    def test_sync_function(self):
         called = False
 
         def sync_fn():
             nonlocal called
             called = True
 
-        await _execute(_Job(name="t", fn=sync_fn, spec="30m"))
-        assert called
-
-    async def test_async_function(self):
-        called = False
-
-        async def async_fn():
-            nonlocal called
-            called = True
-
-        await _execute(_Job(name="t", fn=async_fn, spec="30m"))
+        _execute(_Job(name="t", fn=sync_fn, spec="30m"))
         assert called
 
 
 class TestRunJob:
-    async def test_success(self):
+    def test_success(self):
         job = _Job(name="t", fn=lambda: None, spec="30m")
-        await _run_job(job)
+        _run_job(job)
         assert job.last_status == "success"
         assert job.runs == 1
         assert job.next_run_at is not None
 
-    async def test_failure_with_retries(self):
+    def test_failure_with_retries(self):
         def bad():
             raise ValueError("boom")
 
         job = _Job(name="t", fn=bad, spec="30m", retries=1)
-        await _run_job(job)
+        _run_job(job)
         assert job.last_status == "failed"
         assert job.failures == 1
         assert job.error == "boom"
 
-    async def test_cancellation_propagates(self):
-        async def slow():
-            await asyncio.sleep(100)
+    def test_failure_propagates_after_last_retry(self):
+        def bad():
+            raise ValueError("boom")
 
-        job = _Job(name="t", fn=slow, spec="30m", retries=0)
-        task = asyncio.create_task(_run_job(job))
-        await asyncio.sleep(0.01)
-        task.cancel()
-        with pytest.raises(asyncio.CancelledError):
-            await task
+        job = _Job(name="t", fn=bad, spec="30m", retries=0)
+        _run_job(job)
+        assert job.last_status == "failed"
+        assert job.error == "boom"
 
 
 class TestListJobs:

@@ -119,7 +119,7 @@ class CompanyFilling:
         self.sec = SECEDGAR()
         self.yf = Yfinance()
 
-    async def get_candle_history(
+    def get_candle_history(
         self,
         symbol: str,
         interval: str = "1d",
@@ -132,7 +132,7 @@ class CompanyFilling:
 
         resolution = FINNHUB_RESOLUTION_MAP[interval]
 
-        df_finn = await self.finn.fetch_candles_history(
+        df_finn = self.finn.fetch_candles_history(
             symbol=symbol,
             resolution=resolution,
             years=years,
@@ -144,7 +144,7 @@ class CompanyFilling:
 
         logger.info(f"Finnhub returned {len(df_finn)} rows for {symbol}, falling back to yfinance")
 
-        df_yf = await self.yf.fetch_history(
+        df_yf = self.yf.fetch_history(
             symbol=symbol,
             interval=interval,
             years=years,
@@ -155,7 +155,7 @@ class CompanyFilling:
 
         return df_yf
 
-    async def get_history(
+    def get_history(
         self,
         quarters: int = 8,
         symbols: list[str] | None = None,
@@ -167,7 +167,7 @@ class CompanyFilling:
 
         for symbol in symbols:
             try:
-                raw = await self.sec.fetch(symbol=symbol)
+                raw = self.sec.fetch(symbol=symbol)
             except Exception:
                 logger.warning(f"Failed to fetch SEC data for {symbol}")
                 continue

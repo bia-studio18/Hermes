@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -11,12 +11,12 @@ from hermes.core.errors import AcquisitionError
 def _mock_client(client_cls, payload=None, error=None, effects=None):
     client = MagicMock()
     if effects is not None:
-        client.get = AsyncMock(side_effect=effects)
+        client.get = MagicMock(side_effect=effects)
     elif error is not None:
-        client.get = AsyncMock(side_effect=error)
+        client.get = MagicMock(side_effect=error)
     else:
-        client.get = AsyncMock(return_value=payload)
-    client_cls.return_value.__aenter__.return_value = client
+        client.get = MagicMock(return_value=payload)
+    client_cls.return_value.__enter__.return_value = client
     return client
 
 
@@ -58,46 +58,46 @@ class TestBinanceBuildUrl:
 
 
 class TestBinanceFetch:
-    async def test_fetch_success(self):
+    def test_fetch_success(self):
         b = Binance(cache=None)
         mock_response = [[1711900800000, "65000", "65500", "64800", "65200", "1000"]]
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, payload=mock_response)
-            result = await b._fetch(mode="spot", endpoint="ohlcv", symbol="BTCUSDT", interval="1d", limit=30)
+            result = b._fetch(mode="spot", endpoint="ohlcv", symbol="BTCUSDT", interval="1d", limit=30)
             assert result == mock_response
 
-    async def test_fetch_404(self):
+    def test_fetch_404(self):
         b = Binance(cache=None)
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, error=AcquisitionError("404", status_code=404))
-            result = await b._fetch(mode="spot", endpoint="ohlcv", symbol="BAD", interval="1d", limit=30)
+            result = b._fetch(mode="spot", endpoint="ohlcv", symbol="BAD", interval="1d", limit=30)
             assert result is None
 
-    async def test_fetch_403_uses_client_retry_auth(self):
+    def test_fetch_403_uses_client_retry_auth(self):
         b = Binance(cache=None)
         mock_response = [[1711900800000, "65000", "65500", "64800", "65200", "1000"]]
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, payload=mock_response)
-            result = await b._fetch(mode="spot", endpoint="ohlcv", symbol="BTCUSDT", interval="1d", limit=30)
+            result = b._fetch(mode="spot", endpoint="ohlcv", symbol="BTCUSDT", interval="1d", limit=30)
             assert result is not None
             client_cls.assert_called_once_with(timeout=30.0, max_retries=3, retry_auth=True)
 
-    async def test_fetch_http_error(self):
+    def test_fetch_http_error(self):
         b = Binance(cache=None)
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, error=AcquisitionError("500", status_code=500))
             with pytest.raises(AcquisitionError):
-                await b._fetch(mode="spot", endpoint="ohlcv", symbol="BTCUSDT", interval="1d", limit=30)
+                b._fetch(mode="spot", endpoint="ohlcv", symbol="BTCUSDT", interval="1d", limit=30)
 
-    async def test_fetch_returns_data(self, tmp_cache):
+    def test_fetch_returns_data(self, tmp_cache):
         b = Binance(cache=tmp_cache)
         mock_response = [[1711900800000, "65000", "65500", "64800", "65200", "1000"]]
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, payload=mock_response)
-            r1 = await b.fetch(mode="spot", endpoint="ohlcv", symbol="BTCUSDT", interval="1d", limit=30)
+            r1 = b.fetch(mode="spot", endpoint="ohlcv", symbol="BTCUSDT", interval="1d", limit=30)
             assert r1 == mock_response

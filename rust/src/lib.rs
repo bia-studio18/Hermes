@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 
 pub mod cli;
-mod http;
+pub mod http;
 
 #[pyfunction]
 fn version() -> &'static str {

@@ -30,10 +30,10 @@ class enviromental_features:
         deps=["NDGAIN:cvs"],
         compute="climate vulnerability score computed from the NDGAIN dataset",
     )
-    async def climate_vulnerability_score(
+    def climate_vulnerability_score(
         self, country_code: str, mode: Literal["F", "ML"] = "F"
     ) -> float | pl.DataFrame:
-        data = await self._data.fetch_cvs(country=country_code)
+        data = self._data.fetch_cvs(country=country_code)
         data = check_empty(data=data, mode=mode)
         if not isinstance(data, pl.DataFrame):
             return data
@@ -51,8 +51,8 @@ class enviromental_features:
         deps=["NDGAIN:crs"],
         compute="climate readiness score computed from the NDGAIN dataset",
     )
-    async def climate_readiness_score(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self._data.fetch_crs(country=country_code)
+    def climate_readiness_score(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self._data.fetch_crs(country=country_code)
         data = check_empty(data=data, mode=mode)
         if not isinstance(data, pl.DataFrame):
             return data
@@ -65,14 +65,14 @@ class enviromental_features:
             return data.select(["year", "score"])
 
     @feature(name="natural_disaster_risk", group="enviromental_features", deps=[], compute="")
-    async def natural_disaster_risk(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float: ...
+    def natural_disaster_risk(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float: ...
 
     @feature(name="food_price_index_change_yoy", group="enviromental_features", deps=[], compute="")
-    async def food_price_index_change_yoy(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float: ...
+    def food_price_index_change_yoy(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float: ...
 
     @feature(name="energy_dependence_ratio", group="enviromental_features", deps=[], compute="")
-    async def energy_dependence_ratio(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="EG.IMP.CONS.ZS")
+    def energy_dependence_ratio(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.wb.fetch(country_code=country_code, indicator_code="EG.IMP.CONS.ZS")
         data = check_empty(mode=mode, data=data, country=country_code)
         if not isinstance(data, pl.DataFrame):
             return data
@@ -85,8 +85,8 @@ class enviromental_features:
             return data.select(["date", "value"])
 
     @feature(name="water_stress_index", group="enviromental_features", deps=[], compute="")
-    async def water_stress_index(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="ER.H2O.FWTL.ZS")
+    def water_stress_index(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.wb.fetch(country_code=country_code, indicator_code="ER.H2O.FWTL.ZS")
         data = check_empty(mode=mode, data=data, country=country_code)
         if not isinstance(data, pl.DataFrame):
             return data
@@ -100,11 +100,6 @@ class enviromental_features:
 
 
 if __name__ == "__main__":
-    import asyncio
-
-    async def main():
-        env = enviromental_features()
-        data = await env.water_stress_index(country_code="PAK")
-        print(data)
-
-    asyncio.run(main())
+    env = enviromental_features()
+    data = env.water_stress_index(country_code="PAK")
+    print(data)

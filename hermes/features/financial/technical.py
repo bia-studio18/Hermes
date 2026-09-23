@@ -51,9 +51,9 @@ class TechnicalFeatures:
 
         return float((values[-1] - np.mean(values)) / std)
 
-    async def ohlcv(self, symbol: str, market: str = "future", interval: str = "1h", limit: int = 250):
+    def ohlcv(self, symbol: str, market: str = "future", interval: str = "1h", limit: int = 250):
 
-        data = await self.binance.fetch(
+        data = self.binance.fetch(
             mode=market,
             endpoint="ohlcv",
             symbol=symbol,
@@ -193,14 +193,14 @@ class TechnicalFeatures:
             "taker_buy_vol_ratio": taker_buy_vol_ratio,
         }
 
-    async def trade_features(
+    def trade_features(
         self,
         symbol: str,
         market: str = "future",
         limit: int = 1000,
     ):
 
-        trades = await self.binance.fetch(
+        trades = self.binance.fetch(
             mode=market,
             endpoint="trades",
             symbol=symbol,
@@ -249,14 +249,14 @@ class TechnicalFeatures:
             ),
         }
 
-    async def orderbook_features(
+    def orderbook_features(
         self,
         symbol: str,
         market: str = "future",
         limit: int = 20,
     ):
 
-        book = await self.binance.fetch(
+        book = self.binance.fetch(
             mode=market,
             endpoint="order_book",
             symbol=symbol,
@@ -311,13 +311,13 @@ class TechnicalFeatures:
             "depth_imbalance": depth_imbalance,
         }
 
-    async def day_features(
+    def day_features(
         self,
         symbol: str,
         market: str = "future",
     ):
 
-        data = await self.binance.fetch(
+        data = self.binance.fetch(
             mode=market,
             endpoint="24hr",
             symbol=symbol,
@@ -348,14 +348,14 @@ class TechnicalFeatures:
             "quote_volume_24h": float(data["quoteVolume"]),
         }
 
-    async def funding_features(
+    def funding_features(
         self,
         symbol: str,
         market: str = "future",
         limit: int = 30,
     ):
 
-        data = await self.binance.fetch(
+        data = self.binance.fetch(
             mode=market,
             endpoint="fundingRate",
             symbol=symbol,
@@ -384,13 +384,13 @@ class TechnicalFeatures:
             "funding_rate_zscore": zscore,
         }
 
-    async def oi_features(
+    def oi_features(
         self,
         symbol: str,
         market: str = "future",
     ):
 
-        current = await self.binance.fetch(
+        current = self.binance.fetch(
             mode=market,
             endpoint="openInterest",
             symbol=symbol,
@@ -398,7 +398,7 @@ class TechnicalFeatures:
 
         oi = float(current["openInterest"])
 
-        history = await self.binance.fetch(
+        history = self.binance.fetch(
             mode=market,
             endpoint="openInterestHist",
             symbol=symbol,
@@ -426,12 +426,12 @@ class TechnicalFeatures:
             "oi_change_24h": oi_change_24h,
         }
 
-    async def funding_time(
+    def funding_time(
         self,
         symbol: str,
     ):
 
-        data = await self.binance.fetch(
+        data = self.binance.fetch(
             mode="future",
             endpoint="premiumIndex",
             symbol=symbol,
@@ -443,14 +443,14 @@ class TechnicalFeatures:
 
         return {"time_to_next_funding_min": max(0, (next_funding - now) / 60_000)}
 
-    async def positioning_features(
+    def positioning_features(
         self,
         symbol: str,
         period: str = "1h",
         limit: int = 30,
     ):
 
-        long_short = await self.binance.fetch(
+        long_short = self.binance.fetch(
             mode="future",
             endpoint="longShortRatio",
             symbol=symbol,
@@ -458,7 +458,7 @@ class TechnicalFeatures:
             limit=limit,
         )
 
-        top_accounts = await self.binance.fetch(
+        top_accounts = self.binance.fetch(
             mode="future",
             endpoint="topLongShortAccountRatio",
             symbol=symbol,
@@ -466,7 +466,7 @@ class TechnicalFeatures:
             limit=limit,
         )
 
-        top_positions = await self.binance.fetch(
+        top_positions = self.binance.fetch(
             mode="future",
             endpoint="topLongShortPositionRatio",
             symbol=symbol,
@@ -498,14 +498,14 @@ class TechnicalFeatures:
             - 1.0,
         }
 
-    async def build_snapshot(
+    def build_snapshot(
         self,
         symbol: str,
         market: str = "future",
         interval: str = "1h",
     ):
 
-        candles = await self.ohlcv(
+        candles = self.ohlcv(
             symbol=symbol,
             market=market,
             interval=interval,
@@ -514,36 +514,36 @@ class TechnicalFeatures:
 
         price = self.calculate_price_features(candles)
 
-        trades = await self.trade_features(
+        trades = self.trade_features(
             symbol=symbol,
             market=market,
         )
 
-        orderbook = await self.orderbook_features(
+        orderbook = self.orderbook_features(
             symbol=symbol,
             market=market,
         )
 
-        day = await self.day_features(
+        day = self.day_features(
             symbol=symbol,
             market=market,
         )
 
-        funding = await self.funding_features(
+        funding = self.funding_features(
             symbol=symbol,
             market=market,
         )
 
-        oi = await self.oi_features(
+        oi = self.oi_features(
             symbol=symbol,
             market=market,
         )
 
-        funding_time = await self.funding_time(
+        funding_time = self.funding_time(
             symbol=symbol,
         )
 
-        positioning = await self.positioning_features(
+        positioning = self.positioning_features(
             symbol=symbol,
         )
 
@@ -564,14 +564,14 @@ class TechnicalFeatures:
             ),
         )
 
-    async def get_technical(
+    def get_technical(
         self,
         symbol: str,
         market: str = "future",
         interval: str = "1h",
     ):
 
-        return await self.build_snapshot(
+        return self.build_snapshot(
             symbol=symbol,
             market=market,
             interval=interval,

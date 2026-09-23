@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import polars as pl
@@ -283,19 +283,19 @@ class TestTAHistoryFeatures:
 
 
 class TestTAHistoryAsync:
-    async def test_get_history_empty(self):
+    def test_get_history_empty(self):
         ta = TAHistory()
-        with patch.object(ta.binance, "fetch_history", new_callable=AsyncMock) as mock_fetch:
+        with patch.object(ta.binance, "fetch_history", new_callable=MagicMock) as mock_fetch:
             mock_fetch.return_value = pl.DataFrame()
-            result = await ta.get_history("BTCUSDT", interval="1d", years=1)
+            result = ta.get_history("BTCUSDT", interval="1d", years=1)
             assert result.is_empty()
 
-    async def test_get_history_calls_features(self):
+    def test_get_history_calls_features(self):
         ta = TAHistory()
         mock_df = _make_ohlcv_df(250)
-        with patch.object(ta.binance, "fetch_history", new_callable=AsyncMock) as mock_fetch:
+        with patch.object(ta.binance, "fetch_history", new_callable=MagicMock) as mock_fetch:
             mock_fetch.return_value = mock_df
-            result = await ta.get_history("BTCUSDT", interval="1d", years=1)
+            result = ta.get_history("BTCUSDT", interval="1d", years=1)
             assert not result.is_empty()
             assert "rsi_14" in result.columns
             assert "macd" in result.columns
@@ -490,14 +490,14 @@ class TestExtractPeriods:
 
 
 class TestFAHistoryAsync:
-    async def test_get_history_empty(self):
+    def test_get_history_empty(self):
         fa = FAHistory(finnhub_api="test", sec_email="test", sec_username="test", fred_api="test")
-        with patch.object(fa.sec, "fetch", new_callable=AsyncMock) as mock_fetch:
+        with patch.object(fa.sec, "fetch", new_callable=MagicMock) as mock_fetch:
             mock_fetch.return_value = None
-            result = await fa.get_history(quarters=2, symbols=["AAPL"])
+            result = fa.get_history(quarters=2, symbols=["AAPL"])
             assert result.is_empty()
 
-    async def test_get_history_calls_sec(self):
+    def test_get_history_calls_sec(self):
         fa = FAHistory(finnhub_api="test", sec_email="test", sec_username="test", fred_api="test")
         mock_raw = {
             "facts": {
@@ -665,9 +665,9 @@ class TestFAHistoryAsync:
                 }
             }
         }
-        with patch.object(fa.sec, "fetch", new_callable=AsyncMock) as mock_fetch:
+        with patch.object(fa.sec, "fetch", new_callable=MagicMock) as mock_fetch:
             mock_fetch.return_value = mock_raw
-            result = await fa.get_history(quarters=2, symbols=["AAPL"])
+            result = fa.get_history(quarters=2, symbols=["AAPL"])
             assert not result.is_empty()
             assert "revenue" in result.columns
             assert "gross_margin" in result.columns
