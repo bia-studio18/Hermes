@@ -4,14 +4,14 @@ import json as _json
 import logging
 import time
 from collections.abc import Iterator
-from typing import Any
+from typing import Any, TypeAlias
 from urllib.parse import urljoin
 
-from hermes import _rust as _rust_module
+import hermes._rust as _rust_module
 
-_RustHttpClient = _rust_module.http.HttpClient
-_RustHttpResponse = _rust_module.http.HttpResponse
-HermesHttpError = _rust_module.http.HermesHttpError
+_RustHttpClient: TypeAlias = _rust_module.http.HttpClient
+_RustHttpResponse: TypeAlias = _rust_module.http.HttpResponse
+HermesHttpError: TypeAlias = _rust_module.http.HermesHttpError
 from hermes.core.errors import (
     AcquisitionError,
     AuthenticationError,
@@ -129,9 +129,7 @@ class Client:
         chunk_size: int = 8192,
         **kwargs: Any,
     ) -> Iterator[bytes]:
-        resp = self._request_response(
-            method, url, params=params, headers=headers, **kwargs
-        )
+        resp = self._request_response(method, url, params=params, headers=headers, **kwargs)
         self._raise_for_status(resp, url)
         body = resp.bytes()
         for offset in range(0, len(body), chunk_size):
@@ -157,9 +155,7 @@ class Client:
             merged.setdefault("Content-Type", "application/json")
         elif data is not None:
             if not isinstance(data, str):
-                raise TypeError(
-                    "data must be a str; send structured payloads via json=..."
-                )
+                raise TypeError("data must be a str; send structured payloads via json=...")
             body = data
         client = self._client
         if client is None:
@@ -196,9 +192,7 @@ class Client:
         except Exception:
             body = ""
         if status in (401, 403):
-            raise AuthenticationError(
-                f"Auth error {status} on {url}: {body[:500]}", status_code=status
-            )
+            raise AuthenticationError(f"Auth error {status} on {url}: {body[:500]}", status_code=status)
         if status == 429:
             raw = resp.header("Retry-After")
             try:
@@ -212,12 +206,8 @@ class Client:
             error.status_code = status
             raise error
         if status >= 500:
-            raise ServerError(
-                f"Server error {status} on {url}: {body[:500]}", status_code=status
-            )
-        raise AcquisitionError(
-            f"HTTP {status} on {url}: {body[:500]}", status_code=status
-        )
+            raise ServerError(f"Server error {status} on {url}: {body[:500]}", status_code=status)
+        raise AcquisitionError(f"HTTP {status} on {url}: {body[:500]}", status_code=status)
 
     @staticmethod
     def _map_exception(exc: HermesHttpError, url: str) -> Exception:
