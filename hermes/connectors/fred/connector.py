@@ -21,11 +21,11 @@ class FRED(BaseConnector):
         self._url = "https://api.stlouisfed.org/fred/series/observations"
         self._api = get_cred("fred")
 
-    async def _fetch(self, series_id: str, timeout: float = 30.0, retries: int = 3) -> pl.DataFrame:
+    def _fetch(self, series_id: str, timeout: float = 30.0, retries: int = 3) -> pl.DataFrame:
         params = {"series_id": series_id, "api_key": self._api, "file_type": "json"}
 
         try:
-            r = await self._get_json(self._url, params=params, timeout=timeout, retries=retries)
+            r = self._get_json(self._url, params=params, timeout=timeout, retries=retries)
         except AcquisitionError as e:
             if self._not_found(e):
                 logger.warning("404: series_id=%s", series_id)
@@ -34,10 +34,10 @@ class FRED(BaseConnector):
 
         return observations_to_dataframe(r, series_id)
 
-    async def fetch(self, series_id: str, timeout: float = 30.0, retries: int = 3, force: bool = False) -> pl.DataFrame:
+    def fetch(self, series_id: str, timeout: float = 30.0, retries: int = 3, force: bool = False) -> pl.DataFrame:
         cached_params = {"series_id": series_id}
 
-        df = await self._cache.get_or_fetch(
+        df = self._cache.get_or_fetch(
             source="fred",
             params=cached_params,
             fetch_fn=partial(

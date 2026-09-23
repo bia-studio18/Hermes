@@ -20,7 +20,7 @@ class SECEDGAR(BaseConnector):
         self._username = get_cred("sec_username")
         self._url = "https://data.sec.gov/api/xbrl/companyfacts"
 
-    async def _fetch(self, symbol: str, retries: int = 3, timeout: float = 30.0):
+    def _fetch(self, symbol: str, retries: int = 3, timeout: float = 30.0):
         try:
             cik = get_cik(ticker=symbol)
         except ValueError:
@@ -31,7 +31,7 @@ class SECEDGAR(BaseConnector):
         headers = {"User-Agent": f"{self._username} {self._email}"}
 
         try:
-            return await self._get_json(url, headers=headers, timeout=timeout, retries=retries)
+            return self._get_json(url, headers=headers, timeout=timeout, retries=retries)
         except AcquisitionError as e:
             if self._not_found(e):
                 logger.warning("404: cik=%s", cik)
@@ -39,7 +39,7 @@ class SECEDGAR(BaseConnector):
             logger.error("HTTP error: %s", e)
             raise
 
-    async def fetch(
+    def fetch(
         self,
         symbol: str,
         timeout: float = 30.0,
@@ -50,7 +50,7 @@ class SECEDGAR(BaseConnector):
             "company": symbol,
         }
 
-        return await self._cache.get_or_fetch(
+        return self._cache.get_or_fetch(
             source="sec_edgar",
             params=cache_params,
             fetch_fn=partial(

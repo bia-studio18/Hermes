@@ -30,7 +30,7 @@ class social_features:
         deps=[],
         compute="social_stability_index",
     )
-    async def social_stability_index(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float: ...
+    def social_stability_index(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float: ...
 
     @feature(
         name="human_rights_score",
@@ -38,8 +38,8 @@ class social_features:
         deps=["hrs:human_rights"],
         compute="human_rights_score from the Human Rights Score dataset",
     )
-    async def human_rights_score(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self._data.fetch_hrs(country=country_code)
+    def human_rights_score(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self._data.fetch_hrs(country=country_code)
         data = check_empty(data=data, mode=mode)
         if not isinstance(data, pl.DataFrame):
             return data
@@ -57,8 +57,8 @@ class social_features:
         deps=["fsi:fragile_states"],
         compute="fragile_state_index from the Fragile States Index dataset",
     )
-    async def fragile_state_index(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self._data.fetch_fsi(country=country_code)
+    def fragile_state_index(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self._data.fetch_fsi(country=country_code)
         data = check_empty(data=data, mode=mode)
         if not isinstance(data, pl.DataFrame):
             return data
@@ -76,8 +76,8 @@ class social_features:
         deps=["hdi:human_development"],
         compute="human_development_index from the HDI dataset",
     )
-    async def human_development_index(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self._data.fetch_hdi(country=country_code)
+    def human_development_index(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self._data.fetch_hdi(country=country_code)
         data = check_empty(data=data, mode=mode)
         if not isinstance(data, pl.DataFrame):
             return data
@@ -95,8 +95,8 @@ class social_features:
         deps=["world_bank:SI.POV.GINI"],
         compute="gini_coefficient from the World Bank data",
     )
-    async def gini_coefficient(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="SI.POV.GINI")
+    def gini_coefficient(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.wb.fetch(country_code=country_code, indicator_code="SI.POV.GINI")
         data = check_empty(data=data, mode=mode)
         if not isinstance(data, pl.DataFrame):
             return data
@@ -115,8 +115,8 @@ class social_features:
         deps=["world_bank:SI.POV.DDAY"],
         compute="poverty_headcount_ratio from the World Bank data",
     )
-    async def poverty_headcount_ratio(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="SI.POV.DDAY")
+    def poverty_headcount_ratio(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.wb.fetch(country_code=country_code, indicator_code="SI.POV.DDAY")
         data = check_empty(data=data, mode=mode)
         if not isinstance(data, pl.DataFrame):
             return data

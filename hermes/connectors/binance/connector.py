@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import math
 from datetime import UTC, datetime, timedelta
@@ -56,7 +55,7 @@ class Binance(BaseConnector):
 
         return f"{base_url.rstrip('/')}/{path}", params
 
-    async def _fetch(
+    def _fetch(
         self,
         mode: str,
         endpoint: str,
@@ -81,7 +80,7 @@ class Binance(BaseConnector):
         )
 
         try:
-            return await self._get_json(url, params=params, timeout=timeout, retries=retries)
+            return self._get_json(url, params=params, timeout=timeout, retries=retries)
         except AcquisitionError as e:
             if self._not_found(e):
                 logger.warning("404")
@@ -89,7 +88,7 @@ class Binance(BaseConnector):
             logger.error("HTTP error: %s", e)
             raise
 
-    async def fetch(
+    def fetch(
         self,
         mode: str,
         endpoint: str,
@@ -111,7 +110,7 @@ class Binance(BaseConnector):
             "end_time": end_time,
         }
 
-        return await self._cache.get_or_fetch(
+        return self._cache.get_or_fetch(
             source="binance",
             params=cached_params,
             fetch_fn=partial(
@@ -131,7 +130,7 @@ class Binance(BaseConnector):
             ttl=timedelta(days=1),
         )
 
-    async def fetch_history(
+    def fetch_history(
         self,
         symbol: str,
         interval: str = "1d",
@@ -148,11 +147,13 @@ class Binance(BaseConnector):
         per_request_ms = 1000 * interval_ms
 
         num_requests = math.ceil((now_ms - start_ms) / per_request_ms)
-        semaphore = asyncio.Semaphore(max_concurrent)
 
-        async def _fetch_window(window_start: int, window_end: int) -> list:
-            async with semaphore:
-                data = await self.fetch(
+        all_candles = []
+        for i in range(num_requests):
+            window_start = start_ms + (i * per_request_ms)
+            window_end = min(window_start + per_request_ms, now_ms)
+            try:
+                data = self.fetch(
                     mode=market,
                     endpoint="ohlcv",
                     symbol=symbol,
@@ -162,22 +163,11 @@ class Binance(BaseConnector):
                     end_time=window_end,
                     force=True,
                 )
-                return data if data else []
-
-        tasks = []
-        for i in range(num_requests):
-            window_start = start_ms + (i * per_request_ms)
-            window_end = min(window_start + per_request_ms, now_ms)
-            tasks.append(_fetch_window(window_start, window_end))
-
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-
-        all_candles = []
-        for r in results:
-            if isinstance(r, list):
-                all_candles.extend(r)
-            else:
-                logger.warning(f"History fetch error: {r}")
+            except Exception as e:
+                logger.warning(f"History fetch error: {e}")
+                continue
+            if data:
+                all_candles.extend(data)
 
         df = klines_to_dataframe(all_candles)
         self._validate(df, [NotNull("open_time"), NotNull("close")], "binance")

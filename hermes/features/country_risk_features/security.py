@@ -24,8 +24,8 @@ class security_features:
         deps=["sipri:milex"],
         compute="military_spending_gdp from the SIPRI dataset",
     )
-    async def military_spending_gdp(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self._data.fetch_sipri(country=country_code)
+    def military_spending_gdp(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self._data.fetch_sipri(country=country_code)
         data = _year_int(data, "year")
 
         if mode == "F":
@@ -41,11 +41,11 @@ class security_features:
         deps=["sipri:milex"],
         compute="military_spending_growth_yoy from the SIPRI dataset",
     )
-    async def military_spending_growth_yoy(
+    def military_spending_growth_yoy(
         self, country_code: str, mode: Literal["F", "ML"] = "F"
     ) -> float | pl.DataFrame:
 
-        data = await self._data.fetch_sipri(country=country_code)
+        data = self._data.fetch_sipri(country=country_code)
         data = _year_int(data, "year")
         data = data.sort("year", descending=True)
 
@@ -71,7 +71,7 @@ class security_features:
         deps=[],
         compute="alliance_strength_score",
     )
-    async def alliance_strength_score(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float:
+    def alliance_strength_score(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float:
         pass
 
     @feature(
@@ -80,7 +80,7 @@ class security_features:
         deps=[],
         compute="arms_imports_12m",
     )
-    async def arms_imports_12m(self, country_code: str, mode: Literal["F", "ML"] = "F") -> int:
+    def arms_imports_12m(self, country_code: str, mode: Literal["F", "ML"] = "F") -> int:
         pass
 
     @feature(
@@ -89,7 +89,7 @@ class security_features:
         deps=[],
         compute="arms_exports_12m",
     )
-    async def arms_exports_12m(self, country_code: str, mode: Literal["F", "ML"] = "F") -> int:
+    def arms_exports_12m(self, country_code: str, mode: Literal["F", "ML"] = "F") -> int:
         pass
 
     @feature(
@@ -98,7 +98,7 @@ class security_features:
         deps=[],
         compute="peacekeeping_troops",
     )
-    async def peacekeeping_troops(self, country_code: str, mode: Literal["F", "ML"] = "F") -> int:
+    def peacekeeping_troops(self, country_code: str, mode: Literal["F", "ML"] = "F") -> int:
         pass
 
     @feature(
@@ -107,8 +107,8 @@ class security_features:
         deps=["nato:membership"],
         compute="nato_member from the NATO dataset",
     )
-    async def nato_member(self, country_code: str, mode: Literal["F", "ML"] = "F") -> bool | pl.DataFrame:
-        data = await self._data.fetch_nato(country=country_code)
+    def nato_member(self, country_code: str, mode: Literal["F", "ML"] = "F") -> bool | pl.DataFrame:
+        data = self._data.fetch_nato(country=country_code)
         data = _year_int(data, "Year")
 
         if mode == "F":

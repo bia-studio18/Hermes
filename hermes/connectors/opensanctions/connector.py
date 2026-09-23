@@ -18,7 +18,7 @@ class OpenSanction(BaseConnector):
         self._headers = {"Authorization": f"ApiKey {self._api_key}", "Accept": "application/json"}
         super().__init__(cache, headers=self._headers)
 
-    async def _fetch(
+    def _fetch(
         self,
         country: str,
         dataset: str,
@@ -62,7 +62,7 @@ class OpenSanction(BaseConnector):
         logger.info(f"Params: {params}")
 
         try:
-            return await self._get_json(url, params=params, timeout=timeout, retries=retries)
+            return self._get_json(url, params=params, timeout=timeout, retries=retries)
         except AcquisitionError as e:
             if self._not_found(e):
                 logger.error(f"Dataset '{dataset}' not found")
@@ -70,7 +70,7 @@ class OpenSanction(BaseConnector):
             logger.error("HTTP error: %s", e)
             raise
 
-    async def fetch(
+    def fetch(
         self,
         country: str,
         dataset: str,
@@ -87,7 +87,7 @@ class OpenSanction(BaseConnector):
             "dataset": dataset,
         }
 
-        return await self._cache.get_or_fetch(
+        return self._cache.get_or_fetch(
             source="OpenSanction",
             params=cached_params,
             fetch_fn=partial(

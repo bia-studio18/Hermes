@@ -63,39 +63,39 @@ class FAfeatures:
             "filing_type": None,
         }
 
-    async def _yf_data(self, symbol: str):
-        _earnings = await self._yf.fetch(endpoint="earnings_history", symbol=symbol)
+    def _yf_data(self, symbol: str):
+        _earnings = self._yf.fetch(endpoint="earnings_history", symbol=symbol)
         earnings = _earnings["surprisePercent"]
-        _eps = await self._yf.fetch(endpoint="eps_estimate", symbol=symbol)
+        _eps = self._yf.fetch(endpoint="eps_estimate", symbol=symbol)
         eps = _eps["avg"]["0q"]
-        _rev = await self._yf.fetch(symbol=symbol, endpoint="revenue_estimate")
+        _rev = self._yf.fetch(symbol=symbol, endpoint="revenue_estimate")
         rev = _rev["avg"]["0y"]
         return {"earnings_surprise": next(iter(earnings.values())), "eps_estimate": eps, "revenue_estimate": rev}
 
-    async def finn_profile(self, symbol: str):
-        data = await self.finn.fetch(endpoint="profile", symbol=symbol)
+    def finn_profile(self, symbol: str):
+        data = self.finn.fetch(endpoint="profile", symbol=symbol)
         return data
 
-    async def company_peers(self, symbol: str):
-        data = await self.finn.fetch(endpoint="peers", symbol=symbol)
+    def company_peers(self, symbol: str):
+        data = self.finn.fetch(endpoint="peers", symbol=symbol)
         return data
 
-    async def finn_metrics(self, symbol: str):
-        data = await self.finn.fetch(endpoint="metric", symbol=symbol)
+    def finn_metrics(self, symbol: str):
+        data = self.finn.fetch(endpoint="metric", symbol=symbol)
         return data.get("metric", data)
 
-    async def finn_qoute(self, symbol: str):
-        qoute = await self.finn.fetch(endpoint="quote", symbol=symbol)
+    def finn_qoute(self, symbol: str):
+        qoute = self.finn.fetch(endpoint="quote", symbol=symbol)
         return qoute["c"]
 
-    async def macro(self):
-        macro_gdp = await self.fred.fetch(series_id="GDPC1")
-        macro_gdp_growth = await self.fred.fetch(series_id="A191RL1Q225SBEA")
-        macro_inflation = await self.fred.fetch(series_id="CPIAUCSL")
-        macro_interest_rates = await self.fred.fetch(series_id="FEDFUNDS")
-        macro_unemployment = await self.fred.fetch(series_id="UNRATE")
-        macro_government_debt = await self.fred.fetch(series_id="GFDEBTN")
-        macro_exchange_rates = await self.fred.fetch(series_id="RTWEXBGS")
+    def macro(self):
+        macro_gdp = self.fred.fetch(series_id="GDPC1")
+        macro_gdp_growth = self.fred.fetch(series_id="A191RL1Q225SBEA")
+        macro_inflation = self.fred.fetch(series_id="CPIAUCSL")
+        macro_interest_rates = self.fred.fetch(series_id="FEDFUNDS")
+        macro_unemployment = self.fred.fetch(series_id="UNRATE")
+        macro_government_debt = self.fred.fetch(series_id="GFDEBTN")
+        macro_exchange_rates = self.fred.fetch(series_id="RTWEXBGS")
 
         return {
             "macro_gdp": float(macro_gdp["value"].iloc[0]),
@@ -107,16 +107,16 @@ class FAfeatures:
             "macro_exchange_rates": float(macro_exchange_rates["value"].iloc[0]),
         }
 
-    async def get_fundamentels(self, symbol: str):
+    def get_fundamentels(self, symbol: str):
 
-        raw_sec = await self.sec.fetch(symbol=symbol)
+        raw_sec = self.sec.fetch(symbol=symbol)
         if not isinstance(raw_sec, dict):
             raise TypeError(f"Expected dict from SEC, got {type(raw_sec)}")
         sec_funds = self.extract_funds_sec(data=raw_sec)
         filing_meta = self.extract_filing_meta(data=raw_sec)
-        metric = await self.finn_metrics(symbol=symbol)
-        macro = await self.macro()
-        yf_data = await self._yf_data(symbol=symbol)
+        metric = self.finn_metrics(symbol=symbol)
+        macro = self.macro()
+        yf_data = self._yf_data(symbol=symbol)
 
         return CompanyFundamental(
             symbol=symbol,
@@ -154,7 +154,7 @@ class FAfeatures:
             weighted_average_shares=sec_funds["weighted_average_shares_basic"],
             dividends=sec_funds["dividends"],
             buybacks=sec_funds["buybacks"],
-            current_price=await self.finn_qoute(symbol=symbol),
+            current_price=self.finn_qoute(symbol=symbol),
             market_cap=metric["marketCapitalization"],
             pe_ratio=metric["peTTM"],
             ps_ratio=metric["psTTM"],
@@ -168,7 +168,7 @@ class FAfeatures:
             revenue_estimates=yf_data["revenue_estimate"],
             earnings_surprise=yf_data["earnings_surprise"],
             revenue_surprise=(sec_funds["revenue"] - yf_data["revenue_estimate"]) / yf_data["revenue_estimate"],
-            company_peers=await self.company_peers(symbol=symbol),
+            company_peers=self.company_peers(symbol=symbol),
             macro_gdp=macro["macro_gdp"],
             macro_gdp_growth=macro["macro_gdp_growth"],
             macro_inflation=macro["macro_inflation"],

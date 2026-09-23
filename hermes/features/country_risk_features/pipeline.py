@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from collections.abc import Callable
 from datetime import datetime
@@ -16,16 +15,15 @@ from hermes.features.country_risk_features.social import social_features
 logger = logging.getLogger(__name__)
 
 
-async def _await_group(fns: dict[str, Callable[..., Any]]) -> dict[str, Any]:
-    async def _safe_call(fn):
+def _safe_group(fns: dict[str, Callable[..., Any]]) -> dict[str, Any]:
+    values = {}
+    for name, fn in fns.items():
         try:
-            return await fn()
+            values[name] = fn()
         except Exception as e:
-            logger.warning(f"Feature failed: {e}")
-            return None
-
-    values = await asyncio.gather(*(_safe_call(f) for f in fns.values()))
-    return dict(zip(fns.keys(), values))
+            logger.warning(f"Feature {name} failed: {e}")
+            values[name] = None
+    return values
 
 
 def _normalize_key(df: pl.DataFrame, key_col: str) -> pl.DataFrame:
@@ -47,9 +45,9 @@ class pipeline:
         self.soc = social_features()
         self.os_api = os_api
 
-    async def get_country_risk_features(self, country):
+    def get_country_risk_features(self, country):
         check_iso3(code=country)
-        economic = await _await_group(
+        economic = _safe_group(
             {
                 "gdp_growth_yoy": lambda: self.eco.gdp_growth_yoy(country_code=country, mode="F"),
                 "gdp_growth_qoq": lambda: self.eco.gdp_growth_qoq(country_code=country, mode="F"),
@@ -99,7 +97,7 @@ class pipeline:
                 "gdp_per_capita_ppp": lambda: self.eco.gdp_per_capita_ppp(country_code=country, mode="F"),  # int, USD
             }
         )
-        geopolitical = await _await_group(
+        geopolitical = _safe_group(
             {
                 "conflict_event_count_30d": lambda: self.geo.conflict_event_count_30d(
                     country_code=country, mode="F"
@@ -156,7 +154,7 @@ class pipeline:
                 ),  # int, 0-100
             }
         )
-        security = await _await_group(
+        security = _safe_group(
             {
                 "military_spending_gdp": lambda: self.sec.military_spending_gdp(
                     country_code=country, mode="F"
@@ -177,7 +175,7 @@ class pipeline:
                 "nato_member": lambda: self.sec.nato_member(country_code=country),  # bool
             }
         )
-        social = await _await_group(
+        social = _safe_group(
             {
                 "social_stability_index": lambda: self.soc.social_stability_index(
                     country_code=country, mode="F"
@@ -195,7 +193,7 @@ class pipeline:
                 ),  # float, percent
             }
         )
-        environmental = await _await_group(
+        environmental = _safe_group(
             {
                 "climate_vulnerability_score": lambda: self.env.climate_vulnerability_score(
                     country_code=country, mode="F"
@@ -228,7 +226,7 @@ class pipeline:
             },
         }
 
-    async def build_training_panel(self, fns, countries) -> pl.DataFrame:
+    def build_training_panel(self, fns, countries) -> pl.DataFrame:
         panels = []
 
         for country in countries:
@@ -236,7 +234,7 @@ class pipeline:
 
             for fn in fns:
                 try:
-                    series = await fn(country, mode="ML")
+                    series = fn(country, mode="ML")
                     if isinstance(series, pl.DataFrame) and not series.is_empty():
                         key = series.columns[0]
                         series = series.unique(subset=[key], keep="first")

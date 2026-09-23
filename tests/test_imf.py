@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -12,12 +12,12 @@ from hermes.entities.countries import iso3_to_iso2
 def _mock_client(client_cls, payload=None, error=None, effects=None):
     client = MagicMock()
     if effects is not None:
-        client.get = AsyncMock(side_effect=effects)
+        client.get = MagicMock(side_effect=effects)
     elif error is not None:
-        client.get = AsyncMock(side_effect=error)
+        client.get = MagicMock(side_effect=error)
     else:
-        client.get = AsyncMock(return_value=payload)
-    client_cls.return_value.__aenter__.return_value = client
+        client.get = MagicMock(return_value=payload)
+    client_cls.return_value.__enter__.return_value = client
     return client
 
 
@@ -70,18 +70,18 @@ class TestIso3ToIso2:
 
 
 class TestIMF:
-    async def test_fetch_success(self, sample_sdmx_response):
+    def test_fetch_success(self, sample_sdmx_response):
         imf = IMF(cache=None)
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, payload=sample_sdmx_response)
-            df = await imf._fetch("USA", "IMF.STA", "PPI", "PPI.IX.A")
+            df = imf._fetch("USA", "IMF.STA", "PPI", "PPI.IX.A")
             assert not df.is_empty()
             assert df["value"].item(0) == 110.5
             assert df["country"].item(0) == "USA"
             assert df["source"].item(0) == "IMF"
 
-    async def test_fetch_no_series(self):
+    def test_fetch_no_series(self):
         imf = IMF(cache=None)
         mock_response = {
             "data": {
@@ -99,21 +99,21 @@ class TestIMF:
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, payload=mock_response)
-            df = await imf._fetch("USA", "IMF.STA", "PPI", "PPI.IX.A")
+            df = imf._fetch("USA", "IMF.STA", "PPI", "PPI.IX.A")
             assert df.is_empty()
 
-    async def test_fetch_404(self):
+    def test_fetch_404(self):
         imf = IMF(cache=None)
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, error=AcquisitionError("404", status_code=404))
-            df = await imf._fetch("USA", "IMF.STA", "BAD", "X")
+            df = imf._fetch("USA", "IMF.STA", "BAD", "X")
             assert df.is_empty()
 
-    async def test_fetch_http_error(self):
+    def test_fetch_http_error(self):
         imf = IMF(cache=None)
 
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, error=AcquisitionError("500", status_code=500))
             with pytest.raises(AcquisitionError):
-                await imf._fetch("USA", "IMF.STA", "PPI", "PPI.IX.A")
+                imf._fetch("USA", "IMF.STA", "PPI", "PPI.IX.A")

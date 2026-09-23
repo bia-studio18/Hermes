@@ -20,7 +20,7 @@ class IMF(BaseConnector):
         super().__init__(cache)
         self.url: str = IMF_BASE_URL
 
-    async def _fetch(
+    def _fetch(
         self,
         country: str,
         agency: str,
@@ -36,7 +36,7 @@ class IMF(BaseConnector):
         empty = empty_dataframe()
 
         try:
-            r = await self._get_json(url, headers=headers, timeout=timeout, retries=retries)
+            r = self._get_json(url, headers=headers, timeout=timeout, retries=retries)
         except AcquisitionError as e:
             if self._not_found(e):
                 logger.warning(f"404: country={country}, dataflow={dataflow_id}, key={key}")
@@ -45,7 +45,7 @@ class IMF(BaseConnector):
             raise
         return parse_sdmx_json(r["data"], country=country, key=key)
 
-    async def fetch(
+    def fetch(
         self,
         country: str,
         agency: str,
@@ -62,7 +62,7 @@ class IMF(BaseConnector):
             "dataflow_id": dataflow_id,
         }
 
-        df = await self._cache.get_or_fetch(
+        df = self._cache.get_or_fetch(
             source="imf",
             params=cache_params,
             fetch_fn=partial(

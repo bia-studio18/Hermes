@@ -36,8 +36,8 @@ class economic_features:
         deps=["world_bank:NY.GDP.MKTP.KD.ZG"],
         compute="GDP growth YoY, merged from WB and IMF",
     )
-    async def gdp_growth_yoy(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="NY.GDP.MKTP.KD.ZG")
+    def gdp_growth_yoy(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.wb.fetch(country_code=country_code, indicator_code="NY.GDP.MKTP.KD.ZG")
         data = check_empty(mode=mode, data=data, country=country_code)
         if not isinstance(data, pl.DataFrame):
             return data
@@ -54,8 +54,8 @@ class economic_features:
         deps=["world_bank:NY.GDP.MKTP.KD"],
         compute="GDP growth QoQ, interpolated from the annual frequency data from the World_Bank",
     )
-    async def gdp_growth_qoq(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="NY.GDP.MKTP.KD")
+    def gdp_growth_qoq(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.wb.fetch(country_code=country_code, indicator_code="NY.GDP.MKTP.KD")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -86,10 +86,10 @@ class economic_features:
         deps=["world_bank:NV.IND.MANF.KD.ZG"],
         compute="industrial_production_yoy from the World Bank data",
     )
-    async def industrial_production_yoy(
+    def industrial_production_yoy(
         self, country_code: str, mode: Literal["F", "ML"] = "F"
     ) -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="NV.IND.MANF.KD.ZG")
+        data = self.wb.fetch(country_code=country_code, indicator_code="NV.IND.MANF.KD.ZG")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -109,8 +109,8 @@ class economic_features:
         deps=["world_bank:FP.CPI.TOTL.ZG"],
         compute="inflation_cpi_yoy from the World Bank data",
     )
-    async def inflation_cpi_yoy(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="FP.CPI.TOTL.ZG")
+    def inflation_cpi_yoy(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.wb.fetch(country_code=country_code, indicator_code="FP.CPI.TOTL.ZG")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -130,8 +130,8 @@ class economic_features:
         deps=["world_bank:FP.CPI.TOTL"],
         compute="inflation_volatility_12m from the World Bank data",
     )
-    async def inflation_volatility_12m(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="FP.CPI.TOTL")
+    def inflation_volatility_12m(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.wb.fetch(country_code=country_code, indicator_code="FP.CPI.TOTL")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -168,8 +168,8 @@ class economic_features:
         deps=["IMF:IMF.STA:PPI:PPI.IX.A"],
         compute="ppi_yoy from the IMF data",
     )
-    async def ppi_yoy(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.imf.fetch(country=country_code, agency="IMF.STA", dataflow_id="PPI", key="PPI.IX.A")
+    def ppi_yoy(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.imf.fetch(country=country_code, agency="IMF.STA", dataflow_id="PPI", key="PPI.IX.A")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -188,8 +188,8 @@ class economic_features:
         deps=["world_bank:NV.IND.MANF.KD.ZG"],
         compute="inflation_yoy from the IMF data",
     )
-    async def inflation_yoy(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.imf.fetch(country=country_code, agency="IMF.STA", dataflow_id="CPI", key="CPI._T.IX.M")
+    def inflation_yoy(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.imf.fetch(country=country_code, agency="IMF.STA", dataflow_id="CPI", key="CPI._T.IX.M")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -208,8 +208,8 @@ class economic_features:
         deps=["world_bank:SL.UEM.TOTL.ZS"],
         compute="unemployment_rate from the World Bank data",
     )
-    async def unemployment_rate(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="SL.UEM.TOTL.ZS")
+    def unemployment_rate(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.wb.fetch(country_code=country_code, indicator_code="SL.UEM.TOTL.ZS")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -228,8 +228,8 @@ class economic_features:
         deps=["world_bank:SL.UEM.1524.ZS"],
         compute="youth_unemployment from the World Bank data",
     )
-    async def youth_unemployment(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="SL.UEM.1524.ZS")
+    def youth_unemployment(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.wb.fetch(country_code=country_code, indicator_code="SL.UEM.1524.ZS")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -248,10 +248,10 @@ class economic_features:
         deps=["world_bank:SL.TLF.CACT.ZS"],
         compute="labor_force_participation from the World Bank data",
     )
-    async def labor_force_participation(
+    def labor_force_participation(
         self, country_code: str, mode: Literal["F", "ML"] = "F"
     ) -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="SL.TLF.CACT.ZS")
+        data = self.wb.fetch(country_code=country_code, indicator_code="SL.TLF.CACT.ZS")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -270,10 +270,10 @@ class economic_features:
         deps=["world_bank:BN.CAB.XOKA.GD.ZS"],
         compute="current_account_gdp_ratio from the World Bank data",
     )
-    async def current_account_gdp_ratio(
+    def current_account_gdp_ratio(
         self, country_code: str, mode: Literal["F", "ML"] = "F"
     ) -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="BN.CAB.XOKA.GD.ZS")
+        data = self.wb.fetch(country_code=country_code, indicator_code="BN.CAB.XOKA.GD.ZS")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -292,10 +292,10 @@ class economic_features:
         deps=["world_bank:FI.RES.TOTL.MO"],
         compute="fx_reserves_months_import from the World Bank data",
     )
-    async def fx_reserves_months_import(
+    def fx_reserves_months_import(
         self, country_code: str, mode: Literal["F", "ML"] = "F"
     ) -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="FI.RES.TOTL.MO")
+        data = self.wb.fetch(country_code=country_code, indicator_code="FI.RES.TOTL.MO")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -314,8 +314,8 @@ class economic_features:
         deps=["world_bank:DT.DOD.DECT.GN.ZS"],
         compute="external_debt_gdp_ratio from the World Bank data",
     )
-    async def external_debt_gdp_ratio(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="DT.DOD.DECT.GN.ZS")
+    def external_debt_gdp_ratio(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.wb.fetch(country_code=country_code, indicator_code="DT.DOD.DECT.GN.ZS")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -334,8 +334,8 @@ class economic_features:
         deps=["IMF:IMF.RES:WEO:GGXCNL_NGDP"],
         compute="fiscal_deficit_gdp from the IMF data",
     )
-    async def fiscal_deficit_gdp(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.imf.fetch(country=country_code, agency="IMF.RES", dataflow_id="WEO", key="GGXCNL_NGDP")
+    def fiscal_deficit_gdp(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.imf.fetch(country=country_code, agency="IMF.RES", dataflow_id="WEO", key="GGXCNL_NGDP")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -354,8 +354,8 @@ class economic_features:
         deps=["IMF:IMF.RES:WEO:GGXWDG_NGDP"],
         compute="government_debt_gdp from the IMF data",
     )
-    async def government_debt_gdp(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.imf.fetch(country=country_code, agency="IMF.RES", dataflow_id="WEO", key="GGXWDG_NGDP")
+    def government_debt_gdp(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.imf.fetch(country=country_code, agency="IMF.RES", dataflow_id="WEO", key="GGXWDG_NGDP")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -374,8 +374,8 @@ class economic_features:
         deps=["IMF:IMF.STA:ER:EREER_IX.M"],
         compute="reer_misalignment from the IMF data",
     )
-    async def reer_misalignment(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.imf.fetch(country=country_code, agency="IMF.STA", dataflow_id="ER", key="EREER_IX.M")
+    def reer_misalignment(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.imf.fetch(country=country_code, agency="IMF.STA", dataflow_id="ER", key="EREER_IX.M")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -394,8 +394,8 @@ class economic_features:
         deps=["world_bank:FB.AST.NPLN.ZS"],
         compute="banking_sector_health from the World Bank data",
     )
-    async def banking_sector_health(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="FB.AST.NPLN.ZS")
+    def banking_sector_health(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.wb.fetch(country_code=country_code, indicator_code="FB.AST.NPLN.ZS")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -414,8 +414,8 @@ class economic_features:
         deps=["world_bank:NY.GDP.PCAP.PP.CD"],
         compute="gdp_per_capita_ppp from the World Bank data",
     )
-    async def gdp_per_capita_ppp(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
-        data = await self.wb.fetch(country_code=country_code, indicator_code="NY.GDP.PCAP.PP.CD")
+    def gdp_per_capita_ppp(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
+        data = self.wb.fetch(country_code=country_code, indicator_code="NY.GDP.PCAP.PP.CD")
 
         data = check_empty(mode=mode, country=country_code, data=data)
         if not isinstance(data, pl.DataFrame):
@@ -430,12 +430,7 @@ class economic_features:
 
 
 if __name__ == "__main__":
-    import asyncio
-
-    async def main():
-        eco = economic_features()
-        data = await eco.inflation_volatility_12m("USA", "ML")
-        data.write_csv("data/data.csv")
-        print(data)
-
-    asyncio.run(main())
+    eco = economic_features()
+    data = eco.inflation_volatility_12m("USA", "ML")
+    data.write_csv("data/data.csv")
+    print(data)

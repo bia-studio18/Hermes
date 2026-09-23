@@ -40,7 +40,7 @@ class FINNHUB(BaseConnector):
 
         return f"{self._url}/{path}"
 
-    async def _fetch(
+    def _fetch(
         self,
         endpoint: str,
         symbol: str,
@@ -74,7 +74,7 @@ class FINNHUB(BaseConnector):
             params["to"] = _to
 
         try:
-            return await self._get_json(_url, params=params, timeout=timeout, retries=retries)
+            return self._get_json(_url, params=params, timeout=timeout, retries=retries)
         except AcquisitionError as e:
             if self._not_found(e):
                 logger.warning("404")
@@ -82,7 +82,7 @@ class FINNHUB(BaseConnector):
             logger.error("HTTP error: %s", e)
             raise
 
-    async def fetch(
+    def fetch(
         self,
         endpoint: str,
         symbol: str,
@@ -101,7 +101,7 @@ class FINNHUB(BaseConnector):
             "_from": _from,
         }
 
-        return await self._cache.get_or_fetch(
+        return self._cache.get_or_fetch(
             source="finnhub",
             params=cached_params,
             fetch_fn=partial(
@@ -118,7 +118,7 @@ class FINNHUB(BaseConnector):
             ttl=timedelta(days=7),
         )
 
-    async def fetch_candles_history(
+    def fetch_candles_history(
         self,
         symbol: str,
         resolution: str = "D",
@@ -134,7 +134,7 @@ class FINNHUB(BaseConnector):
 
         while chunk_start < now:
             chunk_end = min(chunk_start + chunk_seconds, now)
-            data = await self.fetch(
+            data = self.fetch(
                 endpoint="candles",
                 symbol=symbol,
                 resolution=resolution,

@@ -13,7 +13,7 @@ class CryptoHistory:
     def __init__(self):
         self.binance = Binance()
 
-    async def get_history(
+    def get_history(
         self,
         symbol: str,
         interval: str = "1d",
@@ -21,7 +21,7 @@ class CryptoHistory:
         years: int = 2,
         max_concurrent: int = 10,
     ) -> pl.DataFrame:
-        df = await self.binance.fetch_history(
+        df = self.binance.fetch_history(
             symbol=symbol,
             interval=interval,
             market=market,

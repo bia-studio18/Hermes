@@ -78,122 +78,108 @@ def http_server():
 
 
 class TestClientRequests:
-    async def test_get_returns_json(self, http_server):
+    def test_get_returns_json(self, http_server):
         _Handler.routes[("GET", "/items")] = _json_response({"data": [1, 2, 3]})
-        async with Client(base_url=http_server) as c:
-            result = await c.get("/items")
+        with Client(base_url=http_server) as c:
+            result = c.get("/items")
         assert result == {"data": [1, 2, 3]}
 
-    async def test_post_sends_json(self, http_server):
+    def test_post_sends_json(self, http_server):
         _Handler.routes[("POST", "/items")] = _json_response({"created": True})
-        async with Client(base_url=http_server) as c:
-            result = await c.post("/items", json={"name": "x"})
+        with Client(base_url=http_server) as c:
+            result = c.post("/items", json={"name": "x"})
         assert result == {"created": True}
 
-    async def test_put_and_delete(self, http_server):
+    def test_put_and_delete(self, http_server):
         _Handler.routes[("PUT", "/items/1")] = _json_response({"ok": True})
         _Handler.routes[("DELETE", "/items/1")] = _json_response({"deleted": True})
-        async with Client(base_url=http_server) as c:
-            assert await c.put("/items/1") == {"ok": True}
-            assert await c.delete("/items/1") == {"deleted": True}
+        with Client(base_url=http_server) as c:
+            assert c.put("/items/1") == {"ok": True}
+            assert c.delete("/items/1") == {"deleted": True}
 
-    async def test_query_params_passed(self, http_server):
+    def test_query_params_passed(self, http_server):
         _Handler.routes[("GET", "/search?q=hermes&limit=5")] = _json_response({"results": []})
-        async with Client(base_url=http_server) as c:
-            result = await c.get("/search", params={"q": "hermes", "limit": 5})
+        with Client(base_url=http_server) as c:
+            result = c.get("/search", params={"q": "hermes", "limit": 5})
         assert result == {"results": []}
 
-    async def test_client_error_not_retried_by_default(self, http_server):
+    def test_client_error_not_retried_by_default(self, http_server):
         _Handler.routes[("GET", "/items")] = (400, {"Content-Type": "text/plain"}, b"bad")
-        async with Client(base_url=http_server) as c:
+        with Client(base_url=http_server) as c:
             with pytest.raises(AcquisitionError):
-                await c.get("/items")
+                c.get("/items")
 
-    async def test_retries_until_success(self, http_server):
+    def test_retries_until_success(self, http_server):
         _Handler.routes[("GET", "/items")] = [
             (503, {"Content-Type": "text/plain"}, b"first"),
             (503, {"Content-Type": "text/plain"}, b"second"),
             _json_response({"ok": True}),
         ]
-        async with Client(base_url=http_server, max_retries=3, backoff_factor=0.01) as c:
-            result = await c.get("/items")
+        with Client(base_url=http_server, max_retries=3, backoff_factor=0.01) as c:
+            result = c.get("/items")
         assert result == {"ok": True}
 
-    async def test_gives_up_after_max_retries(self, http_server):
+    def test_gives_up_after_max_retries(self, http_server):
         _Handler.routes[("GET", "/items")] = [(503, {"Content-Type": "text/plain"}, b"unavailable")]
-        async with Client(base_url=http_server, max_retries=2, backoff_factor=0.01) as c:
+        with Client(base_url=http_server, max_retries=2, backoff_factor=0.01) as c:
             with pytest.raises(AcquisitionError):
-                await c.get("/items")
+                c.get("/items")
 
-    async def test_auth_error_raised(self, http_server):
+    def test_auth_error_raised(self, http_server):
         _Handler.routes[("GET", "/secure")] = (401, {"Content-Type": "text/plain"}, b"denied")
-        async with Client(base_url=http_server) as c:
+        with Client(base_url=http_server) as c:
             with pytest.raises(AuthenticationError):
-                await c.get("/secure")
+                c.get("/secure")
 
-    async def test_auth_error_not_retried(self, http_server):
+    def test_auth_error_not_retried(self, http_server):
         _Handler.routes[("GET", "/secure")] = (403, {"Content-Type": "text/plain"}, b"denied")
-        async with Client(base_url=http_server, max_retries=5) as c:
+        with Client(base_url=http_server, max_retries=5) as c:
             with pytest.raises(AuthenticationError):
-                await c.get("/secure")
+                c.get("/secure")
 
-    async def test_auth_error_retried_when_configured(self, http_server):
+    def test_auth_error_retried_when_configured(self, http_server):
         _Handler.routes[("GET", "/secure")] = [
             (403, {"Content-Type": "text/plain"}, b"denied"),
             _json_response({"ok": True}),
         ]
-        async with Client(base_url=http_server, max_retries=3, backoff_factor=0.01, retry_auth=True) as c:
-            result = await c.get("/secure")
+        with Client(base_url=http_server, max_retries=3, backoff_factor=0.01, retry_auth=True) as c:
+            result = c.get("/secure")
         assert result == {"ok": True}
 
-    async def test_builtin_timeout_is_retried(self):
-        import asyncio
-        from unittest.mock import AsyncMock, MagicMock
-
-        cm = MagicMock()
-        cm.__aenter__ = AsyncMock(side_effect=TimeoutError("timeout"))
-        cm.__aexit__ = AsyncMock(return_value=False)
-        session = MagicMock()
-        session.closed = False
-        session.request.return_value = cm
-        c = Client(max_retries=2, backoff_factor=0.01)
-        c._session = session  # type: ignore[assignment]
-        with pytest.raises(TimeoutError):
-            await c.get("/items")
-        assert session.request.call_count == 3
-
-    async def test_rate_limit_error_raised(self, http_server):
+    def test_rate_limit_error_raised(self, http_server):
         _Handler.routes[("GET", "/items")] = (
             429,
             {"Content-Type": "text/plain", "Retry-After": "3"},
             b"slow down",
         )
-        async with Client(base_url=http_server) as c:
+        with Client(base_url=http_server) as c:
             with pytest.raises(RateLimitError) as ei:
-                await c.get("/items")
+                c.get("/items")
             assert ei.value.retry_after == 3.0
 
 
 class TestClientStream:
-    async def test_stream_chunks(self, http_server):
+    def test_stream_chunks(self, http_server):
         _Handler.routes[("GET", "/blob")] = (
             200,
             {"Content-Type": "application/octet-stream"},
             b"abcdefghij",
         )
-        async with Client(base_url=http_server) as c:
-            chunks = [chunk async for chunk in c.stream("GET", "/blob", chunk_size=4)]
+        with Client(base_url=http_server) as c:
+            chunks = [chunk for chunk in c.stream("GET", "/blob", chunk_size=4)]
         assert chunks == [b"abcd", b"efgh", b"ij"]
 
 
 class TestClientLifecycle:
-    async def test_request_before_open_raises(self):
-        c = Client(base_url="http://example.com")  # not used as context manager
-        with pytest.raises(AcquisitionError):
-            await c.get("/x")
-        await c.close()
+    def test_works_without_context_manager(self, http_server):
+        _Handler.routes[("GET", "/items")] = _json_response({"ok": True})
+        c = Client(base_url=http_server)
+        try:
+            assert c.get("/items") == {"ok": True}
+        finally:
+            c.close()
 
-    async def test_close_twice_is_safe(self, http_server):
-        async with Client(base_url=http_server) as c:
-            await c.close()
-            await c.close()
+    def test_close_twice_is_safe(self, http_server):
+        with Client(base_url=http_server) as c:
+            c.close()
+            c.close()

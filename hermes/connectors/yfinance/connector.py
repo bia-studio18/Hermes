@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from datetime import timedelta
 from functools import partial
@@ -27,7 +26,7 @@ class Yfinance(BaseConnector):
     ):
         super().__init__(cache)
 
-    async def _fetch(
+    def _fetch(
         self,
         endpoint: YfinanceEndpoint,
         symbol: str,
@@ -48,7 +47,7 @@ class Yfinance(BaseConnector):
         else:
             raise ValueError(f"Unsupported endpoint: {endpoint}")
 
-    async def fetch(
+    def fetch(
         self,
         endpoint: YfinanceEndpoint,
         symbol: str,
@@ -59,7 +58,7 @@ class Yfinance(BaseConnector):
             "symbol": symbol,
         }
 
-        return await self._cache.get_or_fetch(
+        return self._cache.get_or_fetch(
             source="yfinance",
             params=cached_params,
             fetch_fn=partial(
@@ -71,7 +70,7 @@ class Yfinance(BaseConnector):
             ttl=timedelta(days=1),
         )
 
-    async def fetch_history(
+    def fetch_history(
         self,
         symbol: str,
         interval: str = "1d",
@@ -87,7 +86,7 @@ class Yfinance(BaseConnector):
             ticker = yf.Ticker(symbol)
             return ticker.history(period=f"{years}y", interval=yf_interval)
 
-        df = await asyncio.get_event_loop().run_in_executor(None, _sync_history)
+        df = _sync_history()
 
         df = history_to_dataframe(df)
         self._validate(df, [NotNull("timestamp_ms"), NotNull("close")], "yfinance")

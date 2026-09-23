@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-import asyncio
-import inspect
 import logging
-from collections.abc import Awaitable, Callable
+import threading
+import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
-JobFn = Callable[..., Awaitable[Any] | Any]
+JobFn = Callable[..., Any]
 
 
 def _cron_field(pattern: str, low: int, high: int) -> set[int]:
@@ -175,8 +175,11 @@ class _Job:
 
 
 _registry: dict[str, _Job] = {}
-_loop_task: asyncio.Task | None = None
 _running = False
+_stop_event = threading.Event()
+_loop_thread: threading.Thread | None = None
+# ponytail: single condition variable guards _registry; add per-job locks if jobs run concurrently
+_cond = threading.Condition()
 
 
 def schedule(
@@ -212,17 +215,11 @@ def schedule(
     return decorator
 
 
-async def _execute(job: _Job) -> None:
-    result = job.fn()
-
-    if inspect.isawaitable(result):
-        await asyncio.wait_for(
-            result,
-            timeout=job.timeout,
-        )
+def _execute(job: _Job) -> None:
+    job.fn()
 
 
-async def _run_job(job: _Job) -> None:
+def _run_job(job: _Job) -> None:
     job.last_status = "running"
     job.error = None
 
@@ -230,7 +227,7 @@ async def _run_job(job: _Job) -> None:
 
     for attempt in range(job.retries + 1):
         try:
-            await _execute(job)
+            _execute(job)
 
             job.last_status = "success"
             job.last_run = started
@@ -238,14 +235,11 @@ async def _run_job(job: _Job) -> None:
             job.next_run_at = job.calculate_next_run(datetime.now())
             return
 
-        except asyncio.CancelledError:
-            raise
-
         except Exception as exc:
             job.error = str(exc)
 
             if attempt < job.retries:
-                await asyncio.sleep(min(2**attempt, 60))
+                time.sleep(min(2**attempt, 60))
 
     job.last_status = "failed"
     job.last_run = started
@@ -260,7 +254,7 @@ async def _run_job(job: _Job) -> None:
     )
 
 
-async def _loop() -> None:
+def _loop() -> None:
     global _running
 
     _running = True
@@ -278,17 +272,13 @@ async def _loop() -> None:
             if (job.next_run_at is not None and job.next_run_at <= now and job.last_status != "running")
         ]
 
-        if due:
-            await asyncio.gather(
-                *(_run_job(job) for job in due),
-                return_exceptions=True,
-            )
-            continue
+        for job in due:
+            _run_job(job)
 
         next_times = [job.next_run_at for job in _registry.values() if job.next_run_at is not None]
 
         if not next_times:
-            await asyncio.sleep(1)
+            _stop_event.wait(1)
             continue
 
         delay = max(
@@ -296,36 +286,33 @@ async def _loop() -> None:
             min((next_time - now).total_seconds() for next_time in next_times),
         )
 
-        await asyncio.sleep(min(delay, 60))
+        _stop_event.wait(min(delay, 60))
 
 
 def start() -> None:
-    global _loop_task
+    global _loop_thread
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    _loop_task = loop.create_task(_loop())
+    _loop_thread = threading.Thread(target=_loop, daemon=True)
+    _loop_thread.start()
 
     try:
-        loop.run_until_complete(_loop_task)
+        _stop_event.wait()
     except KeyboardInterrupt:
         pass
     finally:
-        loop.run_until_complete(loop.shutdown_asyncgens())
-        loop.close()
+        stop()
+        if _loop_thread:
+            _loop_thread.join()
 
 
 def stop() -> None:
     global _running
 
     _running = False
-
-    if _loop_task and not _loop_task.done():
-        _loop_task.cancel()
+    _stop_event.set()
 
 
-async def run_now_async(name: str | None = None) -> None:
+def run_now(name: str | None = None) -> None:
     if name is None:
         jobs = list(_registry.values())
     else:
@@ -334,14 +321,8 @@ async def run_now_async(name: str | None = None) -> None:
 
         jobs = [_registry[name]]
 
-    await asyncio.gather(
-        *(_run_job(job) for job in jobs),
-        return_exceptions=True,
-    )
-
-
-def run_now(name: str | None = None) -> None:
-    asyncio.run(run_now_async(name))
+    for job in jobs:
+        _run_job(job)
 
 
 def list_jobs() -> list[dict[str, Any]]:

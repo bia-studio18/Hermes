@@ -1,10 +1,12 @@
-import asyncio
+import logging
 from functools import lru_cache
 from pathlib import Path
 
 import polars as pl
 
 from hermes.parsing.engine import ParserEngine
+
+logger = logging.getLogger(__name__)
 
 CURRENT_DIR = Path(__file__).resolve().parent.parent
 
@@ -24,17 +26,17 @@ class PUBLIC_DATASET:
     def __init__(self) -> None:
         self._parser = ParserEngine()
 
-    async def _read_csv(self, path: Path) -> pl.DataFrame:
-        return await asyncio.to_thread(self._parser.parse, path, "csv")
+    def _read_csv(self, path: Path) -> pl.DataFrame:
+        return self._parser.parse(path, "csv")
 
-    async def fetch_hrs(self, country: str) -> pl.DataFrame:
-        df = await self._read_csv(HRS_PATH)
+    def fetch_hrs(self, country: str) -> pl.DataFrame:
+        df = self._read_csv(HRS_PATH)
         data = df.filter(pl.col("country") == country)
         data = data.with_columns(pl.col("date").str.to_date())
         return data
 
-    async def fetch_hdi(self, country: str) -> pl.DataFrame:
-        df = await self._read_csv(HDI_PATH)
+    def fetch_hdi(self, country: str) -> pl.DataFrame:
+        df = self._read_csv(HDI_PATH)
         df.columns = [c if c != "" else "index" for c in df.columns]
         data = df.select(["country", "Year", "HDI"])
         data.columns = ["iso3", "year", "score"]
@@ -42,39 +44,39 @@ class PUBLIC_DATASET:
         data = data.filter(pl.col("iso3") == country)
         return data
 
-    async def fetch_cpi(self, country: str) -> pl.DataFrame:
-        df = await self._read_csv(CPI_PATH)
+    def fetch_cpi(self, country: str) -> pl.DataFrame:
+        df = self._read_csv(CPI_PATH)
         data = df.select(["iso3", "year", "score"])
         data = data.with_columns(pl.col("year").cast(pl.Utf8).str.to_date())
         data = data.filter(pl.col("iso3") == country)
         return data
 
-    async def fetch_fsi(self, country: str) -> pl.DataFrame:
-        df = await self._read_csv(FSI_PATH)
+    def fetch_fsi(self, country: str) -> pl.DataFrame:
+        df = self._read_csv(FSI_PATH)
         data = df.filter(pl.col("country") == country)
         data = data.with_columns(pl.col("date").str.to_date())
         return data
 
-    async def fetch_nato(self, country: str) -> pl.DataFrame:
-        df = await self._read_csv(NATO_PATH)
+    def fetch_nato(self, country: str) -> pl.DataFrame:
+        df = self._read_csv(NATO_PATH)
         data = df.filter(pl.col("ISO3") == country)
         data = data.with_columns(pl.col("Year").cast(pl.Utf8).str.to_date())
         return data
 
-    async def fetch_crs(self, country: str) -> pl.DataFrame:
-        df = await self._read_csv(CRS_PATH)
+    def fetch_crs(self, country: str) -> pl.DataFrame:
+        df = self._read_csv(CRS_PATH)
         data = df.filter(pl.col("ISO3") == country)
         data = data.with_columns(pl.col("year").cast(pl.Utf8).str.to_date())
         return data
 
-    async def fetch_cvs(self, country: str) -> pl.DataFrame:
-        df = await self._read_csv(CVS_PATH)
+    def fetch_cvs(self, country: str) -> pl.DataFrame:
+        df = self._read_csv(CVS_PATH)
         data = df.filter(pl.col("ISO3") == country)
         data = data.with_columns(pl.col("year").cast(pl.Utf8).str.to_date())
         return data
 
-    async def fetch_sipri(self, country: str) -> pl.DataFrame:
-        df = await self._read_csv(SIPRI_PATH)
+    def fetch_sipri(self, country: str) -> pl.DataFrame:
+        df = self._read_csv(SIPRI_PATH)
         data = df.filter(pl.col("iso3") == country)
         data = data.with_columns(pl.col("year").cast(pl.Utf8).str.to_date())
         return data

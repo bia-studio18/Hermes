@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
@@ -94,7 +94,7 @@ class TestCalculatePriceFeatures:
 
 
 class TestTAfeaturesSnapshot:
-    async def test_snapshot_with_mocked_data(self):
+    def test_snapshot_with_mocked_data(self):
         ta = TAfeatures()
         ta.binance = MagicMock()
 
@@ -144,7 +144,7 @@ class TestTAfeaturesSnapshot:
 
         premium = {"lastFundingRate": "0.0001", "nextFundingTime": 1711900800000}
 
-        async def mock_fetch(mode, endpoint, symbol, **kwargs):
+        def mock_fetch(mode, endpoint, symbol, **kwargs):
             if endpoint == "ohlcv":
                 return candles
             elif endpoint == "trades":
@@ -165,9 +165,9 @@ class TestTAfeaturesSnapshot:
                 return premium
             return []
 
-        ta.binance.fetch = AsyncMock(side_effect=mock_fetch)
+        ta.binance.fetch = MagicMock(side_effect=mock_fetch)
 
-        result = await ta.build_snapshot("BTCUSDT")
+        result = ta.build_snapshot("BTCUSDT")
         assert result.symbol == "BTCUSDT"
         assert result.close == 351.0
         assert result.open == 349.0
