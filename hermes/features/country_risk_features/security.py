@@ -41,9 +41,7 @@ class security_features:
         deps=["sipri:milex"],
         compute="military_spending_growth_yoy from the SIPRI dataset",
     )
-    def military_spending_growth_yoy(
-        self, country_code: str, mode: Literal["F", "ML"] = "F"
-    ) -> float | pl.DataFrame:
+    def military_spending_growth_yoy(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
 
         data = self._data.fetch_sipri(country=country_code)
         data = _year_int(data, "year")

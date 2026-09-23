@@ -86,9 +86,7 @@ class economic_features:
         deps=["world_bank:NV.IND.MANF.KD.ZG"],
         compute="industrial_production_yoy from the World Bank data",
     )
-    def industrial_production_yoy(
-        self, country_code: str, mode: Literal["F", "ML"] = "F"
-    ) -> float | pl.DataFrame:
+    def industrial_production_yoy(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
         data = self.wb.fetch(country_code=country_code, indicator_code="NV.IND.MANF.KD.ZG")
 
         data = check_empty(mode=mode, country=country_code, data=data)
@@ -248,9 +246,7 @@ class economic_features:
         deps=["world_bank:SL.TLF.CACT.ZS"],
         compute="labor_force_participation from the World Bank data",
     )
-    def labor_force_participation(
-        self, country_code: str, mode: Literal["F", "ML"] = "F"
-    ) -> float | pl.DataFrame:
+    def labor_force_participation(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
         data = self.wb.fetch(country_code=country_code, indicator_code="SL.TLF.CACT.ZS")
 
         data = check_empty(mode=mode, country=country_code, data=data)
@@ -270,9 +266,7 @@ class economic_features:
         deps=["world_bank:BN.CAB.XOKA.GD.ZS"],
         compute="current_account_gdp_ratio from the World Bank data",
     )
-    def current_account_gdp_ratio(
-        self, country_code: str, mode: Literal["F", "ML"] = "F"
-    ) -> float | pl.DataFrame:
+    def current_account_gdp_ratio(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
         data = self.wb.fetch(country_code=country_code, indicator_code="BN.CAB.XOKA.GD.ZS")
 
         data = check_empty(mode=mode, country=country_code, data=data)
@@ -292,9 +286,7 @@ class economic_features:
         deps=["world_bank:FI.RES.TOTL.MO"],
         compute="fx_reserves_months_import from the World Bank data",
     )
-    def fx_reserves_months_import(
-        self, country_code: str, mode: Literal["F", "ML"] = "F"
-    ) -> float | pl.DataFrame:
+    def fx_reserves_months_import(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
         data = self.wb.fetch(country_code=country_code, indicator_code="FI.RES.TOTL.MO")
 
         data = check_empty(mode=mode, country=country_code, data=data)

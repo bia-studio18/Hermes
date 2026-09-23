@@ -30,9 +30,7 @@ class enviromental_features:
         deps=["NDGAIN:cvs"],
         compute="climate vulnerability score computed from the NDGAIN dataset",
     )
-    def climate_vulnerability_score(
-        self, country_code: str, mode: Literal["F", "ML"] = "F"
-    ) -> float | pl.DataFrame:
+    def climate_vulnerability_score(self, country_code: str, mode: Literal["F", "ML"] = "F") -> float | pl.DataFrame:
         data = self._data.fetch_cvs(country=country_code)
         data = check_empty(data=data, mode=mode)
         if not isinstance(data, pl.DataFrame):
