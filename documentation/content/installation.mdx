@@ -27,11 +27,11 @@ Hermes installs the following dependencies automatically:
 
 | Package | Purpose |
 |---------|---------|
-| `aiohttp` | Async HTTP client for connectors |
 | `polars` | Primary DataFrame library |
 | `pyarrow` | Arrow interchange and Parquet support |
-| `yfinance` | Yahoo Finance data (optional via uv add hermes-plt[yfinance]) |
-| `typer` | CLI framework |
+| `yfinance` | Yahoo Finance data (optional via `hermes-plt[yfinance]`) |
+
+The compiled `hermes._rust` extension (built with PyO3) provides the HTTP client and the CLI; it is bundled with the wheel, so no Rust toolchain is needed on your machine.
 
 ## Environment Variables
 
@@ -56,9 +56,9 @@ NEWS_DATA_API=
 ```
 
 > Note: these variables are the documented convention in `.env.example`. Hermes does not
-> auto-load `.env` files yet — connectors currently take keys explicitly as constructor
-> arguments. Pass them directly, e.g. `FRED(api="my_key")`, `FINNHUB(api="my_key")`,
-> `OpenSanction(api_key="my_key")`, `SECEDGAR(username="...", email="...")`.
+> auto-load `.env` files yet. Connectors no longer take keys as constructor arguments —
+> they read from the credential manager via `hr.set_cred(name, value)` (see
+> [Configuration](/reference/configuration)).
 
 | Variable | Connector | Notes |
 |----------|-----------|-------|
@@ -74,7 +74,7 @@ Not all connectors require API keys. World Bank, IMF, Binance, and YFinance work
 ## Verify Installation
 
 ```bash
-hermes version
+hermes --help
 ```
 
 Or from Python:
@@ -83,13 +83,6 @@ Or from Python:
 from importlib.metadata import version
 
 print(version("hermes-plt"))
-```
-
-Or use the CLI:
-
-```bash
-hermes version
-hermes info
 ```
 
 ## Docker (optional)

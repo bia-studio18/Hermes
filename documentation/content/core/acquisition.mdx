@@ -4,7 +4,7 @@ title: Acquisition
 
 # Acquisition
 
-The acquisition module handles data fetching from external sources with built-in caching and an async HTTP client. Connectors use `RawCache` for on-disk Parquet caching.
+The acquisition module handles data fetching from external sources with built-in caching and a synchronous HTTP client. Connectors use `RawCache` for on-disk Parquet caching.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ Connector
     ▼
 ┌─────────────┐         ┌──────────┐
 │   Client    │────────▶│  Cache   │
-│  (aiohttp)  │         │ (Parquet)│
+│ (Rust core) │         │ (Parquet)│
 └─────────────┘         └──────────┘
 ```
 
@@ -61,15 +61,15 @@ cache.put("world_bank", {"country": "US"}, df)
 
 #### `get_or_fetch(source, params, fetch_fn, force=False, ttl=None) -> pl.DataFrame`
 
-Async method — returns cached data if available, otherwise calls `fetch_fn`, caches the result, and returns it.
+Returns cached data if available, otherwise calls `fetch_fn`, caches the result, and returns it.
 
 ```python
 import polars as pl
 
-async def fetch_data():
+def fetch_data():
     return pl.DataFrame({"value": [1, 2, 3]})
 
-df = await cache.get_or_fetch(
+df = cache.get_or_fetch(
     source="world_bank",
     params={"country": "US"},
     fetch_fn=fetch_data,
@@ -112,15 +112,15 @@ Keys are SHA-256 hashes of `source + JSON-serialized params`, truncated to 16 ch
 
 ## Client
 
-Async HTTP client wrapping `aiohttp`.
+Synchronous HTTP client backed by the Hermes Rust core. Transport-fault and 5xx retries are handled in Rust (idempotent methods only); this layer maps status codes and raw errors onto Hermes error types.
 
 ### `Client(base_url, timeout=30.0, max_retries=0, ...)`
 
 ```python
 from hermes.acquisition import Client
 
-async with Client(base_url="https://api.worldbank.org/v2") as client:
-    data = await client.get("/countries/US/indicators/NY.GDP.MKTP.KD.ZG")
+with Client(base_url="https://api.worldbank.org/v2") as client:
+    data = client.get("/countries/US/indicators/NY.GDP.MKTP.KD.ZG")
 ```
 
 | Parameter | Type | Default | Description |
@@ -154,29 +154,25 @@ async with Client(base_url="https://api.worldbank.org/v2") as client:
 The working path for acquiring data is to instantiate a connector directly. Every connector's `fetch()` uses the shared `RawCache` unless `cache=None` is passed, and takes the same `retries`/`timeout` knobs:
 
 ```python
-import asyncio
 from hermes.connectors import World_bank, FRED, Binance
 
-async def main():
-    wb = World_bank()
-    df = await wb.fetch(country_code="US", indicator_code="NY.GDP.MKTP.KD.ZG")
-    print(df.head())
-
-asyncio.run(main())
+wb = World_bank()
+df = wb.fetch(country_code="US", indicator_code="NY.GDP.MKTP.KD.ZG")
+print(df.head())
 ```
 
 Registered connectors (exported from `hermes.connectors`):
 
-| Connector | Class | API key required |
-|-----------|-------|------------------|
+| Connector | Class | Credential required |
+|-----------|-------|---------------------|
 | Binance | `Binance` | No |
-| Finnhub | `FINNHUB` | Yes — passed as `api=` (see `FINNHUB_API` in `.env.example`) |
-| FRED | `FRED` | Yes — passed as `api=` |
+| Finnhub | `FINNHUB` | Yes — `set_cred("finnhub", ...)` |
+| FRED | `FRED` | Yes — `set_cred("fred", ...)` |
 | GDELT | `GDELT` | No (stub) |
 | IMF | `IMF` | No |
-| OpenSanctions | `OpenSanction` | Yes — passed as `api_key=` |
+| OpenSanctions | `OpenSanction` | Yes — `set_cred("opensanction", ...)` |
 | Public datasets | `PUBLIC_DATASET` | No |
-| SEC EDGAR | `SECEDGAR` | Username/email passed as `username=` / `email=` (User-Agent) |
+| SEC EDGAR | `SECEDGAR` | Yes — `set_cred("sec_username", ...)` / `set_cred("sec_email", ...)` |
 | World Bank | `World_bank` | No |
 | Yahoo Finance | `Yfinance` | No |
 

@@ -25,16 +25,27 @@ SEC_USERNAME=Your Name
 SEC_EMAIL=your@email.com
 ```
 
-These are the documented convention (see `.env.example`). Hermes does not auto-load `.env` files yet — connectors take keys explicitly as constructor arguments:
+These are the documented convention (see `.env.example`). Hermes does not auto-load `.env` files yet. Connectors read their keys from the **credential manager** at construction time, so register the value first:
 
 ```python
+import hermes as hr
 from hermes.connectors import FRED, FINNHUB, OpenSanction, SECEDGAR
 
-fred = FRED(api="your_key")
-finnhub = FINNHUB(api="your_key")
-sanctions = OpenSanction(api_key="your_key")
-sec = SECEDGAR(username="Your Name", email="your@email.com")
+hr.set_cred("fred", "your_key")
+hr.set_cred("finnhub", "your_key")
+hr.set_cred("opensanction", "your_key")
+hr.set_cred("sec_username", "Your Name")
+hr.set_cred("sec_email", "your@email.com")
+
+fred = FRED()
+finnhub = FINNHUB()
+sanctions = OpenSanction()
+sec = SECEDGAR()
 ```
+
+The credential manager API: `hr.set_cred(name, value)`, `hr.get_cred(name)`, `hr.has_cred(name)`, `hr.list_creds()`, `hr.delete_cred(name)`. Values are persisted locally to `~/.hermes-plt/credentials.json` (mode `0600`); nothing is logged or exported.
+
+> On a fresh install the store must exist before `hr.set_cred`/`hr.get_cred` work — until `~/.hermes-plt/credentials.json` is present they raise `CredentialStorageError`. The CLI's `cred` command was removed in the Rust CLI rewrite, so initialize the file first (it can simply contain `{}`).
 
 ### Required Variables
 
@@ -59,20 +70,7 @@ These connectors work without any configuration:
 
 ## Programmatic Configuration
 
- {/* TODO: verify against source — configure() and get_config() raise NotImplementedError */}
-
-```python
-import hermes as hr
-
-# Set API keys programmatically
-config = hr.configure(api_keys={
-    "fred": "your_key",
-    "finnhub": "your_key",
-})
-
-# Retrieve current config
-config = hr.get_config()
-```
+`hr.configure()` and `hr.get_config()` are scaffolded and currently raise `NotImplementedError` — use the credential manager (`hr.set_cred` / `hr.get_cred`) for API keys today.
 
 ## Cache Configuration
 
@@ -146,7 +144,7 @@ Incremental sync state was previously persisted at `~/.hermes/sync/<source>.json
 
 ## Scheduler Configuration
 
-The scheduler uses asyncio for job execution.
+The scheduler runs jobs on a background thread.
 
 ### Schedule Specs
 

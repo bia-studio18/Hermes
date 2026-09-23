@@ -17,8 +17,10 @@ pip install hermes-plt
 Verify the installation:
 
 ```bash
-hermes version
+hermes --help
 ```
+
+> The CLI currently ships four commands — `fetch`, `inspect`, `dataset`, `entity` — which parse but are not implemented yet. Profiling from the terminal is not available in this release; use the Python API below.
 
 ## Basic Usage
 
@@ -38,10 +40,10 @@ for col in report.columns:
     print(f"{col.name}: {col.dtype}, nulls={col.null_count}, unique={col.unique_count}")
 ```
 
-Or from the terminal:
+Profile from Python — the terminal equivalent is not yet available:
 
-```bash
-hermes profile_data data.csv
+```python
+report = hr.profile(path="data.csv")
 ```
 
 ### Read and inspect data
@@ -114,34 +116,34 @@ pandas_df = ds.to_pandas()   # pandas.DataFrame
 
 ## Connectors
 
-Hermes ships with 10 source connectors that share a common disk cache and retry layer. Connectors are used directly (they are `async`), and each `fetch()` caches its result by default.
+Hermes ships with 10 source connectors that share a common disk cache and retry layer. They are synchronous; each `fetch()` caches its result by default.
 
 ### World Bank (no API key required)
 
 ```python
-import asyncio
 from hermes.connectors import World_bank
 
-async def main():
-    wb = World_bank()  # uses the shared disk cache (~/.hermes_cache/raw)
+wb = World_bank()  # uses the shared disk cache (~/.hermes_cache/raw)
 
-    df = await wb.fetch(
-        country_code="US",
-        indicator_code="NY.GDP.MKTP.KD.ZG",
-    )
-    print(df.head())
-
-asyncio.run(main())
+df = wb.fetch(
+    country_code="US",
+    indicator_code="NY.GDP.MKTP.KD.ZG",
+)
+print(df.head())
 ```
 
 ### FRED (requires API key)
 
+Register the key first, then construct the connector — connectors read credentials from the credential manager at instantiation time:
+
 ```python
+import hermes as hr
 from hermes.connectors import FRED
 
-fred = FRED(api="your_fred_key")
+hr.set_cred("fred", "your_fred_key")
 
-df = await fred.fetch(series_id="CPIAUCSL")  # Consumer Price Index
+fred = FRED(api="your_fred_key")
+df = fred.fetch(series_id="CPIAUCSL")  # Consumer Price Index
 print(df.head())
 ```
 
@@ -153,11 +155,11 @@ from hermes.connectors import Binance
 b = Binance()
 
 # Single request (cached): 30 daily spot candles
-df = await b.fetch(mode="spot", endpoint="ohlcv", symbol="BTCUSDT", interval="1d", limit=30)
+df = b.fetch(mode="spot", endpoint="ohlcv", symbol="BTCUSDT", interval="1d", limit=30)
 print(df.head())
 
-# Multi-year history (future market, up to 10 concurrent requests)
-history = await b.fetch_history(symbol="BTCUSDT", interval="1d", market="future", years=2)
+# Multi-year history (future market)
+history = b.fetch_history(symbol="BTCUSDT", interval="1d", market="future", years=2)
 print(history.head())
 ```
 
