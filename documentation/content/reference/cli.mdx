@@ -4,86 +4,70 @@ title: CLI
 
 # CLI Reference
 
-Hermes provides a command-line interface built with [Typer](https://typer.tiangolo.com/). After installation, the `hermes` command is available in your shell.
+Hermes provides a command-line interface backed by the Rust core (built with [clap](https://clap.rs/), no Typer dependency). After installation, the `hermes` command is available in your shell. The Python shim (`hermes.cli`) forwards straight to the compiled Rust CLI, so the native binary and the Python entry point behave identically.
 
 ## Usage
 
 ```bash
-hermes [COMMAND] [OPTIONS]
+hermes [COMMAND]
 ```
+
+## Global options
+
+| Option | Description |
+|--------|-------------|
+| `-h`, `--help` | Print help |
+| `-V`, `--version` | Print version |
 
 ## Commands
 
-### `hermes version`
+### `hermes fetch`
 
-Print the current version.
+Fetch data from a source.
 
-```bash
-$ hermes version
-Hermes v0.2.16
-```
+### `hermes inspect`
 
-> Note: the printed version is currently hardcoded to `v0.2.16` in the CLI while the package version is `0.2.17` — they will be synced.
+Inspect data.
 
-### `hermes info`
+### `hermes dataset`
 
-Print version and description.
+Manage datasets.
 
-```bash
-$ hermes info
-Hermes v0.2.16
-Foundational intelligence data platform
-```
+### `hermes entity`
 
-### `hermes profile_data <PATH>`
+Work with entities.
 
-Profile a dataset file and display a rich-formatted report.
+> These four commands parse correctly but are not wired to Hermes functionality yet — each exits with code `1` and prints `<command> is not implemented yet`. Unknown commands, missing arguments, and other usage errors exit with code `2`.
 
-```bash
-$ hermes profile_data gdp.csv
-```
+## Exit codes
 
-**Arguments:**
+| Code | Meaning |
+|------|---------|
+| `0` | Command succeeded (or `--help` / `--version` was displayed) |
+| `1` | Parsed command has no implementation yet |
+| `2` | Usage error (unknown command or bad arguments) |
 
-| Argument | Description |
-|----------|-------------|
-| `PATH` | Path to the dataset file (CSV or Parquet) |
-
-The command displays:
-- **Summary panel** — file path, row count, column count, date range, frequency
-- **Columns table** — per-column stats: type, unique count, null count, null %, min, max, mean, median
-- **Top values** — most frequent values per string column
-- **Quality panel** — completeness, duplicate count, anomaly count
-
-**Example output:**
+## Example output
 
 ```
-╭─ Profile Report ─────────────────────────────────────────╮
-│  File:   gdp.csv                                         │
-│  Rows:   249                                             │
-│  Columns: 6                                              │
-│  Date range: date: 2000-01-01 → 2023-01-01              │
-│  Frequency: 365 days                                    │
-╰──────────────────────────────────────────────────────────╯
+$ hermes --help
+Hermes command-line interface
 
-╭─ Columns ────────────────────────────────────────────────╮
-│  Column        Type     Unique   Nulls   Null%   ...     │
-│  country_code  Utf8     249      0       0.00%   ...     │
-│  indicator     Utf8     1        0       0.00%   ...     │
-│  value         Float64  249      0       0.00%   ...     │
-│  ...                                                      │
-╰──────────────────────────────────────────────────────────╯
+Commands:
+  fetch    Fetch data from a source
+  inspect  Inspect data
+  dataset  Manage datasets
+  entity   Work with entities
+  help     Print this message or the help of the given subcommand(s)
 
-╭─ Quality ────────────────────────────────────────────────╮
-│  Completeness: 100% (all columns complete)               │
-│  Duplicates: 0                                           │
-│  Anomalies: none detected                                │
-╰──────────────────────────────────────────────────────────╯
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
 ```
 
 ## Installation
 
-The CLI is installed automatically with `pip install hermes-plt`. The entry point is defined in `pyproject.toml`:
+The CLI is installed automatically with `pip install hermes-plt`. The entry point is defined in `pyproject.toml` and forwards to the Rust core:
 
 ```toml
 [project.scripts]
@@ -92,6 +76,4 @@ hermes = "hermes.cli:app"
 
 ## Dependencies
 
-The CLI uses:
-- `typer` — command framework
-- `rich` — terminal formatting and tables
+`hermes.cli` is a thin shim — argument parsing, help, and version handling live in the Rust core (`rust/src/cli`, using `clap`). There is no Typer. If you need the Rust code, the toolchain requirement is Rust (edition per `rust/Cargo.toml`); Python-only users get the prebuilt `hermes._rust` extension.

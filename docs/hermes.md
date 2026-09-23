@@ -2004,7 +2004,7 @@ return consistent `Dataset`/result types.
 
 ### E2. Acquisition Engine
 
-*Status: partial — `RawCache` (Parquet disk cache with TTL/keys/stats) and `Client` (aiohttp, retries, backoff, error mapping, streaming) implemented and used by all connectors. NOT implemented: source registry, sync state, pagination helpers, `fetch/ingest/source/connect/read/stream` API.*
+*Status: partial — `RawCache` (Parquet disk cache with TTL/keys/stats) and `Client` (Rust core HTTP: retries, backoff, error mapping, streaming) implemented and used by all connectors. NOT implemented: source registry, sync state, pagination helpers, `fetch/ingest/source/connect/read/stream` API.*
 
 - [ ] Define `Source`: configuration, credentials, capabilities, metadata, lifecycle
 - [ ] Implement `fetch()`, `ingest()`, `source()`, `connect()`, `read()`, `stream()`
@@ -2201,7 +2201,7 @@ Corporate/financial/defense/healthcare identifiers can be added independently.
 
 ### E20. Inspection / Developer Experience
 
-*Status: partial — `inspect()` and `profile()` implemented (data API + Dataset methods); CLI `profile_data` works. Not ended: `get_metadata`/`get_provenance`/`get_lineage` wrappers, catalog schema/lineage inspection CLI.*
+*Status: partial — `inspect()` and `profile()` implemented (data API + Dataset methods). The Rust CLI (`fetch/inspect/dataset/entity`) parses but is not wired up. Not ended: `get_metadata`/`get_provenance`/`get_lineage` wrappers, catalog schema/lineage inspection CLI.*
 
 - [ ] Implement `inspect()`: dimensions, schema, metadata, sample records, quality, lineage,
       provenance, version
@@ -2537,11 +2537,11 @@ provenance/lineage; (2) `resolve_company("AAPL").financials` returning a provena
 | Dataset Catalog | E11 | ~5% (stubs) |
 | Storage / Query / Export | E12–15 | ~25% (export/utils + Dataset.save/export real; storage backends/query stubs) |
 | Versioning / Migration | E16/E17 | ~10% (DataVersion model exists) |
-| Public API + CLI | E20/E24 | ~50% (data API real: parse/normalize/validate/profile/inspect/freqs/ranges/anomalies; credentials real; CLI profile_data + cred real; fetch/schema/storage wrappers stubs) |
+| Public API + CLI | E20/E24 | ~50% (data API real: parse/normalize/validate/profile/inspect/freqs/ranges/anomalies; credentials real; Rust CLI subcommands parse but are unwired; fetch/schema/storage wrappers stubs) |
 | Scheduler | — | **DONE** — cron/interval job scheduler in `hermes.core.scheduler` |
 | Connectors on engine | Phase 9 | ~40% (9 connectors work with shared cache/client; GDELT is a stub; contract pending) |
 | Provider layer | Phase 10 | ~5% (entities skeleton) |
-| Hardening / Testing / Docs | E25/E26/E28 | ~35% (385 tests pass; docs being brought in line; platform hardening pending) |
+| Hardening / Testing / Docs | E25/E26/E28 | ~35% (414 tests pass; docs being brought in line; platform hardening pending) |
 
 ---
 

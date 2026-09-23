@@ -15,3 +15,7 @@ res/
 **/home/
 res/
 **/node_modules/
+# build artifacts
+hermes/_rust*.so
+dist/
+rust/target/

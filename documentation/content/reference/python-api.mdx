@@ -239,7 +239,7 @@ NOT IMPLEMENTED — raises `NotImplementedError`.
 Credential storage is implemented and persisted to `~/.hermes-plt/credentials.json`:
 
 ```python
-hr.set_cred("fred", "api_key_value")    # or: hermes cred set fred
+hr.set_cred("fred", "api_key_value")
 hr.get_cred("fred")                     # -> "api_key_value"
 hr.has_cred("fred")                     # -> True
 hr.list_creds()                         # -> ["fred"]

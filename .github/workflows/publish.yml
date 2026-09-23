@@ -31,20 +31,30 @@ jobs:
       - name: Test
         run: uv run pytest --cov=hermes --cov-report=xml --cov-report=term
 
-  publish:
+  build:
+    name: Build (${{ matrix.name }})
     if: github.event_name == 'release'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            os: ubuntu-latest
+          - name: macos-x86_64
+            os: macos-13
+          - name: macos-arm64
+            os: macos-14
+          - name: windows-x86_64
+            os: windows-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Build
-        run: uv build
+      - name: Build abi3 wheel
+        run: uv run maturin build --release --strip --out dist --features abi3
 
       - name: Publish
         run: uv publish
