@@ -110,7 +110,7 @@ class Binance(BaseConnector):
             "end_time": end_time,
         }
 
-        return self._cache.get_or_fetch(
+        payload = self._cache.get_or_fetch(
             source="binance",
             params=cached_params,
             fetch_fn=partial(
@@ -129,6 +129,9 @@ class Binance(BaseConnector):
             force=force,
             ttl=timedelta(days=1),
         )
+        if payload is None:
+            return payload
+        return self._dataset(payload, f"binance:{symbol}:{mode}:{endpoint}", source="binance", params=cached_params)
 
     def fetch_history(
         self,

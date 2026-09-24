@@ -7,6 +7,7 @@ from hermes.connectors.finnhub import FINNHUB
 from hermes.connectors.sec import SECEDGAR
 from hermes.connectors.sec.tags import SEC_TAG_MAP
 from hermes.connectors.yfinance import Yfinance
+from hermes.core.dataset import Dataset
 
 logger = logging.getLogger(__name__)
 
@@ -172,6 +173,8 @@ class CompanyFilling:
                 logger.warning(f"Failed to fetch SEC data for {symbol}")
                 continue
 
+            if isinstance(raw, Dataset):
+                raw = raw.data
             if raw is None or not isinstance(raw, dict) or "facts" not in raw:
                 continue
 

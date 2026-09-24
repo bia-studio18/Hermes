@@ -1,7 +1,10 @@
+import hashlib
+import io
 import sqlite3
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 import pyarrow as pa
@@ -13,15 +16,28 @@ from hermes.core.provenance import Provenance
 from hermes.core.versioning import DataVersion
 
 
+def frame_checksum(data: object) -> str:
+    if isinstance(data, pl.LazyFrame):
+        data = data.collect()
+    if isinstance(data, pl.DataFrame):
+        buf = io.BytesIO()
+        data.write_ipc(buf)
+        return hashlib.sha256(buf.getvalue()).hexdigest()
+    return hashlib.sha256(repr(data).encode()).hexdigest()
+
+
 @dataclass
 class Dataset:
+    """Dataset is the central object; `.data` holds the payload and all
+    container access (items, iteration, length, truthiness, attributes) is
+    delegated to it so wrapped data stays usable as-is."""
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     version: str = "0.0.1"
 
     data_ref: str | Path | None = None
     schema_ref: str | None = None
-    data: pl.DataFrame | None = None
+    data: Any = None
 
     metadata: MetaData = field(default_factory=MetaData)
     provenance: Provenance = field(default_factory=Provenance)
@@ -48,6 +64,61 @@ class Dataset:
         if self.metadata is None:
             raise ValueError("No MetaData Available")
         return self.metadata
+
+    def record(
+        self,
+        operation: str,
+        input_ref: str | None = None,
+        params: dict | None = None,
+        *,
+        version: bool = True,
+    ) -> "Dataset":
+        self.lineage.add_step(
+            LineageStep(
+                operation=operation,
+                input_ref=input_ref,
+                output_ref=self.name,
+                params=dict(params or {}),
+            )
+        )
+        if version:
+            self._bump_version()
+        return self
+
+    def _bump_version(self) -> None:
+        if self.data is None:
+            return
+        prev = self.data_version
+        frame = self.data if isinstance(self.data, pl.DataFrame) else None
+        schema_hash = None
+        if frame is not None:
+            schema_hash = hashlib.sha256(str(sorted((c, str(t)) for c, t in frame.schema.items())).encode()).hexdigest()
+        self.data_version = DataVersion(
+            content_hash=frame_checksum(self.data),
+            schema_hash=schema_hash,
+            parent_version=prev.content_hash if prev else None,
+        )
+
+    def __getattr__(self, name: str) -> object:
+        data = self.__dict__.get("data")
+        if data is None or name.startswith("__"):
+            raise AttributeError(name)
+        return getattr(data, name)
+
+    def __getitem__(self, key):
+        return self.data[key]
+
+    def __iter__(self):
+        return iter(self.data)
+
+    def __len__(self) -> int:
+        return len(self.data)
+
+    def __contains__(self, item) -> bool:
+        return item in self.data
+
+    def __bool__(self) -> bool:
+        return bool(self.data)
 
     def inspect(self) -> InspectReport:
         if self.data is None:
@@ -77,7 +148,7 @@ class Dataset:
 
         _profile = profile(self.data)
         self.set_metadata(_profile)
-        self.lineage.add_step(LineageStep(operation="profile", output_ref=self.name))
+        self.record("profile", version=False)
         return self.metadata
 
     def set_metadata(self, metadata: MetaData) -> None:
@@ -134,6 +205,9 @@ class Dataset:
         if isinstance(data, pa.Table):
             return pl.from_arrow(data)  # type: ignore[return-value]
 
+        if isinstance(data, (list, dict)):
+            return pl.DataFrame(data)
+
         raise TypeError(f"Cannot convert {type(data).__name__} to Polars")
 
     def to_pandas(self) -> object:
@@ -186,7 +260,7 @@ class Dataset:
             data = self.__load_file()
 
         self.data = data
-        self.lineage.add_step(LineageStep(operation="load", input_ref=ref, output_ref=self.name))
+        self.record("load", input_ref=ref)
         return self.data
 
     def __load_file(self):

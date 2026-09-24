@@ -87,7 +87,7 @@ class OpenSanction(BaseConnector):
             "dataset": dataset,
         }
 
-        return self._cache.get_or_fetch(
+        payload = self._cache.get_or_fetch(
             source="OpenSanction",
             params=cached_params,
             fetch_fn=partial(
@@ -102,5 +102,13 @@ class OpenSanction(BaseConnector):
                 timeout=timeout,
             ),
             force=force,
-            ttl=timedelta(days=30),
+            ttl=timedelta(days=7),
+        )
+        if payload is None:
+            return payload
+        return self._dataset(
+            payload,
+            f"opensanctions:{country}:{dataset}",
+            source="opensanctions",
+            params=cached_params,
         )

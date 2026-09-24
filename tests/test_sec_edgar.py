@@ -84,4 +84,4 @@ class TestSECEDGAR:
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, payload=mock_response)
             r1 = sec.fetch(symbol="AAPL")
-            assert r1 == mock_response
+            assert r1.data == mock_response

@@ -7,6 +7,7 @@ import polars as pl
 from hermes.acquisition.cache import RawCache
 from hermes.connectors.base import BaseConnector
 from hermes.connectors.fred.parser import observations_to_dataframe
+from hermes.core.dataset import Dataset
 from hermes.core.errors import AcquisitionError
 from hermes.credentials.manager import get_cred
 from hermes.normalization import NormalizeDate
@@ -34,7 +35,7 @@ class FRED(BaseConnector):
 
         return observations_to_dataframe(r, series_id)
 
-    def fetch(self, series_id: str, timeout: float = 30.0, retries: int = 3, force: bool = False) -> pl.DataFrame:
+    def fetch(self, series_id: str, timeout: float = 30.0, retries: int = 3, force: bool = False) -> Dataset | None:
         cached_params = {"series_id": series_id}
 
         df = self._cache.get_or_fetch(
@@ -53,4 +54,4 @@ class FRED(BaseConnector):
             return df
         df = self._normalize(df, [NormalizeDate("date")])
         self._validate(df, [NotNull("date"), NotNull("value")], "fred")
-        return df
+        return self._dataset(df, f"fred:{series_id}", source="fred", params=cached_params)

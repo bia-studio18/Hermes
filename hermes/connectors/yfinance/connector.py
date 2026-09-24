@@ -58,7 +58,7 @@ class Yfinance(BaseConnector):
             "symbol": symbol,
         }
 
-        return self._cache.get_or_fetch(
+        payload = self._cache.get_or_fetch(
             source="yfinance",
             params=cached_params,
             fetch_fn=partial(
@@ -69,6 +69,9 @@ class Yfinance(BaseConnector):
             force=force,
             ttl=timedelta(days=1),
         )
+        if payload is None:
+            return payload
+        return self._dataset(payload, f"yfinance:{symbol}:{endpoint}", source="yfinance", params=cached_params)
 
     def fetch_history(
         self,

@@ -50,7 +50,7 @@ class SECEDGAR(BaseConnector):
             "company": symbol,
         }
 
-        return self._cache.get_or_fetch(
+        payload = self._cache.get_or_fetch(
             source="sec_edgar",
             params=cache_params,
             fetch_fn=partial(
@@ -62,3 +62,6 @@ class SECEDGAR(BaseConnector):
             force=force,
             ttl=timedelta(days=7),
         )
+        if payload is None:
+            return payload
+        return self._dataset(payload, f"sec_edgar:{symbol}", source="sec_edgar", params=cache_params)

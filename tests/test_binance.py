@@ -100,4 +100,4 @@ class TestBinanceFetch:
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, payload=mock_response)
             r1 = b.fetch(mode="spot", endpoint="ohlcv", symbol="BTCUSDT", interval="1d", limit=30)
-            assert r1 == mock_response
+            assert r1.data == mock_response

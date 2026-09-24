@@ -8,6 +8,7 @@ from hermes.acquisition.cache import RawCache
 from hermes.connectors.base import BaseConnector
 from hermes.connectors.imf.mappings import IMF_BASE_URL
 from hermes.connectors.imf.parser import empty_dataframe, parse_sdmx_json
+from hermes.core.dataset import Dataset
 from hermes.core.errors import AcquisitionError
 from hermes.normalization import NormalizeCountry, NormalizeDate
 from hermes.validation import NotNull
@@ -54,7 +55,7 @@ class IMF(BaseConnector):
         timeout: float = 30.0,
         retries: int = 3,
         force: bool = False,
-    ) -> pl.DataFrame:
+    ) -> Dataset:
         cache_params = {
             "country": country,
             "key": key,
@@ -79,4 +80,9 @@ class IMF(BaseConnector):
         )
         df = self._normalize(df, [NormalizeDate("date"), NormalizeCountry("country")])
         self._validate(df, [NotNull("country"), NotNull("value")], "imf")
-        return df
+        return self._dataset(
+            df,
+            f"imf:{agency}:{dataflow_id}:{key}",
+            source="imf",
+            params=cache_params,
+        )
