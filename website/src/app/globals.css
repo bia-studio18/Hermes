@@ -71,3 +71,24 @@ body {
 :focus:not(:focus-visible) {
   outline: none;
 }
+/* Skip to content — visible only on keyboard focus */
+.skip-to-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  padding: 0.75rem 1.25rem;
+  background: var(--color-teal);
+  color: var(--color-midnight);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-120%);
+  transition: transform 0.15s ease;
+}
+
+.skip-to-content:focus {
+  transform: translateY(0);
+  outline: 2px solid var(--color-offwhite);
+  outline-offset: 2px;
+}
