@@ -101,7 +101,7 @@ class FINNHUB(BaseConnector):
             "_from": _from,
         }
 
-        return self._cache.get_or_fetch(
+        payload = self._cache.get_or_fetch(
             source="finnhub",
             params=cached_params,
             fetch_fn=partial(
@@ -117,6 +117,9 @@ class FINNHUB(BaseConnector):
             force=force,
             ttl=timedelta(days=7),
         )
+        if payload is None:
+            return payload
+        return self._dataset(payload, f"finnhub:{symbol}:{endpoint}", source="finnhub", params=cached_params)
 
     def fetch_candles_history(
         self,

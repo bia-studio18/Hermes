@@ -8,6 +8,7 @@ from hermes.acquisition.cache import RawCache
 from hermes.connectors.base import BaseConnector
 from hermes.connectors.world_bank.mappings import WORLD_BANK_BASE_URL
 from hermes.connectors.world_bank.parser import records_to_dataframe
+from hermes.core.dataset import Dataset
 from hermes.core.errors import AcquisitionError
 from hermes.normalization import NormalizeCountry, NormalizeDate
 from hermes.validation import NotNull
@@ -75,7 +76,7 @@ class World_bank(BaseConnector):
         timeout: float = 30.0,
         retries: int = 3,
         force: bool = False,
-    ) -> pl.DataFrame:
+    ) -> Dataset:
         cache_params = {
             "country": country_code,
             "indicator": indicator_code,
@@ -103,4 +104,9 @@ class World_bank(BaseConnector):
         )
         df = self._normalize(df, [NormalizeDate("date"), NormalizeCountry("country")])
         self._validate(df, [NotNull("date"), NotNull("country"), NotNull("value")], "world_bank")
-        return df
+        return self._dataset(
+            df,
+            f"world_bank:{country_code}:{indicator_code}",
+            source="world_bank",
+            params=cache_params,
+        )

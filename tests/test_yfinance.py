@@ -80,4 +80,4 @@ class TestYfinance:
             r1 = yf.fetch(endpoint="eps_estimate", symbol="AAPL")
             r2 = yf.fetch(endpoint="eps_estimate", symbol="AAPL")
             assert mock_ticker.earnings_estimate is not None
-            assert r1 == r2
+            assert r1.data == r2.data

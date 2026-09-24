@@ -3,10 +3,14 @@ import logging
 import numpy as np
 import polars as pl
 
+from hermes.core.dataset import Dataset
+
 logger = logging.getLogger(__name__)
 
 
 def check_empty(mode, data, country="unknown"):
+    if isinstance(data, Dataset):
+        data = data.to_polars()
     if isinstance(data, pl.DataFrame) and data.is_empty():
         logger.warning(f"No Data for {country}")
         return empty_result(mode)

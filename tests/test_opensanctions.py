@@ -43,7 +43,7 @@ class TestOpenSanction:
         with patch("hermes.connectors.base.Client") as client_cls:
             _mock_client(client_cls, error=AcquisitionError("404", status_code=404))
             result = os.fetch("USA", dataset="default", limit=0)
-            assert result == {}
+            assert result.data == {}
 
     def test_fetch_http_error(self, tmp_cache):
         os = OpenSanction(cache=tmp_cache)

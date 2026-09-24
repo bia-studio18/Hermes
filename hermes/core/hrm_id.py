@@ -29,3 +29,5 @@ def hrm_id(entity_type: str) -> str:
     encoded = encoded.zfill(22)
 
     return f"HRM-{entity_type.upper()}-{encoded.upper()}"
+
+print(hrm_id('FUCK'))

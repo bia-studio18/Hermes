@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
+from importlib.metadata import PackageNotFoundError, version
 from typing import Any
 
 import polars as pl
 
 from hermes.acquisition.cache import RawCache
 from hermes.acquisition.client import Client
+from hermes.core.dataset import Dataset, frame_checksum
 from hermes.core.errors import AcquisitionError
+from hermes.core.provenance import Provenance
 from hermes.normalization import NormalizationEngine
 from hermes.normalization.rule import NormalizationRule
 from hermes.validation import validate
@@ -56,6 +60,28 @@ class BaseConnector:
         result = validate(data, rules)
         if not result.passed:
             logger.warning("%s validation failed:\n%s", source, result.summary())
+
+    def _dataset(self, payload: Any, name: str, *, source: str, params: dict | None = None) -> Dataset:
+        dataset = Dataset(
+            name=name,
+            data=payload,
+            provenance=Provenance(
+                source=source,
+                connector=type(self).__name__.lower(),
+                connector_version=self._hermes_version(),
+                retrieved_at=datetime.now(tz=UTC),
+                raw_checksum=frame_checksum(payload),
+            ),
+        )
+        dataset.record("fetch", input_ref=source, params=params or {})
+        return dataset
+
+    @staticmethod
+    def _hermes_version() -> str | None:
+        try:
+            return version("hermes-plt")
+        except PackageNotFoundError:
+            return None
 
 
 __all__ = ["BaseConnector"]

@@ -6,6 +6,7 @@ from typing import Any
 import polars as pl
 import polars.selectors as cs
 
+from hermes.core.dataset import Dataset
 from hermes.core.errors import HermesError
 from hermes.core.metadata import ColumnMetadata, InspectReport, MetaData, QualityInfo
 from hermes.core.result import Result
@@ -13,24 +14,38 @@ from hermes.normalization.context import NormalizationContext
 from hermes.normalization.engine import NormalizationEngine
 from hermes.normalization.rule import NormalizationRule
 from hermes.parsing.engine import ParserEngine
-from hermes.validation.engine import validate
+from hermes.validation.engine import validate as validate_frame
 from hermes.validation.result import ValidationResult
 
 logger = logging.getLogger(__name__)
 
 
-def parse(data: object, format: str | None = None, **kwargs: object) -> Result:
-    try:
-        df = ParserEngine().parse(data, format=format, **kwargs)
-        return Result(
-            status="success",
-            data=df,
-            statistics={"rows": df.height, "columns": df.width},
-        )
-    except HermesError as exc:
-        result = Result(status="failure", data=None)
-        result.add_error(exc)
-        return result
+def parse(data: object, format: str | None = None, **kwargs: object) -> Dataset:
+    if isinstance(data, Dataset):
+        if not isinstance(data.data, pl.DataFrame):
+            source = data.data if data.data is not None else data.data_ref
+            data.data = ParserEngine().parse(source, format=format, **kwargs)
+            if isinstance(data.data, pl.LazyFrame):
+                data.data = data.data.collect()
+        data.record("parse", input_ref=str(data.data_ref) if data.data_ref else None, params={"format": format})
+        return data
+
+    df = data if isinstance(data, (pl.DataFrame, pl.LazyFrame)) else ParserEngine().parse(data, format=format, **kwargs)
+    if isinstance(df, pl.LazyFrame):
+        df = df.collect()
+    ref = data if isinstance(data, (str, Path)) else None
+    name = Path(ref).stem if ref else "dataset"
+    ds = Dataset(name=name, data=df, data_ref=ref)
+    ds.record("parse", input_ref=str(ref) if ref else None, params={"format": format})
+    return ds
+
+
+def _rule_labels(rules: list | None) -> list:
+    labels = []
+    for rule in rules or []:
+        describe = getattr(rule, "describe", None)
+        labels.append(describe() if callable(describe) else getattr(rule, "name", str(rule)))
+    return labels
 
 
 def normalize(
@@ -41,9 +56,30 @@ def normalize(
 ) -> object:
 
     engine = NormalizationEngine(rules=rules or [], context=context)
+    if isinstance(data, Dataset):
+        if report:
+            result = engine.normalize_report(data.data)
+            data.data = result.data
+        else:
+            data.data = engine.normalize(data.data)
+        data.record("normalize", params={"rules": _rule_labels(rules), "report": report})
+        return result if report else data
+
     if report:
         return engine.normalize_report(data)
     return engine.normalize(data)
+
+
+def validate(data: object, rules: list | None = None) -> ValidationResult:
+    if isinstance(data, Dataset):
+        result = validate_frame(data.data, rules=rules)
+        data.record(
+            "validate",
+            params={"rules": _rule_labels(rules), "passed": result.passed, "errors": len(result.errors)},
+            version=False,
+        )
+        return result
+    return validate_frame(data, rules=rules)
 
 
 def validate_data(data: object, rules: list | None = None) -> ValidationResult:
