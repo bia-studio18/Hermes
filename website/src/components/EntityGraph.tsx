@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 
 // Entity-relationship diagram: six labelled entity types radiating from a
 // central hub. Thin teal lines, low-opacity dots. Inline SVG.
 //
-// Hovering (or tab-focusing) a node isolates its edge and label, which is the
-// whole interaction — a state change, so framer owns it.
+// Hovering (or tab-focusing) a node isolates its edge, label and dot, which is
+// the whole interaction. The transitions are plain CSS on SVG presentation
+// attributes rather than a motion library: those attributes are read as the
+// element's start value by CSS but come back undefined to a JS animator, and
+// here there is nothing to coordinate — one boolean drives everything.
 
 const NODES = [
   { label: "Country", x: 30, y: 30 },
@@ -20,9 +22,14 @@ const NODES = [
 
 const HUB = { x: 104, y: 61 };
 
+const EDGE = "transition-[stroke-opacity] duration-200";
+const FILL = "transition-[fill] duration-200";
+const FADE = "transition-opacity duration-200";
+
 export function EntityGraph() {
   const [hover, setHover] = useState<string | null>(null);
   const dim = hover !== null;
+  const lit = (label: string) => hover === label;
 
   return (
     <svg
@@ -33,7 +40,7 @@ export function EntityGraph() {
       aria-label="Entity relationship graph: Country, Organization, Person, Location, Event and Document, each connected to a central hub"
     >
       {NODES.map((n) => (
-        <motion.line
+        <line
           key={`edge-${n.label}`}
           x1={HUB.x}
           y1={HUB.y}
@@ -41,23 +48,23 @@ export function EntityGraph() {
           y2={n.y}
           stroke="var(--color-teal)"
           strokeWidth="0.75"
-          animate={{ strokeOpacity: dim ? (hover === n.label ? 1 : 0.12) : 0.45 }}
-          transition={{ duration: 0.2 }}
+          style={{ strokeOpacity: dim ? (lit(n.label) ? 1 : 0.12) : 0.45 }}
+          className={EDGE}
         />
       ))}
 
-      <motion.circle
+      <circle
         cx={HUB.x}
         cy={HUB.y}
         r="4"
         fill="var(--color-teal)"
-        animate={{ fillOpacity: dim ? 1 : 0.85 }}
-        transition={{ duration: 0.2 }}
+        style={{ fillOpacity: dim ? 1 : 0.85 }}
+        className={FADE}
       />
       <circle cx={HUB.x} cy={HUB.y} r="7" fill="var(--color-teal)" fillOpacity="0.15" />
 
       {NODES.map((n) => (
-        <motion.text
+        <text
           key={`label-${n.label}`}
           x={n.x}
           y={n.y}
@@ -67,17 +74,18 @@ export function EntityGraph() {
           fontSize="8"
           fontFamily="var(--font-jetbrains-mono), monospace"
           letterSpacing="1"
-          animate={{
-            fill: dim && hover !== n.label ? "var(--color-gray)" : "var(--color-offwhite)",
+          style={{
+            fill: dim && !lit(n.label) ? "var(--color-gray)" : "var(--color-offwhite)",
           }}
-          transition={{ duration: 0.2 }}
+          className={FILL}
         >
           {n.label.toUpperCase()}
-        </motion.text>
+        </text>
       ))}
 
       {/* Hit targets last so they sit above the artwork, and focusable so the
-          same isolation is reachable from the keyboard. */}
+          same isolation is reachable from the keyboard. The visible dot scales
+          inside its own box; the hit area does not. */}
       {NODES.map((n) => (
         <g
           key={`hit-${n.label}`}
@@ -90,15 +98,17 @@ export function EntityGraph() {
           onBlur={() => setHover(null)}
           className="cursor-pointer outline-none"
         >
-          <motion.circle
+          <circle cx={n.x} cy={n.y} r="10" fill="transparent" />
+          <circle
             cx={n.x}
             cy={n.y}
             r="2.6"
             fill="var(--color-offwhite)"
-            animate={{ r: hover === n.label ? 3.6 : 2.6 }}
-            transition={{ duration: 0.2 }}
+            style={{ opacity: dim && !lit(n.label) ? 0.28 : 1 }}
+            className={`origin-center transition duration-200 [transform-box:fill-box] ${
+              lit(n.label) ? "scale-125" : "scale-100"
+            }`}
           />
-          <circle cx={n.x} cy={n.y} r="10" fill="transparent" />
         </g>
       ))}
     </svg>
