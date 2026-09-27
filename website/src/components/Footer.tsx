@@ -1,54 +1,84 @@
-import Link from "next/link";
 import { LogoMark } from "@/components/Logo";
 import { SocialLinks } from "@/components/SocialLinks";
-import { DOCS_URL, GITHUB_URL } from "@/lib/constants";
-
-const FOOTER_LINKS = [
-  { label: "Docs", href: DOCS_URL },
-  { label: "GitHub", href: GITHUB_URL },
-];
+import { EXTERNAL_LINKS, SECTIONS } from "@/lib/constants";
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/[0.06] bg-midnight">
-      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
-        <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
-          {/* Brand */}
-          <div className="flex items-center gap-3">
-            <LogoMark className="h-6 w-9 shrink-0" />
-            <div>
-              <p className="font-sans text-sm font-bold uppercase leading-none tracking-[0.28em] text-offwhite">
-                Hermes
-              </p>
-              <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.22em] text-gray">
-                DATA INFRASTRUCTURE
-              </p>
+    <footer className="border-t border-hairline bg-midnight">
+      <div className="shell py-14">
+        <div className="grid grid-cols-2 gap-10 sm:grid-cols-4">
+          <div className="col-span-2 sm:col-span-1">
+            <div className="flex items-center gap-3">
+              <LogoMark className="h-6 w-9 shrink-0" />
+              <div>
+                <p className="font-sans text-sm font-bold uppercase leading-none tracking-[0.28em] text-offwhite">
+                  Hermes
+                </p>
+                <p className="label mt-2 text-gray">Data infrastructure</p>
+              </div>
             </div>
+            <p className="mt-5 max-w-xs text-sm leading-relaxed text-gray-bright">
+              Acquire, normalize, validate and serve data through one interface.
+            </p>
           </div>
 
-          {/* Links + Social */}
-          <div className="flex flex-col gap-6 sm:items-end">
-            <nav className="flex items-center gap-6" aria-label="Footer">
-              {FOOTER_LINKS.map((l) => (
-                <a
-                  key={l.label}
-                  href={l.href}
-                  className="text-sm font-medium text-gray-bright transition-colors duration-150 hover:text-teal"
-                >
-                  {l.label}
-                </a>
+          <nav aria-label="Sections">
+            <p className="label text-gray">Sections</p>
+            <ul className="mt-4 space-y-2.5">
+              {SECTIONS.map((s) => (
+                <li key={s.id}>
+                  <a
+                    href={`#${s.id}`}
+                    className="text-sm text-gray-bright transition-colors duration-150 hover:text-teal-bright"
+                  >
+                    {s.label}
+                  </a>
+                </li>
               ))}
-            </nav>
-            <SocialLinks />
+            </ul>
+          </nav>
+
+          <nav aria-label="Project">
+            <p className="label text-gray">Project</p>
+            <ul className="mt-4 space-y-2.5">
+              {EXTERNAL_LINKS.map((l) => (
+                <li key={l.label}>
+                  <a
+                    href={l.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-gray-bright transition-colors duration-150 hover:text-teal-bright"
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+              <li>
+                <a
+                  href="#main-content"
+                  className="text-sm text-gray-bright transition-colors duration-150 hover:text-teal-bright"
+                >
+                  Back to top
+                </a>
+              </li>
+            </ul>
+          </nav>
+
+          <div>
+            <p className="label text-gray">Elsewhere</p>
+            <div className="mt-4">
+              <SocialLinks />
+            </div>
           </div>
         </div>
 
-        <div className="mt-10 border-t border-white/[0.06] pt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-gray">
+        <div className="mt-12 flex flex-col gap-3 border-t border-hairline pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="label text-gray">
             &copy; {new Date().getFullYear()} Hermes. All rights reserved.
           </p>
-          <p className="text-xs text-gray">
-            Built for reliable data infrastructure.
+          <p className="label flex items-center gap-2 text-gray">
+            <span className="pulse-dot" aria-hidden="true" />
+            All systems operational
           </p>
         </div>
       </div>
