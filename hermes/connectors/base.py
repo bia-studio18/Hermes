@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import logging
 from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError, version
@@ -23,6 +21,7 @@ logger = logging.getLogger(__name__)
 class BaseConnector:
     #: canonical registry schema this connector's canonical output conforms to
     canonical_schema: str = ""
+
     def __init__(
         self,
         cache: RawCache | None = None,

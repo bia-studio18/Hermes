@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from collections.abc import Iterable, Mapping
 from typing import Any
 
@@ -23,19 +21,19 @@ class ValidationEngine:
         if rules:
             self.add_rules(rules)
 
-    def add_rule(self, rule: ValidationRule) -> ValidationEngine:
+    def add_rule(self, rule: ValidationRule) -> "ValidationEngine":
         if not isinstance(rule, ValidationRule):
             raise RuleConfigurationError(f"Expected a ValidationRule, got {type(rule).__name__}")
         rule.validate()
         self._rules.append(rule)
         return self
 
-    def add_rules(self, rules: Iterable[ValidationRule]) -> ValidationEngine:
+    def add_rules(self, rules: Iterable[ValidationRule]) -> "ValidationEngine":
         for rule in rules:
             self.add_rule(rule)
         return self
 
-    def remove_rule(self, rule: ValidationRule | str) -> ValidationEngine:
+    def remove_rule(self, rule: ValidationRule | str) -> "ValidationEngine":
         target = rule.name if isinstance(rule, ValidationRule) else rule
         for index, configured in enumerate(self._rules):
             if configured.name == target:
@@ -43,7 +41,7 @@ class ValidationEngine:
                 return self
         raise RuleConfigurationError(f"No rule named {target!r} is configured")
 
-    def clear_rules(self) -> ValidationEngine:
+    def clear_rules(self) -> "ValidationEngine":
         self._rules.clear()
         return self
 
@@ -82,7 +80,7 @@ class ValidationEngine:
         if isinstance(data, pl.DataFrame):
             return data
         if isinstance(data, pl.LazyFrame):
-            return data.collect(engine='streaming')
+            return data.collect(engine="streaming")
         if pa is not None and isinstance(data, pa.Table):
             return pl.DataFrame(pl.from_arrow(data))
         if isinstance(data, Mapping):

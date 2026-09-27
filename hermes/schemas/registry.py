@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+import logging
 import re
 from functools import lru_cache
 
@@ -14,6 +13,8 @@ from hermes.schemas.financial import FINANCIAL_OBSERVATION
 from hermes.schemas.geopolitical import GEOPOLITICAL_EVENT
 from hermes.schemas.market import MARKET_OBSERVATION
 from hermes.schemas.security import SECURITY_EVENT
+
+logger = logging.getLogger(__name__)
 
 CANONICAL_SCHEMAS: tuple[Schema, ...] = (
     ENTITY,
@@ -69,9 +70,6 @@ class SchemaRegistry:
             return versioned.get(version)
         return max(versioned.values(), key=lambda s: _parse_version(s.version))
 
-    def list(self) -> list[Schema]:
-        return [s for versioned in self._schemas.values() for s in versioned.values()]
-
     def list_names(self) -> list[str]:
         return sorted(self._schemas.keys())
 
@@ -109,6 +107,7 @@ class SchemaRegistry:
             try:
                 frame = frame.with_columns(pl.col(f.name).cast(dtype, strict=False))
             except Exception:  # noqa: BLE001 - best-effort coercion
+                logger.warning(f"Failed to cast column {f.name!r} to {dtype}", exc_info=True)
                 continue
         return frame
 

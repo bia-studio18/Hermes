@@ -11,9 +11,7 @@ from hermes.entities.registry import EntityRegistry
 from hermes.entities.resolver import StaticEntityResolver
 from hermes.resources.countries import countries_frame
 
-_CIK_PATH = (
-    Path(__file__).resolve().parent.parent / "connectors" / "lib" / "datasets" / "cik.parquet"
-)
+_CIK_PATH = Path(__file__).resolve().parent.parent / "connectors" / "lib" / "datasets" / "cik.parquet"
 
 _TYPE_SYNONYMS = {
     "company": "company",
@@ -34,7 +32,10 @@ def _country_entities() -> list[Entity]:
         name = row.get("name")
         if not alpha3 or not name:
             continue
-        identifiers = {"iso3": EntityIdentifier(alpha3), "iso2": EntityIdentifier(str((row.get("alpha_2") or "")).upper())}
+        identifiers = {
+            "iso3": EntityIdentifier(alpha3),
+            "iso2": EntityIdentifier(str(row.get("alpha_2") or "").upper()),
+        }
         aliases = [
             EntityAlias(value)
             for value in (str(v) for v in (row.get("official_name"), row.get("common_name")) if v)

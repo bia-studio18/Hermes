@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
@@ -79,7 +77,9 @@ class TestDatasetOps:
 class TestLazyPath:
     def test_load_and_parse_are_lazy(self, tmp_path):
         p = tmp_path / "big.parquet"
-        pl.DataFrame({"date": pl.Series(["2020-01-01", "2021-01-01"]).str.to_date(), "value": [1.5, 2.5]}).write_parquet(p)
+        pl.DataFrame(
+            {"date": pl.Series(["2020-01-01", "2021-01-01"]).str.to_date(), "value": [1.5, 2.5]}
+        ).write_parquet(p)
 
         ds = hr.parse(str(p))
         assert isinstance(ds.data, pl.LazyFrame)

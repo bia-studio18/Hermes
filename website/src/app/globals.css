@@ -7,6 +7,15 @@
   --color-teal: #2f6f68;
   /* Slightly lighter gray for body copy legibility on midnight */
   --color-gray-bright: #9aa2aa;
+  /* Lightened tint of --color-teal (already used for code accents) so small
+     text clears WCAG AA on midnight. --color-teal is 3.4:1, this is 6.9:1.
+     Keep --color-teal for borders, rules and fills, where 3:1 is the bar. */
+  --color-teal-bright: #4aa89e;
+  /* Lifted panel background, one step off the canvas */
+  --color-panel: #0e1114;
+  /* Hairline border — the single structural line weight of the whole page */
+  --color-hairline: rgba(245, 245, 242, 0.09);
+  --color-hairline-strong: rgba(245, 245, 242, 0.16);
 }
 
 @theme inline {
@@ -15,12 +24,18 @@
   --color-gray: var(--color-gray);
   --color-gray-bright: var(--color-gray-bright);
   --color-teal: var(--color-teal);
+  --color-teal-bright: var(--color-teal-bright);
+  --color-panel: var(--color-panel);
+  --color-hairline: var(--color-hairline);
+  --color-hairline-strong: var(--color-hairline-strong);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 }
 
 html {
   scroll-behavior: smooth;
+  /* clears the sticky status bar + header when jumping to a section anchor */
+  scroll-padding-top: 6.5rem;
 }
 
 body {
@@ -29,6 +44,220 @@ body {
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* ── Layout primitives ───────────────────────────────────────────────────── */
+
+/* Page container. One definition instead of repeating the same Tailwind
+   string in every section. */
+.shell {
+  margin-inline: auto;
+  max-width: 76rem;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .shell {
+    padding-inline: 2rem;
+  }
+}
+
+/* Hairline-bordered panel — the base cell of the whole page. */
+.panel {
+  position: relative;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-panel);
+  border-radius: 2px;
+}
+
+/* Corner registration marks. Decorative targeting brackets, the way a
+   technical drawing marks a detail callout. */
+.brackets::before,
+.brackets::after {
+  content: "";
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-color: var(--color-teal-bright);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.brackets::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+
+.brackets::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1px solid;
+  border-right: 1px solid;
+}
+
+/* ── Type ────────────────────────────────────────────────────────────────── */
+
+/* Monospace micro-label. Every section heading, table header and status
+   readout on the page is set in this. */
+.label {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  line-height: 1;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Grid fields ─────────────────────────────────────────────────────────── */
+
+/* Structural background grid. Fades out radially so it never reaches the
+   text, which is what keeps it reading as paper rather than as a table. */
+.grid-field {
+  background-image:
+    linear-gradient(to right, var(--color-hairline) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-hairline) 1px, transparent 1px);
+  background-size: 76px 76px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, #000 25%, transparent 78%);
+}
+
+.grid-field-fine {
+  background-image:
+    linear-gradient(to right, var(--color-hairline) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-hairline) 1px, transparent 1px);
+  background-size: 19px 19px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 10%, transparent 72%);
+}
+
+/* Vignette that keeps a full-bleed section from meeting the next one abruptly */
+.fade-edges {
+  mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+}
+
+/* ── Status ──────────────────────────────────────────────────────────────── */
+
+.pulse-dot {
+  position: relative;
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--color-teal-bright);
+}
+
+.pulse-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  animation: ping 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping {
+  75%,
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+/* Diagonal hazard stripes — used behind the ticker and section rules */
+.stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--color-hairline) 0 1px,
+    transparent 1px 7px
+  );
+}
+
+/* ── Ticker ──────────────────────────────────────────────────────────────── */
+
+.ticker {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll 48s linear infinite;
+}
+
+.ticker:hover .ticker-track {
+  animation-play-state: paused;
+}
+
+@keyframes ticker-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  border-radius: 2px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.btn-primary {
+  background: var(--color-teal-bright);
+  color: var(--color-midnight);
+}
+
+.btn-primary:hover {
+  background: #5cbcaf;
+}
+
+.btn-ghost {
+  border: 1px solid var(--color-hairline-strong);
+  color: var(--color-offwhite);
+}
+
+.btn-ghost:hover {
+  border-color: var(--color-teal-bright);
+  color: var(--color-teal-bright);
+}
+
+/* ── Interactive cell ────────────────────────────────────────────────────── */
+
+/* A bordered data cell that responds to the pointer. Border brightens and
+   the fill lifts one step — the same interaction on every cell on the page. */
+.cell {
+  position: relative;
+  transition:
+    border-color 200ms ease,
+    background-color 200ms ease;
+}
+
+.cell:hover {
+  border-color: rgba(74, 168, 158, 0.55);
+  background: #101518;
+}
+
+/* Hairline that fills from the left as a scroll-linked progress indicator */
+.rule-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--color-teal-bright);
+  transform-origin: left;
 }
 
 /* Decorative hero texture — sparse dots + thin teal lines (world-map / network overlay) */
@@ -48,7 +277,7 @@ body {
 }
 
 ::selection {
-  background: var(--color-teal);
+  background: var(--color-teal-bright);
   color: var(--color-midnight);
 }
 
@@ -63,7 +292,7 @@ body {
 }
 /* Focus visible — keyboard accessibility, brand teal */
 :focus-visible {
-  outline: 2px solid var(--color-teal);
+  outline: 2px solid var(--color-teal-bright);
   outline-offset: 2px;
 }
 
@@ -71,7 +300,7 @@ body {
 :focus:not(:focus-visible) {
   outline: none;
 }
-/* Offset for sticky header when using skip-to-content / anchors */
+/* Offset for sticky status bar + header when using skip-to-content / anchors */
 #main-content {
-  scroll-margin-top: 5rem;
+  scroll-margin-top: 7rem;
 }

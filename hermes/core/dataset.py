@@ -46,6 +46,7 @@ class Dataset:
     """Dataset is the central object; `.data` holds the payload and all
     container access (items, iteration, length, truthiness, attributes) is
     delegated to it so wrapped data stays usable as-is."""
+
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     version: str = "0.0.1"
@@ -215,10 +216,8 @@ class Dataset:
             scan = ParserEngine().scan(self.data_ref)
             if scan is not None:
                 return scan
-        if isinstance(self.data, pa.Table):
-            return pl.from_arrow(self.data).lazy()  # type: ignore[return-value]
         if isinstance(self.data, dict):
-            frames = [frame for frame in self.data.values() if isinstance(frame, pl.DataFrame)]
+            frames: list[pl.DataFrame] = [f for f in self.data.values() if isinstance(f, pl.DataFrame)]
             if frames:
                 return frames[0].lazy()
         try:

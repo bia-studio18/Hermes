@@ -1,15 +1,13 @@
-from __future__ import annotations
-
 from pathlib import Path
 
 from hermes.api.data import parse as _parse
 from hermes.connectors import (
-    Binance,
     FINNHUB,
     FRED,
     IMF,
-    OpenSanction,
     SECEDGAR,
+    Binance,
+    OpenSanction,
     World_bank,
     Yfinance,
 )
@@ -36,9 +34,7 @@ def _connector(source: str):
     try:
         cls = _CONNECTORS[key]
     except KeyError:
-        raise ConnectorNotFoundError(
-            f"Unknown source {source!r}. Known sources: {sorted(_CONNECTORS)}"
-        ) from None
+        raise ConnectorNotFoundError(f"Unknown source {source!r}. Known sources: {sorted(_CONNECTORS)}") from None
     return cls()
 
 
@@ -62,7 +58,7 @@ def ingest(source: str | Path, **kwargs) -> Dataset:
     if isinstance(source, (str, Path)) and Path(str(source)).exists():
         return read(source, format=kwargs.pop("format", None), **kwargs)
 
-    result = fetch(source, **kwargs)
+    result = fetch(str(source), **kwargs)
     if isinstance(result, Dataset):
         return result
     if result is None:

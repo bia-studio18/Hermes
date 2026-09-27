@@ -703,6 +703,7 @@ def test_custom_rule():
     result2 = hr.validate([{"a": 3}], rules=[AllEven()])
     assert not result2.passed
 
+
 def test_hr_validate_with_canonical_schema():
     import hermes as hr
 

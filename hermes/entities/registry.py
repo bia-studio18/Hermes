@@ -22,10 +22,10 @@ class EntityRegistry:
                 if hit is not None:
                     return hit
             return None
-        resolver = self.get(entity_type)
-        if resolver is None:
+        selected_resolver = self.get(entity_type)
+        if selected_resolver is None:
             raise UnknownEntityTypeError(f"No resolver registered for entity type {entity_type!r}")
-        return resolver.resolve(query)
+        return selected_resolver.resolve(query)
 
     def list_types(self) -> list[str]:
         return sorted(self._resolvers)

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import json
 import os
 import re
@@ -196,7 +194,9 @@ class FilesystemStorage(StorageBackend):
             target_dir.mkdir(parents=True, exist_ok=True)
             _atomic_write(data_path, lambda tmp: _write_data(dataset.data, tmp, format))
             rows, columns, column_schema = _stats_from_file(data_path, format)
-            stored = self._build_metadata(dataset, target_name, rows, columns, column_schema, created, format, data_file)
+            stored = self._build_metadata(
+                dataset, target_name, rows, columns, column_schema, created, format, data_file
+            )
             _atomic_write(
                 metadata_path,
                 lambda tmp: tmp.write_text(_dump(stored), encoding="utf-8"),
@@ -261,12 +261,14 @@ class FilesystemStorage(StorageBackend):
             return
         if data.height != stored.row_count or data.width != stored.column_count:
             raise StorageCorruptionError(
-                f"dataset {name!r} shape mismatch: stored {stored.row_count}x{stored.column_count}, got {data.height}x{data.width}"
+                f"""dataset {name!r} shape mismatch:
+                stored {stored.row_count}x{stored.column_count}, got {data.height}x{data.width}"""
             )
         stored_columns = [entry["name"] for entry in stored.column_schema if "name" in entry]
         if stored_columns and data.columns != stored_columns:
             raise StorageCorruptionError(
-                f"dataset {name!r} column mismatch: stored {stored_columns}, got {data.columns}"
+                f"""dataset {name!r} column mismatch:
+                stored {stored_columns}, got {data.columns}"""
             )
 
     def _raise_not_found_or_corrupt(self, name: str, data_path: Path | None, metadata_path: Path) -> None:
@@ -301,7 +303,9 @@ class FilesystemStorage(StorageBackend):
 
     def exists(self, name: str) -> bool:
         target_dir = self._path_for(name)
-        return target_dir.is_dir() and self._find_data_path(name) is not None and (target_dir / _METADATA_FILE).is_file()
+        return (
+            target_dir.is_dir() and self._find_data_path(name) is not None and (target_dir / _METADATA_FILE).is_file()
+        )
 
     def delete(self, name: str) -> None:
         if not self.exists(name):
