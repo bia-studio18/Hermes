@@ -42,8 +42,8 @@ from hermes.core.errors import (
     StorageError,
     ValidationError,
 )
-from hermes.core.result import Result
 from hermes.core.hrm_id import hrm_id
+from hermes.core.result import Result
 from hermes.credentials.manager import delete_cred, get_cred, has_cred, list_creds, set_cred
 
 __all__ = [

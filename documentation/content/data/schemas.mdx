@@ -162,7 +162,7 @@ from hermes.schemas import SchemaRegistry
 registry = SchemaRegistry()
 registry.register(schema)
 retrieved = registry.get("my_schema", version="1.0.0")
-schemas = registry.list()
+schemas = registry.list_names()
 ```
 
 ## Top-Level API

@@ -15,8 +15,10 @@ from hermes.normalization.context import NormalizationContext
 from hermes.normalization.engine import NormalizationEngine
 from hermes.normalization.rule import NormalizationRule
 from hermes.parsing.engine import ParserEngine
+from hermes.schemas.base import Schema
 from hermes.schemas.registry import get_registry as get_schema_registry
 from hermes.validation import SchemaCheck
+from hermes.validation.context import ValidationContext
 from hermes.validation.engine import validate as validate_frame
 from hermes.validation.result import ValidationResult
 
@@ -44,7 +46,7 @@ def _detect_needs(data: pl.DataFrame | pl.LazyFrame) -> list[tuple[str, str]]:
 
 
 def parse(data: object, format: str | None = None, **kwargs: object) -> Dataset:
-    ref = None
+
     if isinstance(data, Dataset):
         dataset = data
         source = dataset.data if dataset.data is not None else dataset.data_ref
@@ -77,9 +79,7 @@ def _frame_or_parse(source: object, format: str | None = None, **kwargs: object)
         return source
     if isinstance(source, pa.Table):
         return pl.from_arrow(source)
-    if isinstance(source, dict) or (
-        isinstance(source, (list, tuple)) and source and isinstance(source[0], dict)
-    ):
+    if isinstance(source, dict) or (isinstance(source, (list, tuple)) and source and isinstance(source[0], dict)):
         try:
             return pl.DataFrame(source)
         except Exception as exc:  # noqa: BLE001 - wrap user data into a parse error
@@ -124,8 +124,8 @@ def normalize(
 def validate(
     data: object,
     rules: list | None = None,
-    schema: object | None = None,
-    context: object | None = None,
+    schema: str | Schema | None = None,
+    context: ValidationContext | None = None,
 ) -> ValidationResult:
     inherited_rules: list = list(rules or [])
     if schema is not None:
@@ -172,8 +172,8 @@ def inspect(data: pl.DataFrame | pl.LazyFrame | Dataset) -> InspectReport:
     if isinstance(data, pl.LazyFrame):
         schema = data.collect_schema()
         columns = [(col, str(dtype)) for col, dtype in schema.items()]
-        row_count = int(data.select(pl.len()).collect(engine='streaming').item())
-        sample = data.head(5).collect(engine='streaming').to_dicts()
+        row_count = int(data.select(pl.len()).collect(engine="streaming").item())
+        sample = data.head(5).collect(engine="streaming").to_dicts()
         return InspectReport(
             name="dataset",
             row_count=row_count,
@@ -218,7 +218,7 @@ def get_freqs(data: pl.DataFrame | pl.LazyFrame) -> list[str] | None:
     cols = []
     for col in time_cols:
         if isinstance(data, pl.LazyFrame):
-            freq = data.select(pl.col(col).diff().mode().first()).collect(engine='streaming').item()
+            freq = data.select(pl.col(col).diff().mode().first()).collect(engine="streaming").item()
         else:
             freq = data[col].diff().mode().first()
         cols.append(str(freq))
@@ -237,7 +237,7 @@ def date_ranges(data: pl.DataFrame | pl.LazyFrame) -> list[dict[str, tuple[Any, 
     bounds = []
     for col in time_cols:
         if isinstance(data, pl.LazyFrame):
-            bound = data.select(min=pl.col(col).min(), max=pl.col(col).max()).collect(engine='streaming')
+            bound = data.select(min=pl.col(col).min(), max=pl.col(col).max()).collect(engine="streaming")
         else:
             bound = data.select(min=pl.col(col).min(), max=pl.col(col).max())
         bounds.append({col: (bound["min"][0], bound["max"][0])})
@@ -518,6 +518,8 @@ def resolve_data(
     Adds a ``<column>_entity_id`` column per key; unmatched values resolve to null.
     """
     frame = data.data if isinstance(data, Dataset) else data
+    if not isinstance(frame, (pl.DataFrame, pl.LazyFrame)):
+        raise HermesError(f"resolve_data requires a Polars frame, got {type(frame).__name__}")
     if not keys:
         keys = _detect_needs(frame)
     if not keys:
@@ -543,11 +545,17 @@ def resolve_data(
             entity = None
             try:
                 entity = registry.resolve(str(value), entity_type=entity_type)
-            except Exception:  # noqa: BLE001 - per-key tolerance
+            except Exception as exc:  # noqa: BLE001 - per-key tolerance
+                logger.warning(f"Failed to resolve {value!r} as {entity_type}: {exc}", exc_info=True)
                 continue
             if entity is not None:
                 mapping[value] = entity.id
-        expr.append(pl.col(column).cast(pl.Utf8, strict=False).replace_strict(mapping, default=None).alias(f"{column}_entity_id"))
+        expr.append(
+            pl.col(column)
+            .cast(pl.Utf8, strict=False)
+            .replace_strict(mapping, default=None)
+            .alias(f"{column}_entity_id")
+        )
 
     if not expr:
         raise HermesError("No resolvable entity-key columns found in the data")

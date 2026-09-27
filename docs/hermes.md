@@ -189,10 +189,10 @@ hr.get_metadata()
 #### Datasets
 
 ```python
-hr.list_datasets()            # Result of stored dataset names
-DatasetCatalog().load()       # real catalog: DatasetDescriptor index (list/get/search/register)
-hr.dataset()                  # roadmap (E11 catalog API)
-hr.search_datasets()          # roadmap (E11 catalog API)
+hr.list_datasets()  # Result of stored dataset names
+DatasetCatalog().load()  # real catalog: DatasetDescriptor index (list/get/search/register)
+hr.dataset()  # roadmap (E11 catalog API)
+hr.search_datasets()  # roadmap (E11 catalog API)
 ```
 
 #### Storage

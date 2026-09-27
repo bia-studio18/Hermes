@@ -106,7 +106,11 @@ def test_hr_schema_api_results():
 
     migrated = hr.migrate(
         pl.DataFrame({"a": [1], "b": [2]}),
-        Schema(name="from", version="1", fields=[FieldDef(name="a", type="integer"), FieldDef(name="b", type="integer", nullable=True)]),
+        Schema(
+            name="from",
+            version="1",
+            fields=[FieldDef(name="a", type="integer"), FieldDef(name="b", type="integer", nullable=True)],
+        ),
         Schema(name="to", version="2", fields=[FieldDef(name="a", type="integer")]),
     )
     assert migrated.is_success()

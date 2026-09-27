@@ -44,9 +44,7 @@ def hrm_id(entity_type: str, *, timestamp_ms: int | None = None) -> str:
     etype = entity_type.strip().lower()
 
     if etype not in _ENTITY_TYPE_FLAGS:
-        raise InvalidEntityTypeError(
-            f"Unknown entity type {entity_type!r}. Known: {sorted(_KNOWN_ENTITY_TYPES)}"
-        )
+        raise InvalidEntityTypeError(f"Unknown entity type {entity_type!r}. Known: {sorted(_KNOWN_ENTITY_TYPES)}")
 
     timestamp = time.time() if timestamp_ms is None else timestamp_ms / 1000
     timestamp_bits = int(timestamp * 1000) if timestamp_ms is None else int(timestamp_ms)

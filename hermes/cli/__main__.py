@@ -99,8 +99,7 @@ def _inspect(args: argparse.Namespace) -> int:
 
     report = hr.inspect(_loaded(args.name))
     print(
-        f"Inspect: {args.name}  rows: {report.row_count:,}  "
-        f"cols: {report.column_count}  needs: {report.needs or '-'}"
+        f"Inspect: {args.name}  rows: {report.row_count:,}  cols: {report.column_count}  needs: {report.needs or '-'}"
     )
     return 0
 

@@ -20,8 +20,10 @@ def cli_storage(tmp_path):
 
 
 def _cli(root: str, *args: str) -> subprocess.CompletedProcess:
-    return subprocess.run(
-        [sys.executable, "-m", "hermes", "--storage", root, *args], capture_output=True, text=True
+    return subprocess.run(  # noqa: S603
+        [sys.executable, "-m", "hermes", "--storage", root, *args],
+        capture_output=True,
+        text=True,
     )
 
 

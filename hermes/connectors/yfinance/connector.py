@@ -11,7 +11,8 @@ except ImportError:
 
 from hermes.acquisition.cache import RawCache
 from hermes.connectors.base import BaseConnector
-from hermes.connectors.yfinance.mappings import YfinanceEndpoint, YFINANCE_INTERVAL_MAP
+from hermes.connectors.yfinance.mappings import YFINANCE_INTERVAL_MAP, YfinanceEndpoint
+from hermes.connectors.yfinance.parser import history_to_dataframe
 from hermes.validation import NotNull
 
 logger = logging.getLogger(__name__)

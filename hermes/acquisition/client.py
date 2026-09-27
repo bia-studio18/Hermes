@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import json as _json
 import logging
 import time
@@ -53,7 +51,7 @@ class Client:
     def _build_client(self, timeout: float) -> _RustHttpClient:
         return _RustHttpClient(timeout_secs=timeout, retries=self.max_retries)
 
-    def __enter__(self) -> Client:
+    def __enter__(self) -> "Client":
         return self
 
     def __exit__(self, *exc: object) -> None:

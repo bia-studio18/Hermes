@@ -1,3 +1,5 @@
+import polars as pl
+
 from hermes.core.errors import SchemaError
 from hermes.core.result import Result
 from hermes.schemas.base import Schema
@@ -32,7 +34,7 @@ def register_schema(schema: object) -> Result:
     return Result(status="success", data=schema, statistics={"name": schema.name, "version": schema.version})
 
 
-def compare_schema(schema_a: object, schema_b: object) -> Result:
+def compare_schema(schema_a: str | Schema, schema_b: str | Schema) -> Result:
     try:
         outcome = _registry().compare(schema_a, schema_b)
     except SchemaError as exc:
@@ -42,7 +44,13 @@ def compare_schema(schema_a: object, schema_b: object) -> Result:
     return Result(status="success", data=outcome, statistics={"compatible": outcome.compatible})
 
 
-def migrate(data: object, from_schema: object, to_schema: object, *, rename: dict | None = None) -> Result:
+def migrate(
+    data: pl.DataFrame | pl.LazyFrame,
+    from_schema: str | Schema,
+    to_schema: str | Schema,
+    *,
+    rename: dict | None = None,
+) -> Result:
     try:
         frame = _registry().migrate(data, from_schema, to_schema, rename=rename)
     except SchemaError as exc:
