@@ -1,12 +1,10 @@
-"use client";
-
-import { KEYWORDS, TOKEN, classify, tokenize } from "@/lib/highlight";
+import { classify, tokenize } from "@/lib/highlight";
 
 /**
  * Renders a source string with generic token colouring.
  *
- * Exists so code samples are written as plain strings in one place
- * (lib/constants.ts) instead of as 50 lines of hand-coloured spans per sample.
+ * Exists so code samples live as plain strings in one place (lib/constants.ts)
+ * instead of as ~50 lines of hand-coloured spans per sample.
  */
 export function Code({ children, className = "" }: { children: string; className?: string }) {
   return (
@@ -19,5 +17,3 @@ export function Code({ children, className = "" }: { children: string; className
     </code>
   );
 }
-
-export { KEYWORDS };

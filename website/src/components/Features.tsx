@@ -1,75 +1,90 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Database, FileStack, Network, ServerCog } from "lucide-react";
+import { Database, FileStack, Network, ServerCog, type LucideIcon } from "lucide-react";
+import { SectionHead } from "@/components/SectionHead";
+import { fadeUp } from "@/lib/constants";
 
-const FEATURES = [
+const FEATURES: {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  facts: string[];
+}[] = [
   {
     icon: Database,
     title: "Multi-source acquisition",
     description:
-      "Fetch from 10 built-in connectors — financial APIs, government portals and files — sharing one caching and retry layer.",
+      "Ten connectors for financial APIs, government portals and local files, all sharing one caching and retry layer.",
+    facts: ["SEC · FRED · IMF · World Bank", "GDELT · Binance · Finnhub", "Parquet-backed cache"],
   },
   {
     icon: FileStack,
     title: "Schema normalization",
     description:
-      "Inconsistent source formats are normalized to versioned canonical schemas so every dataset speaks the same language.",
+      "Inconsistent source formats are normalized onto versioned canonical schemas, so every dataset speaks the same language.",
+    facts: ["7 schema domains", "Composable rule chain", "Per-record diff report"],
   },
   {
     icon: Network,
     title: "Entity resolution",
     description:
-      "Resolve companies, countries and assets across identifiers — from tickers and CIKs to ISO codes and names.",
+      "Resolve companies, countries and securities across every identifier form they appear under — tickers, CIKs, ISINs, LEIs and names.",
+    facts: ["Canonical HRM identifiers", "Alias registry", "Cross-source matching"],
   },
   {
     icon: ServerCog,
     title: "Scalable storage",
     description:
-      "Parquet-backed caching, Dataset save/export, and clean Polars, Arrow and Pandas interchange.",
+      "Parquet-backed caching, Dataset save and export, and clean interchange with the dataframe stack you already run.",
+    facts: ["Stable on-disk format", "Polars · Arrow · Pandas", "Rust core"],
   },
 ];
 
-const sectionFade = {
-  initial: { opacity: 0, y: 24 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: "-80px" },
-  transition: { duration: 0.6, ease: "easeOut" as const },
-};
-
 export function Features() {
   return (
-    <section className="border-t border-white/[0.06] bg-midnight">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
-        <motion.div {...sectionFade} className="mb-14 text-center">
-          <p className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.3em] text-teal">
-            Capabilities
-          </p>
-          <h2 className="font-sans text-3xl font-bold tracking-tight text-offwhite sm:text-4xl">
-            Built for scale. Designed for reliability.
-          </h2>
-        </motion.div>
+    <section id="capabilities" className="border-t border-hairline">
+      <div className="shell py-24">
+        <SectionHead
+          index="02"
+          kicker="Capabilities"
+          title="Built for scale. Designed for reliability."
+          lede="Four capabilities, each a module you can adopt on its own. Nothing here is a wrapper around someone else's product."
+        />
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-px border border-hairline bg-hairline md:grid-cols-2">
           {FEATURES.map((f, i) => (
             <motion.div
               key={f.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.45, delay: i * 0.08 }}
-              className="group rounded-md border border-white/[0.07] bg-[#0e1114] p-6 transition-all duration-200 hover:border-teal/45 hover:bg-[#101518]"
+              {...fadeUp}
+              transition={{ duration: 0.5, delay: (i % 2) * 0.08, ease: "easeOut" }}
+              className="cell group relative bg-midnight p-7"
             >
-              <f.icon
-                className="mb-4 h-6 w-6 text-teal transition-transform duration-200 group-hover:scale-110"
-                aria-hidden="true"
-              />
-              <h3 className="mb-2 font-sans text-lg font-semibold text-offwhite transition-colors duration-200 group-hover:text-teal">
+              <div className="flex items-start justify-between">
+                <f.icon className="h-6 w-6 text-teal-bright" aria-hidden="true" />
+                <span className="label tabular text-gray/60">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </div>
+
+              <h3 className="mt-6 font-sans text-lg font-semibold tracking-tight text-offwhite">
                 {f.title}
               </h3>
-              <p className="text-sm leading-relaxed text-gray-bright">
+              <p className="mt-3 text-sm leading-relaxed text-gray-bright">
                 {f.description}
               </p>
+
+              <ul className="mt-6 space-y-1.5 border-t border-hairline pt-5">
+                {f.facts.map((fact) => (
+                  <li key={fact} className="label flex items-center gap-2.5 text-gray">
+                    <span
+                      className="h-1 w-1 rotate-45 bg-teal transition-colors duration-200 group-hover:bg-teal-bright"
+                      aria-hidden="true"
+                    />
+                    {fact}
+                  </li>
+                ))}
+              </ul>
             </motion.div>
           ))}
         </div>

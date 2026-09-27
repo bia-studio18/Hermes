@@ -20,19 +20,7 @@ export const metadata: Metadata = {
     template: "%s · Hermes",
   },
   description:
-    "Hermes is a modern data infrastructure platform for acquiring, processing, and serving structured and unstructured data at scale.",
-  openGraph: {
-    title: "Hermes — Data infrastructure for the modern world",
-    description:
-      "Acquire, normalize, validate and serve data from multiple sources — with provenance built in.",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Hermes — Data infrastructure for the modern world",
-    description:
-      "Acquire, normalize, validate and serve data from multiple sources — with provenance built in.",
-  },
+    "Hermes is a data infrastructure SDK for acquiring, normalizing, validating and serving structured and unstructured data — from 10 built-in connectors, through one canonical schema.",
 };
 
 export default function RootLayout({
@@ -46,9 +34,6 @@ return (
     className={`${inter.variable} ${jetbrainsMono.variable}`}
   >
     <body className="min-h-screen bg-midnight text-offwhite antialiased">
-      <a href="#main-content" className="skip-to-content">
-        Skip to content
-      </a>
       {children}
     </body>
   </html>
