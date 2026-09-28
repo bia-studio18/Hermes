@@ -31,6 +31,8 @@ class JSONParser:
             source = source.getvalue()
         if isinstance(source, (bytes, bytearray)):
             source = bytes(source).decode(errors="replace")
+        if isinstance(source, str) and source.rstrip().lower().endswith((".jsonl", ".ndjson")):
+            return True
         text = str(source).lstrip()
         lines = [line for line in text.splitlines() if line.strip()]
 
