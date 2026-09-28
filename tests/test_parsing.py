@@ -54,6 +54,25 @@ def test_json_lines(tmp_path):
     assert df["a"].to_list() == [1, 2]
 
 
+def test_json_lines_path_as_str(tmp_path):
+    p = tmp_path / "data.jsonl"
+    p.write_text('{"a": 1}\n{"a": 2}\n')
+    df = engine.parse(str(p), format="jsonl")
+    assert df.height == 2
+    assert df["a"].to_list() == [1, 2]
+    assert engine.parse(str(p)).height == 2
+
+    n = tmp_path / "data.ndjson"
+    n.write_text('{"a": 1}\n{"a": 2}\n')
+    assert engine.parse(str(n), format="jsonl").height == 2
+
+
+def test_json_lines_bytes_content():
+    df = engine.parse(b'{"a": 1}\n{"a": 2}\n', format="jsonl")
+    assert df.height == 2
+    assert df["a"].to_list() == [1, 2]
+
+
 def test_parquet_roundtrip(tmp_path):
     p = tmp_path / "data.parquet"
     pl.DataFrame({"a": [1, 2], "b": ["x", "y"]}).write_parquet(p)
