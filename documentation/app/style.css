@@ -1,12 +1,16 @@
-/* Hermes brand palette — reused from the landing page (website/src/app/globals.css) */
+/* Hermes Documentation — institutional brand system
+   Colors match website/: Midnight, Off-white, Gray, Teal
+*/
+
 :root {
   --color-midnight: #0b0d0f;
   --color-offwhite: #f5f5f2;
   --color-gray: #8b9198;
   --color-teal: #2f6f68;
   --color-border: #1c262b;
+  --color-surface: #101416;
+  --color-surface-hover: #141a1e;
 
-  /* Typography: Inter for UI text, JetBrains Mono for code */
   --x-font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --x-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Fira Code", Menlo, monospace;
 }
@@ -15,71 +19,164 @@
   --color-midnight: #0b0d0f;
 }
 
-/* Sidebar / navbar on Midnight, thin 1px borders */
+/* Page background */
+.dark body,
+.dark .nextra-body,
+html.dark {
+  background-color: var(--color-midnight) !important;
+  color: var(--color-offwhite);
+}
+
+/* Navbar + sidebar */
+.dark .nextra-nav-container,
 .dark .nextra-sidebar-container {
-  background-color: #0b0d0f;
+  background-color: var(--color-midnight) !important;
+  border-color: var(--color-border) !important;
 }
 
 .dark .nextra-nav-container {
-  background-color: #0b0d0f;
+  border-bottom: 1px solid var(--color-border);
 }
 
-/* Link / active accent color (Teal) */
-.nextra-cards a,
+/* Primary / active links → Teal */
 .dark a,
-.dark .nx-text-primary-600 {
-  color: #2f6f68;
+.dark .nx-text-primary-600,
+.nextra-cards a {
+  color: var(--color-teal);
 }
 
-/* Headings in Off White, muted body text in Gray */
+.dark .nextra-sidebar-container a:hover {
+  color: var(--color-offwhite) !important;
+  background-color: var(--color-surface-hover);
+}
+
+/* Active sidebar item */
+.dark .nextra-sidebar-container a[aria-current="page"],
+.dark .nextra-sidebar-container .nx-text-primary-800,
+.dark .nextra-sidebar-container .nx-bg-primary-100 {
+  color: var(--color-teal) !important;
+  background-color: rgba(47, 111, 104, 0.12) !important;
+}
+
+/* Headings */
 .dark h1,
 .dark h2,
 .dark h3,
-.dark h4 {
-  color: #f5f5f2;
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: var(--color-offwhite);
 }
 
-.dark body {
-  color: #f5f5f2;
-}
-
+/* Muted text */
 .dark .nx-text-gray-500,
 .dark .nx-text-gray-400,
-.dark .nx-text-gray-600 {
-  color: #8b9198;
+.dark .nx-text-gray-600,
+.dark p,
+.dark li {
+  color: #c5c9ce;
 }
 
-/* Code blocks: dark, teal-tinted syntax accents, sans rounded pills */
-.dark [data-rehype-pretty-code-figure] pre {
-  background-color: #101416;
-  border: 1px solid #1c262b;
+.dark p,
+.dark li {
+  color: #c5c9ce;
+}
+
+.dark strong {
+  color: var(--color-offwhite);
+}
+
+/* Code blocks */
+.dark [data-rehype-pretty-code-figure] pre,
+.dark pre {
+  background-color: var(--color-surface) !important;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
 }
 
 :not(pre) > code {
-  font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  font-family: var(--x-font-mono);
   background-color: rgba(47, 111, 104, 0.12);
   border-radius: 4px;
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
 }
 
 .dark :not(pre) > code {
   color: #d6e5e2;
 }
 
-/* Selection in brand teal */
-::selection {
-  background: rgba(47, 111, 104, 0.35);
-  color: #f5f5f2;
+/* Tables */
+.dark table {
+  border-color: var(--color-border);
 }
 
-/* Thin scrollbar matching the dark palette */
+.dark th {
+  color: var(--color-offwhite);
+  border-color: var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.dark td {
+  border-color: var(--color-border);
+  color: #c5c9ce;
+}
+
+/* Blockquote */
+.dark blockquote {
+  border-left: 3px solid var(--color-teal);
+  background-color: rgba(47, 111, 104, 0.08);
+  color: #c5c9ce;
+}
+
+/* Horizontal rule */
+.dark hr {
+  border-color: var(--color-border);
+}
+
+/* TOC */
+.dark .nextra-toc a {
+  color: var(--color-gray);
+}
+
+.dark .nextra-toc a:hover,
+.dark .nextra-toc a[data-focus] {
+  color: var(--color-teal);
+}
+
+/* Search */
+.dark input[type="search"],
+.dark .nextra-search input {
+  background-color: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-offwhite) !important;
+}
+
+/* Footer */
+.dark footer a:hover {
+  color: var(--color-teal) !important;
+}
+
+/* Selection */
+::selection {
+  background: rgba(47, 111, 104, 0.35);
+  color: var(--color-offwhite);
+}
+
+/* Focus */
+:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1c262b;
+  background: var(--color-border);
   border-radius: 2px;
 }
 
