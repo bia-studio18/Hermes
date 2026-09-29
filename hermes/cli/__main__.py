@@ -18,8 +18,10 @@ def _render_profile(md: object) -> str:
     import polars as pl
 
     from hermes.core.metadata import MetaData
+    
+    if not isinstance(md, MetaData):
+        raise TypeError(f"The Data should be Hermes MetaData, got {type(md)}")
 
-    assert isinstance(md, MetaData)
     rows = {
         "column": [c.name for c in md.columns],
         "dtype": [c.dtype for c in md.columns],
@@ -103,22 +105,6 @@ def _inspect(args: argparse.Namespace) -> int:
     )
     return 0
 
-
-def _entity(args: argparse.Namespace) -> int:
-    import hermes as hr
-
-    result = hr.resolve_entity(args.query, entity_type=args.type)
-    if not result.is_success():
-        return _fail("entity resolve", result.errors[0] if result.errors else "no match")
-    entity = result.data
-    print(f"{entity.entity_type}: {entity.canonical_name}  ({entity.id})")
-    if entity.country_id:
-        print(f"  country: {entity.country_id}")
-    for key in entity.identifiers:
-        print(f"  {key}: {entity.identifiers[key].value}")
-    return 0
-
-
 def _dataset(args: argparse.Namespace) -> int:
     import hermes as hr
 
@@ -200,7 +186,6 @@ def _build_parser() -> argparse.ArgumentParser:
     p_resolve = e_sub.add_parser("resolve", help="Resolve a name/identifier to an entity")
     p_resolve.add_argument("query", help="canonical name or identifier value")
     p_resolve.add_argument("--type", default=None, help="hint entity type (company, country, security, ...)")
-    p_resolve.set_defaults(func=_entity)
 
     p_dataset = sub.add_parser("dataset", help="Manage stored datasets")
     d_sub = p_dataset.add_subparsers(dest="action", required=True)

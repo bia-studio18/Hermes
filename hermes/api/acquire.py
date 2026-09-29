@@ -14,9 +14,6 @@ from hermes.connectors import (
 from hermes.core.dataset import Dataset
 from hermes.core.errors import AcquisitionError, ConnectorNotFoundError
 
-# Connector sources with a fetch()-style interface. GDELT and the bundled
-# public_data datasets are excluded: GDELT is roadmap-gated, public_data is a
-# local file bundle (use hr.read(path) / hr.ingest(path) for it).
 _CONNECTORS = {
     "binance": Binance,
     "finnhub": FINNHUB,

@@ -13,7 +13,6 @@ from hermes.api.data import (
     normalize,
     parse,
     profile,
-    resolve_data,
     transform,
     validate,
 )

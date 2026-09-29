@@ -7,7 +7,6 @@ import polars as pl
 import polars.selectors as cs
 import pyarrow as pa
 
-from hermes.api.entities import get_registry
 from hermes.core.dataset import Dataset
 from hermes.core.errors import HermesError, ParseError, SchemaError
 from hermes.core.metadata import ColumnMetadata, InspectReport, MetaData, QualityInfo
@@ -271,11 +270,6 @@ def anomaly_count(data: pl.DataFrame | pl.LazyFrame, threshold: float = 1.5) -> 
     return anomaly_data.row(0, named=True)
 
 
-# Memory guardrails for profile(): exact stats that need full sorts or hashes
-# (median, n_unique, top values, duplicates, anomaly quantiles, frequency) are
-# only computed on small inputs. min/max/null_count come from the parquet footer
-# (instant, zero data read); mean/std come from a bounded streaming scan when the
-# uncompressed size fits the budget.
 _HEAVY_ROWS = 5_000_000
 _SCAN_BUDGET_BYTES = 4 * 1024**3
 
@@ -507,62 +501,3 @@ def profile(
         quality=QualityInfo(completeness=completeness, duplicate_count=duplicate_count, anomaly_count=anomaly),
         deep_stats=heavy,
     )
-
-
-def resolve_data(
-    data: object,
-    keys: list[tuple[str, str]] | None = None,
-) -> object:
-    """Resolve known entity-key columns (ticker, iso3, cik, ...) to HRM entity ids.
-
-    Adds a ``<column>_entity_id`` column per key; unmatched values resolve to null.
-    """
-    frame = data.data if isinstance(data, Dataset) else data
-    if not isinstance(frame, (pl.DataFrame, pl.LazyFrame)):
-        raise HermesError(f"resolve_data requires a Polars frame, got {type(frame).__name__}")
-    if not keys:
-        keys = _detect_needs(frame)
-    if not keys:
-        raise HermesError("No entities to resolve: pass keys=[(column, entity_type), ...]")
-
-    registry = get_registry()
-    expr: list[pl.Expr] = []
-    for column, entity_type in keys:
-        if column not in (frame.collect_schema().names() if isinstance(frame, pl.LazyFrame) else frame.columns):
-            continue
-        values = (
-            frame.select(pl.col(column).unique().cast(pl.Utf8, strict=False))
-            .collect(engine="streaming")
-            .to_series()
-            .to_list()
-            if isinstance(frame, pl.LazyFrame)
-            else frame.select(pl.col(column).unique().cast(pl.Utf8, strict=False)).to_series().to_list()
-        )
-        mapping: dict[str, str] = {}
-        for value in values:
-            if value is None or value == "":
-                continue
-            entity = None
-            try:
-                entity = registry.resolve(str(value), entity_type=entity_type)
-            except Exception as exc:  # noqa: BLE001 - per-key tolerance
-                logger.warning(f"Failed to resolve {value!r} as {entity_type}: {exc}", exc_info=True)
-                continue
-            if entity is not None:
-                mapping[value] = entity.id
-        expr.append(
-            pl.col(column)
-            .cast(pl.Utf8, strict=False)
-            .replace_strict(mapping, default=None)
-            .alias(f"{column}_entity_id")
-        )
-
-    if not expr:
-        raise HermesError("No resolvable entity-key columns found in the data")
-    resolved = frame.with_columns(expr)
-
-    if isinstance(data, Dataset):
-        data.data = resolved
-        data.record("resolve_data", params={"keys": [f"{c}/{t}" for c, t in keys]})
-        return data
-    return resolved
