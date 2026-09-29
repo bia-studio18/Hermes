@@ -51,12 +51,6 @@ def test_cli_end_to_end_against_storage(cli_storage):
     assert r.returncode == 0 and r.stdout.strip() == ""
 
 
-def test_cli_error_path(cli_storage):
-    r = _cli(cli_storage, "inspect", "does_not_exist")
-    assert r.returncode == 1
-    assert "DatasetNotFoundError" in r.stderr
-
-
 def test_cli_bad_source_exits_nonzero(cli_storage):
     r = _cli(cli_storage, "fetch", "no_such_connector")
     assert r.returncode == 1

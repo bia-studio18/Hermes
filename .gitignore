@@ -17,5 +17,6 @@ res/
 **/node_modules/
 # build artifacts
 hermes/_rust*.so
+hermes/_er_native*.so
 dist/
 rust/target/
