@@ -15,9 +15,8 @@ you something you can trust.
 > called out explicitly in [Features](#features). Architecture, subsystem specs, ownership and the
 > phased roadmap live in [`docs/hermes.md`](docs/hermes.md).
 
-<div <div align="center">
 ![PyPI downloads](https://img.shields.io/pypi/dm/hermes-plt)
-</div>
+
 ---
 
 ## Table of Contents
