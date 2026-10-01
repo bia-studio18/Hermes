@@ -47,7 +47,7 @@ fn to_py_err(py: Python<'_>, err: RustHttpError) -> PyErr {
 }
 
 /// Materialized response body so no underlying HTTP types leak across the FFI.
-#[pyclass(name = "HttpResponse")]
+#[pyclass(name = "HttpResponse", skip_from_py_object)]
 #[derive(Clone)]
 pub struct HttpResponse {
     status: u16,

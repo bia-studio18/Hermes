@@ -51,15 +51,15 @@ you something you can trust.
 | `hr.validate()` | 22 validation rules: not-null, unique, unique-combination, type, range, regex/pattern, enum, length, duplicate, null-rate, completeness, cardinality, constant, date range/order, freshness, row count, schema, column, foreign-key, referential |
 | `hr.transform()` | Apply a function to a frame or `Dataset`; records a `transform` step in lineage when given a `Dataset` |
 | `hr.get_schema()` / `compare_schema()` / `migrate()` | 7 versioned canonical schemas: `entity`, `economic.observation`, `financial.observation`, `market.observation`, `geopolitical.event`, `security.event`, `document` |
-| `hr.resolve_entity()` and friends | Entity resolution over bundled country (249) and CIK/ticker (10,422) registries, with fuzzy matching and stable `HRM-` identifiers |
+| `hr.resolve()` | Entity resolution. Pass a frame; the Rust engine infers field roles, blocking keys, comparison weights and the match threshold, then links and clusters the rows. **Not yet implemented — see [Limitations](#limitations)** |
 | `hr.save()` / `load()` / `exists()` / `delete()` / `list_datasets()` / `storage_info()` | Filesystem storage backend — Parquet or Arrow IPC, atomic metadata writes, load-time integrity checks |
 | Credentials | `hr.set_cred()` / `get_cred()` / `has_cred()` / `list_creds()` / `delete_cred()` persisted to `~/.hermes-plt/credentials.json` |
 | Connectors | Binance, Finnhub, FRED, IMF, SEC EDGAR, World Bank, YFinance, OpenSanctions — all on one `BaseConnector` contract with shared retry, rate-limit, auth, normalization, validation and provenance |
 | `hr.fetch()` / `fetch_raw()` / `sync()` | Acquisition with retry, rate limiting, pagination, and a 24-hour raw-response cache |
 | `Dataset.record()` | Every operation is recorded into lineage and bumps the dataset version |
 | Error taxonomy | `HermesError` and 10 typed subclasses (`AcquisitionError`, `ParseError`, `SchemaError`, `NormalizationError`, `ValidationError`, `StorageError`, `QueryError`, `ConfigError`, `ConnectorNotFoundError`, `AuthenticationError`) |
-| Rust core | PyO3/maturin extension for entity-resolution primitives and the HTTP client. **Not yet reachable from Python** — see [Limitations](#limitations) |
-| Tests | 364 Python tests + 20 Rust tests, run in CI on Python 3.11 / 3.12 / 3.13 alongside `ruff` and `mypy` |
+| Rust core | PyO3/maturin extension. Owns the entity-resolution engine (`hermes._rust.er`) and the HTTP client. Records cross the boundary as Arrow, zero-copy in both directions |
+| Tests | 352 Python tests + 30 Rust tests, run in CI on Python 3.11 / 3.12 / 3.13 alongside `ruff` and `mypy` |
 
 ### Limitations
 
@@ -69,9 +69,14 @@ Alpha software, called out plainly:
   implementation, and it is not registered with `hr.fetch`.
 - **`PUBLIC_DATASET`** is a local CSV bundle (HDI, CPI, HRS, NATO, CRS, SIPRI), not a network
   connector. Reach it with `hr.read()` / `hr.ingest()`, not `hr.fetch("public_data")`.
-- **Person entity resolution returns nothing.** The `person` entity type is registered with an
-  empty registry. Countries resolve by name / ISO-2 / ISO-3; companies resolve by **ticker or CIK
-  only** (no company-name index yet).
+- **Entity resolution is not implemented.** `hr.resolve()` is the public entry point and
+  `hermes._rust.er` is wired into the extension, but every pipeline stage is a stub
+  (`rust/src/er/`); calling either raises `NotImplementedError`. The bundled country (249)
+  and CIK/ticker (10,422) registries are **no longer searchable** — `resolve_entity`,
+  `resolve_country`, `resolve_company`, `resolve_security`, `resolve_organization`,
+  `resolve_person` and `resolve_data` were removed along with the old Python/Rust hybrid
+  resolver. Country and ISO lookups remain available as plain helpers:
+  `hermes.entities.iso3_to_iso2` / `check_iso3`.
 - **`hermes fetch` does not persist.** It ingests and prints a summary. Use `hr.save()`, or the
   Python API, to write a dataset into storage.
 - **The Rust CLI is not implemented.** All four subcommands return exit code 1. The working CLI is
@@ -116,11 +121,6 @@ shape: (3, 10)
 │ year    ┆ Int64   ┆ 0     ┆ 0.00  ┆ … ┆ 2024 ┆ 2023.5  ┆ 0.57735 ┆ -               │
 │ gdp     ┆ Float64 ┆ 0     ┆ 0.00  ┆ … ┆ 280  ┆ 191.775 ┆ 94.8673 ┆ -               │
 └─────────┴─────────┴───────┴───────┴───┴──────┴─────────┴─────────┴─────────────────┘
-
-$ hermes entity resolve "Kenya" --type country
-country: Kenya  (HRM-COUNTRY-01XGLAII0BFPBUGNAGHTTH)
-  iso3: KEN
-  iso2: KE
 ```
 
 - **Docs** — <https://docs.hermes-plt.xyz>
@@ -293,11 +293,7 @@ result = hr.migrate(entities_df,
 if not result.is_success():
     print(result.errors)   # required fields still missing after the rename
 
-hr.resolve_entity("Kenya")            # Result
-hr.resolve_country("KEN")              # by name, ISO-2 or ISO-3
-hr.resolve_company("AAPL")             # by ticker or CIK
-hr.resolve_security("AAPL"); hr.resolve_organization("AAPL")
-
+result = hr.resolve(df)      # links and clusters rows; adds `entity_id` column
 hr.hrm_id("country")           # 'HRM-COUNTRY-01XGLAII0BFPBUGNAGHTTH'
 ```
 
@@ -361,7 +357,6 @@ hermes [--storage PATH] <command>
 | `hermes fetch <source> [dataset]` | Fetch from a connector or local file |
 | `hermes inspect <name>` | Row/column counts, types, detected entity needs |
 | `hermes profile <name> [--json]` | Full column-stat table for a stored dataset |
-| `hermes entity resolve <query> [--type]` | Resolve an entity to an `HRM-` identifier |
 | `hermes dataset list \| info <name> \| delete <name>` | Manage stored datasets |
 | `hermes cred init \| set <name> \| get <name> [--show] \| list \| delete <name>` | Manage the credential store |
 
@@ -414,12 +409,13 @@ API keys for connectors are read from the credential store, not from environment
 `validate(data, rules=None, schema=None, context=None) -> ValidationResult`,
 `transform(data, fn, **kwargs)`,
 `profile(data=None, path=None, source=None) -> MetaData`, `inspect(data) -> InspectReport`,
-`get_freqs(data)`, `date_ranges(data)`, `anomaly_count(data, threshold=1.5)`,
-`resolve_data(data, keys=None)`
+`get_freqs(data)`, `date_ranges(data)`, `anomaly_count(data, threshold=1.5)`
 
-**Entities** — `resolve_entity(query, entity_type=None) -> Result`, `resolve_country(query)`,
-`resolve_company(query)`, `resolve_security(query)`, `resolve_organization(query)`,
-`resolve_person(query)`
+**Entities** — `resolve(data, **options) -> Result`. Links and clusters the records in a
+frame. Field roles, blocking keys, per-field comparison weights and the match threshold are all
+inferred from the data by the Rust engine; `options` (`keys`, `threshold`, `entity_type`,
+`max_block_size`) overrides that inference and is never required. Returns `data` with an added
+`entity_id` column and `metadata["entities"]` holding one canonical row per cluster.
 
 **Schemas** — `get_schema(name, version=None) -> Result`, `register_schema(schema) -> Result`,
 `compare_schema(a, b) -> Result`, `migrate(data, from_schema, to_schema, *, rename=None) -> Result`

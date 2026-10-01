@@ -18,7 +18,7 @@ def _render_profile(md: object) -> str:
     import polars as pl
 
     from hermes.core.metadata import MetaData
-    
+
     if not isinstance(md, MetaData):
         raise TypeError(f"The Data should be Hermes MetaData, got {type(md)}")
 
@@ -163,7 +163,7 @@ def _cred(args: argparse.Namespace) -> int:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="hermes", description="Hermes data engine")
-    parser.add_argument("--version", action="version", version="hermes 0.1")
+    parser.add_argument("--version", action="version", version="hermes 0.2.22")
     parser.add_argument("--storage", default=None, help="storage root directory (default: configured root)")
     sub = parser.add_subparsers(dest="command")
 
@@ -180,12 +180,6 @@ def _build_parser() -> argparse.ArgumentParser:
     p_profile.add_argument("name", help="file path or stored dataset name")
     p_profile.add_argument("--json", action="store_true", help="emit JSON")
     p_profile.set_defaults(func=_profile)
-
-    p_entity = sub.add_parser("entity", help="Work with entities")
-    e_sub = p_entity.add_subparsers(dest="action", required=True)
-    p_resolve = e_sub.add_parser("resolve", help="Resolve a name/identifier to an entity")
-    p_resolve.add_argument("query", help="canonical name or identifier value")
-    p_resolve.add_argument("--type", default=None, help="hint entity type (company, country, security, ...)")
 
     p_dataset = sub.add_parser("dataset", help="Manage stored datasets")
     d_sub = p_dataset.add_subparsers(dest="action", required=True)

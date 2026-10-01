@@ -1,6 +1,7 @@
 use pyo3::prelude::*;
 
 pub mod cli;
+pub mod er;
 pub mod http;
 
 #[pyfunction]
@@ -11,6 +12,7 @@ fn version() -> &'static str {
 #[pymodule]
 fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(version, m)?)?;
+    er::register(m)?;
     http::register(m)?;
 
     let cli_mod = PyModule::new(m.py(), "cli")?;
