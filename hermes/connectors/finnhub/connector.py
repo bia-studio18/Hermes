@@ -18,24 +18,20 @@ logger = logging.getLogger(__name__)
 class FINNHUB(BaseConnector):
     canonical_schema = "market.observation"
 
-    BASE_URL = BASE_URL
-
-    ENDPOINTS = ENDPOINTS
-
     def __init__(
         self,
         cache: RawCache | None = None,
     ):
         super().__init__(cache, retry_auth=True)
         self._api = get_cred("finnhub")
-        self._url = self.BASE_URL
+        self._url = BASE_URL
 
     def build_url(
         self,
         endpoint: FinnhubEndpoint,
     ) -> str:
         try:
-            path = self.ENDPOINTS[endpoint]
+            path = ENDPOINTS[endpoint]
         except KeyError:
             raise ValueError(f"Unsupported endpoint: {endpoint}")
 

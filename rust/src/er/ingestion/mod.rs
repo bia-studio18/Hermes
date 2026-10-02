@@ -1,5 +1,7 @@
 mod csv;
 mod json;
+mod parquet;
+
 pub fn ingest() {
 
 }
