@@ -15,7 +15,7 @@ struct DamerauLevenshteinSimilarity {
 impl LevenshteinSimilarity {
     pub fn levenshtein_similarity(a: String, b: String) -> Result<Self, Box<dyn Error>> {
                 
-        let matched_score = strsim::levenshtein(&a, &b);
+        let matched_score = strsim::normalized_levenshtein(&a, &b);
         
         let result = SimilarityScore{
             score: matched_score as f64,
@@ -29,7 +29,7 @@ impl LevenshteinSimilarity {
 impl DamerauLevenshteinSimilarity {
     pub fn damerau_levenshtein_similarity(a: String, b: String) -> Result<Self, Box<dyn Error>> {
         
-        let matched_score = strsim::damerau_levenshtein(&a, &b);
+        let matched_score = strsim::normalized_damerau_levenshtein(&a, &b);
         
         let result = SimilarityScore{
             score: matched_score as f64,
