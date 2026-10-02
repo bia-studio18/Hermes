@@ -3,3 +3,5 @@ mod string;
 mod date;
 mod normalize;
 mod exact;
+mod edit;
+mod jaro;

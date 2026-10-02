@@ -16,4 +16,5 @@ impl SimilarityScore {
             "The Score should be between 0.0 and 1.0",
         ))
     }
+
 }
