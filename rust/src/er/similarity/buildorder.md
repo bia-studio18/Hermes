@@ -2,7 +2,7 @@
 2. normalize.rs  ✓
 3. exact.rs      ✓
 4. edit.rs       ✓
-5. jaro.rs       
+5. jaro.rs       ✓
 6. token.rs
 7. numeric.rs
 8. date.rs

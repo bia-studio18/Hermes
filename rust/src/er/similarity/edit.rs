@@ -1,4 +1,4 @@
-use strsim;
+use textdistance;
 use std::error::Error;
 
 use crate::er::similarity::{normalize, score::SimilarityScore};
@@ -15,10 +15,10 @@ struct DamerauLevenshteinSimilarity {
 impl LevenshteinSimilarity {
     pub fn levenshtein_similarity(a: String, b: String) -> Result<Self, Box<dyn Error>> {
                 
-        let matched_score = strsim::normalized_levenshtein(&a, &b);
+        let matched_score = textdistance::nstr::levenshtein(&a, &b);
         
         let result = SimilarityScore{
-            score: matched_score as f64,
+            score: matched_score,
             method: "levenshtein_similarity".to_string()
         };
         
@@ -29,7 +29,7 @@ impl LevenshteinSimilarity {
 impl DamerauLevenshteinSimilarity {
     pub fn damerau_levenshtein_similarity(a: String, b: String) -> Result<Self, Box<dyn Error>> {
         
-        let matched_score = strsim::normalized_damerau_levenshtein(&a, &b);
+        let matched_score = textdistance::nstr::damerau_levenshtein(&a, &b);
         
         let result = SimilarityScore{
             score: matched_score as f64,
