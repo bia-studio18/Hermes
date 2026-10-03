@@ -1,4 +1,4 @@
-use strsim;
+use textdistance;
 use std::error::Error;
 
 use crate::er::similarity::{normalize, score::SimilarityScore};
@@ -16,7 +16,7 @@ impl JaroSimilarity {
         let normalized_a = normalize::normalize(&a);
         let normalized_b = normalize::normalize(&b);
 
-        let matched_score = strsim::jaro(&normalized_a, &normalized_b);
+        let matched_score = textdistance::nstr::jaro(&normalized_a, &normalized_b);
         
         let result = SimilarityScore { 
             score: matched_score,
@@ -33,7 +33,7 @@ impl JaroWinklerSimilarity {
         let normalized_a = normalize::normalize(&a);
         let normalized_b = normalize::normalize(&b);
 
-        let matched_score = strsim::jaro_winkler(&normalized_a, &normalized_b);
+        let matched_score = textdistance::nstr::jaro_winkler(&normalized_a, &normalized_b);
         
         let result = SimilarityScore { 
             score: matched_score,

@@ -5,3 +5,4 @@ mod normalize;
 mod exact;
 mod edit;
 mod jaro;
+mod token;

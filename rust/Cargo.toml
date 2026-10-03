@@ -23,8 +23,8 @@ rustls = "0.23"
 unicode-normalization = "0.1"
 unicode-casefold = "0.2"
 csv = "1.4.0"
-strsim = "0.11.1"
 chrono = "0.4.45"
+textdistance = "1.1.1"
 
 [features]
 abi3 = ["pyo3/abi3-py311"]
