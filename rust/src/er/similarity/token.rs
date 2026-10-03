@@ -3,8 +3,6 @@ use textdistance::nstr::{
 };
 
 use crate::er::similarity::score::SimilarityScore;
-use std::error::Error;
-
 #[derive(Debug, Clone, Copy)]
 pub enum TokenAlgo {
     Jaccard,
