@@ -25,6 +25,7 @@ unicode-casefold = "0.2"
 csv = "1.4.0"
 chrono = "0.4.45"
 textdistance = "1.1.1"
+phonelib = "2.1.0"
 
 [features]
 abi3 = ["pyo3/abi3-py311"]

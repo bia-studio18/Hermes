@@ -7,3 +7,4 @@ mod edit;
 mod jaro;
 mod token;
 mod numeric;
+mod email;

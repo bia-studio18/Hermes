@@ -744,6 +744,7 @@ dependencies = [
  "chrono",
  "clap",
  "csv",
+ "phonelib",
  "pyo3",
  "rayon",
  "rcgen",
@@ -1095,6 +1096,12 @@ name = "percent-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
+
+[[package]]
+name = "phonelib"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fcde8e372d4944d115fd15828c0ee8ad27715fc66d181e17b2fd8ca5c1f03a6c"
 
 [[package]]
 name = "pin-project-lite"
