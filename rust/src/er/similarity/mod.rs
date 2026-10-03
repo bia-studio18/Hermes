@@ -6,3 +6,4 @@ mod exact;
 mod edit;
 mod jaro;
 mod token;
+mod numeric;

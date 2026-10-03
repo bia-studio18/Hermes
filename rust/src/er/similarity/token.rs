@@ -25,7 +25,7 @@ impl TokenSimilarity {
         s1: &str,
         s2: &str,
         algo: TokenAlgo,
-    ) -> Result<Self, Box<dyn Error>> 
+    ) -> Self 
     
     {
         let _score = match algo {
@@ -41,11 +41,11 @@ impl TokenSimilarity {
             score: _score, 
             method: "token_based".to_string()
         };
-        Ok(Self { similarity: result })
+        Self { similarity: result }
     }
 }
 
 pub fn token_similarity(a: String, b: String, algo: TokenAlgo) -> f64 {
-    let n = TokenSimilarity::token_similarity(&a, &b, algo).unwrap();
+    let n = TokenSimilarity::token_similarity(&a, &b, algo);
     n.similarity.score
 }
