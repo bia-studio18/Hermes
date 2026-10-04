@@ -2,8 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, Database, FileStack, Network, ServerCog } from "lucide-react";
-import { SectionHead } from "@/components/SectionHead";
-import { DOCS_URL, GITHUB_URL, fadeUp } from "@/lib/constants";
+import { DOCS_URL, GITHUB_URL } from "@/lib/constants";
 
 const DOCS_NAV = [
   { label: "Introduction" },
@@ -35,41 +34,58 @@ const FEATURE_BADGES = [
   { icon: ServerCog, label: "Scalable storage" },
 ];
 
+const sectionFade = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-80px" },
+  transition: { duration: 0.6, ease: "easeOut" as const },
+};
+
 export function DocsPreview() {
   return (
-    <section id="reference" className="border-t border-hairline">
-      <div className="shell py-24">
-        <SectionHead
-          index="04"
-          kicker="Reference"
-          title="Documented end to end."
-          lede="Ten connector guides, seven schema domains, the full Python API and every CLI command — with runnable examples."
-        />
+    <section className="relative border-t border-white/[0.06] bg-[#0e1114]">
+      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
+        {/* Section intro */}
+        <motion.div {...sectionFade} className="mb-12 text-center">
+          <p className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.3em] text-teal">
+            Documentation
+          </p>
+          <h2 className="font-sans text-3xl font-bold tracking-tight text-offwhite sm:text-4xl">
+            Built to be read. Ready to run.
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-gray-bright">
+            Clear guides for connectors, schemas, and the Python API — so you can
+            go from install to first pipeline without guesswork.
+          </p>
+        </motion.div>
 
-        {/* Mockup of the docs site */}
+        {/* Mockup window */}
         <motion.div
-          {...fadeUp}
-          className="panel brackets overflow-hidden"
+          {...sectionFade}
+          className="overflow-hidden rounded-lg border border-white/[0.08] bg-midnight shadow-2xl shadow-black/50"
         >
-          <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5">
-            <span className="label text-gray-bright">docs.hermes-plt.xyz</span>
-            <span className="label flex items-center gap-2 text-gray">
-              <span className="h-1 w-1 rotate-45 bg-teal" aria-hidden="true" />
-              live docs
+          {/* Window chrome */}
+          <div className="flex items-center gap-2 border-b border-white/[0.06] px-4 py-3">
+            <span className="h-2.5 w-2.5 rounded-full bg-white/15" aria-hidden="true" />
+            <span className="h-2.5 w-2.5 rounded-full bg-white/15" aria-hidden="true" />
+            <span className="h-2.5 w-2.5 rounded-full bg-white/15" aria-hidden="true" />
+            <span className="ml-3 font-mono text-[10px] uppercase tracking-[0.2em] text-gray">
+              docs.hermes-plt.xyz
             </span>
           </div>
 
           <div className="flex">
+            {/* Sidebar */}
             <aside
-              className="hidden w-64 shrink-0 border-r border-hairline p-5 sm:block"
+              className="hidden w-64 shrink-0 border-r border-white/[0.07] p-5 sm:block"
               aria-hidden="true"
             >
-              <nav className="space-y-0.5 font-sans">
+              <nav className="space-y-1 font-sans">
                 {DOCS_NAV.map((item, i) =>
                   item.header ? (
                     <p
                       key={`${item.header}-${i}`}
-                      className="label px-2 pb-1 pt-4 text-teal-bright"
+                      className="px-2 pb-1 pt-4 font-mono text-[10px] font-semibold uppercase tracking-[0.25em] text-teal"
                     >
                       {item.header}
                     </p>
@@ -78,33 +94,37 @@ export function DocsPreview() {
                       key={item.label}
                       className={`cursor-default rounded-sm px-2 py-1.5 text-sm ${
                         item.label === "Introduction"
-                          ? "bg-teal/10 font-medium text-teal-bright"
+                          ? "bg-teal/10 font-medium text-teal"
                           : "text-gray-bright"
                       }`}
                     >
                       {item.label}
                     </p>
-                  ),
+                  )
                 )}
               </nav>
             </aside>
 
+            {/* Main panel */}
             <div className="min-w-0 flex-1 p-6 sm:p-8">
-              <p className="label text-teal-bright">Introduction</p>
+              <p className="font-mono text-xs uppercase tracking-[0.25em] text-teal">
+                Introduction
+              </p>
               <h3 className="mt-3 font-sans text-2xl font-bold tracking-tight text-offwhite">
                 Introduction
               </h3>
               <p className="mt-3 max-w-lg text-sm leading-relaxed text-gray-bright">
-                Hermes provides a unified interface for acquiring, processing and serving
-                data — from financial feeds to geopolitical sources — with built-in
+                Hermes provides a unified interface for acquiring, processing and
+                serving data — from financial feeds to public datasets — with
                 validation, normalization and provenance tracking.
               </p>
 
-              <div className="panel mt-6 flex items-center gap-3 overflow-x-auto rounded-none px-4 py-3">
-                <span className="label text-teal-bright" aria-hidden="true">
+              {/* Install */}
+              <div className="mt-6 flex items-center gap-3 overflow-x-auto rounded-md border border-white/[0.07] bg-[#0e1114] px-4 py-3 font-mono text-sm">
+                <span className="text-teal" aria-hidden="true">
                   $
                 </span>
-                <code className="whitespace-nowrap font-mono text-sm text-gray-bright">
+                <code className="whitespace-nowrap text-gray-bright">
                   pip install hermes-plt
                 </code>
                 <span
@@ -113,13 +133,14 @@ export function DocsPreview() {
                 />
               </div>
 
+              {/* Badges */}
               <div className="mt-6 flex flex-wrap gap-2">
                 {FEATURE_BADGES.map((b) => (
                   <span
                     key={b.label}
-                    className="inline-flex items-center gap-1.5 border border-teal/30 px-2.5 py-1 text-xs text-gray-bright"
+                    className="inline-flex items-center gap-1.5 rounded-sm border border-teal/30 px-2.5 py-1 text-xs text-gray-bright"
                   >
-                    <b.icon className="h-3.5 w-3.5 text-teal-bright" aria-hidden="true" />
+                    <b.icon className="h-3.5 w-3.5 text-teal" aria-hidden="true" />
                     {b.label}
                   </span>
                 ))}
@@ -128,29 +149,31 @@ export function DocsPreview() {
           </div>
         </motion.div>
 
-        {/* Closing CTA */}
-        <motion.div
-          {...fadeUp}
-          className="mx-auto mt-20 max-w-2xl text-center"
-        >
-          <span className="label inline-flex items-center gap-3">
-            <span className="h-px w-8 bg-hairline-strong" aria-hidden="true" />
-            <span className="text-teal-bright">Get started</span>
-            <span className="h-px w-8 bg-hairline-strong" aria-hidden="true" />
-          </span>
-          <h2 className="mt-6 font-sans text-3xl font-bold tracking-tight text-offwhite sm:text-4xl">
-            Data infrastructure for the modern world.
+        {/* CTA */}
+        <motion.div {...sectionFade} className="mx-auto mt-16 max-w-2xl text-center">
+          <h2 className="font-sans text-3xl font-bold tracking-tight text-offwhite sm:text-4xl">
+            Start with the docs.
           </h2>
           <p className="mt-4 text-base leading-relaxed text-gray-bright">
-            Install it, point it at a source, and get a validated dataset. That is the
-            whole onboarding.
+            Installation, connectors, and the Python API — structured so you can
+            move from first install to production patterns.
           </p>
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <a href={DOCS_URL} className="btn btn-primary">
-              Get started
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
+            <a
+              href={DOCS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-sm bg-teal px-7 py-3.5 font-sans text-sm font-semibold text-midnight transition-colors duration-150 hover:bg-[#3a8379]"
+            >
+              Open documentation
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </a>
-            <a href={GITHUB_URL} className="btn btn-ghost">
+            <a
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-sm border border-offwhite/25 px-7 py-3.5 font-sans text-sm font-semibold text-offwhite transition-colors duration-150 hover:border-teal hover:text-teal"
+            >
               View on GitHub
             </a>
           </div>
