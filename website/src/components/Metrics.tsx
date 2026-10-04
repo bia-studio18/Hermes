@@ -7,12 +7,6 @@ import { STATS } from "@/lib/constants";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/**
- * Capability readout. The figures count up once as the band scrolls in.
- *
- * Counts are suppressed under prefers-reduced-motion, which is also why the
- * markup ships the final value and the animation only rewrites it.
- */
 export function Metrics() {
   const root = useRef<HTMLDivElement>(null);
 
@@ -52,10 +46,8 @@ export function Metrics() {
             i > 0 ? "border-t border-hairline sm:border-t-0 sm:border-l" : ""
           } ${i === 2 ? "sm:border-t lg:border-t-0" : ""}`}
         >
-          <span className="label text-gray">Fig. {String(i + 1).padStart(2, "0")}</span>
-          <p className="mt-4 font-mono text-5xl font-medium leading-none tracking-tight text-offwhite tabular">
+          <p className="font-mono text-5xl font-medium leading-none tracking-tight text-offwhite tabular">
             <span data-count={stat.value}>{stat.value}</span>
-            {stat.suffix}
           </p>
           <p className="mt-4 font-sans text-sm font-medium text-offwhite">{stat.label}</p>
           <p className="mt-2 font-mono text-[11px] leading-relaxed text-gray">{stat.note}</p>

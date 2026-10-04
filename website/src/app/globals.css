@@ -5,15 +5,10 @@
   --color-offwhite: #f5f5f2;
   --color-gray: #8b9198;
   --color-teal: #2f6f68;
-  /* Slightly lighter gray for body copy legibility on midnight */
   --color-gray-bright: #9aa2aa;
-  /* Lightened tint of --color-teal (already used for code accents) so small
-     text clears WCAG AA on midnight. --color-teal is 3.4:1, this is 6.9:1.
-     Keep --color-teal for borders, rules and fills, where 3:1 is the bar. */
+  /* 6.9:1 on midnight, where --color-teal is only 3.4:1. Teal stays for borders. */
   --color-teal-bright: #4aa89e;
-  /* Lifted panel background, one step off the canvas */
   --color-panel: #0e1114;
-  /* Hairline border — the single structural line weight of the whole page */
   --color-hairline: rgba(245, 245, 242, 0.09);
   --color-hairline-strong: rgba(245, 245, 242, 0.16);
 }
@@ -34,7 +29,7 @@
 
 html {
   scroll-behavior: smooth;
-  /* clears the sticky status bar + header when jumping to a section anchor */
+  /* clears the sticky header when jumping to a section anchor */
   scroll-padding-top: 6.5rem;
 }
 
@@ -48,8 +43,7 @@ body {
 
 /* ── Layout primitives ───────────────────────────────────────────────────── */
 
-/* Page container. One definition instead of repeating the same Tailwind
-   string in every section. */
+/* Page container */
 .shell {
   margin-inline: auto;
   max-width: 76rem;
@@ -62,7 +56,6 @@ body {
   }
 }
 
-/* Hairline-bordered panel — the base cell of the whole page. */
 .panel {
   position: relative;
   border: 1px solid var(--color-hairline);
@@ -70,8 +63,7 @@ body {
   border-radius: 2px;
 }
 
-/* Corner registration marks. Decorative targeting brackets, the way a
-   technical drawing marks a detail callout. */
+/* Corner registration marks, like a drawing detail callout */
 .brackets::before,
 .brackets::after {
   content: "";
@@ -99,8 +91,7 @@ body {
 
 /* ── Type ────────────────────────────────────────────────────────────────── */
 
-/* Monospace micro-label. Every section heading, table header and status
-   readout on the page is set in this. */
+/* Monospace micro-label */
 .label {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-size: 0.6875rem;
@@ -115,8 +106,7 @@ body {
 
 /* ── Grid fields ─────────────────────────────────────────────────────────── */
 
-/* Structural background grid. Fades out radially so it never reaches the
-   text, which is what keeps it reading as paper rather than as a table. */
+/* Radial mask keeps the grid from ever reaching the text */
 .grid-field {
   background-image:
     linear-gradient(to right, var(--color-hairline) 1px, transparent 1px),
@@ -125,55 +115,7 @@ body {
   mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, #000 25%, transparent 78%);
 }
 
-.grid-field-fine {
-  background-image:
-    linear-gradient(to right, var(--color-hairline) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--color-hairline) 1px, transparent 1px);
-  background-size: 19px 19px;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 10%, transparent 72%);
-}
-
-/* Vignette that keeps a full-bleed section from meeting the next one abruptly */
-.fade-edges {
-  mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
-}
-
 /* ── Status ──────────────────────────────────────────────────────────────── */
-
-.pulse-dot {
-  position: relative;
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background: var(--color-teal-bright);
-}
-
-.pulse-dot::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: inherit;
-  animation: ping 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-@keyframes ping {
-  75%,
-  100% {
-    transform: scale(2.8);
-    opacity: 0;
-  }
-}
-
-/* Diagonal hazard stripes — used behind the ticker and section rules */
-.stripes {
-  background-image: repeating-linear-gradient(
-    -45deg,
-    var(--color-hairline) 0 1px,
-    transparent 1px 7px
-  );
-}
 
 /* ── Ticker ──────────────────────────────────────────────────────────────── */
 
@@ -238,8 +180,6 @@ body {
 
 /* ── Interactive cell ────────────────────────────────────────────────────── */
 
-/* A bordered data cell that responds to the pointer. Border brightens and
-   the fill lifts one step — the same interaction on every cell on the page. */
 .cell {
   position: relative;
   transition:
@@ -250,30 +190,6 @@ body {
 .cell:hover {
   border-color: rgba(74, 168, 158, 0.55);
   background: #101518;
-}
-
-/* Hairline that fills from the left as a scroll-linked progress indicator */
-.rule-fill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  background: var(--color-teal-bright);
-  transform-origin: left;
-}
-
-/* Decorative hero texture — sparse dots + thin teal lines (world-map / network overlay) */
-.map-texture {
-  background-image:
-    radial-gradient(circle at 12% 22%, var(--color-teal) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 42% 18%, var(--color-teal) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 71% 32%, var(--color-teal) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 88% 12%, var(--color-teal) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 30% 62%, var(--color-teal) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 64% 58%, var(--color-teal) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 92% 52%, var(--color-teal) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 18% 84%, var(--color-teal) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 51% 79%, var(--color-teal) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 81% 88%, var(--color-teal) 0 1px, transparent 1.5px);
-  background-size: 100% 100%;
 }
 
 ::selection {
@@ -290,17 +206,14 @@ body {
     scroll-behavior: auto !important;
   }
 }
-/* Focus visible — keyboard accessibility, brand teal */
 :focus-visible {
   outline: 2px solid var(--color-teal-bright);
   outline-offset: 2px;
 }
 
-/* Avoid default focus on mouse click where possible */
 :focus:not(:focus-visible) {
   outline: none;
 }
-/* Offset for sticky status bar + header when using skip-to-content / anchors */
 #main-content {
   scroll-margin-top: 7rem;
 }

@@ -53,14 +53,6 @@ export function Footer() {
                   </a>
                 </li>
               ))}
-              <li>
-                <a
-                  href="#main-content"
-                  className="text-sm text-gray-bright transition-colors duration-150 hover:text-teal-bright"
-                >
-                  Back to top
-                </a>
-              </li>
             </ul>
           </nav>
 
@@ -76,10 +68,12 @@ export function Footer() {
           <p className="label text-gray">
             &copy; {new Date().getFullYear()} Hermes. All rights reserved.
           </p>
-          <p className="label flex items-center gap-2 text-gray">
-            <span className="pulse-dot" aria-hidden="true" />
-            All systems operational
-          </p>
+          <a
+            href="#main-content"
+            className="label text-gray transition-colors duration-150 hover:text-offwhite"
+          >
+            Back to top
+          </a>
         </div>
       </div>
     </footer>

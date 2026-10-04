@@ -25,7 +25,6 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Progress rule across the header, plus a scroll-spy over the page sections.
   useEffect(() => {
     const ctx = gsap.context(() => {
       if (bar.current) {
@@ -62,7 +61,6 @@ export function Header() {
     return () => ctx.revert();
   }, []);
 
-  // The menu is a scroll trap on mobile — close it if the viewport grows back.
   useEffect(() => {
     if (!open) return;
     const mq = window.matchMedia("(min-width: 768px)");
@@ -125,7 +123,6 @@ export function Header() {
         </button>
       </div>
 
-      {/* Scroll progress — 1px rule pinned to the header's lower edge */}
       <span
         ref={bar}
         aria-hidden="true"

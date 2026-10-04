@@ -11,6 +11,7 @@ from typing import Any
 import polars as pl
 import pyarrow as pa
 
+import hermes._rust as _rust
 from hermes.core.errors import HermesError
 from hermes.core.lineage import Lineage, LineageStep
 from hermes.core.metadata import InspectReport, MetaData
@@ -45,7 +46,11 @@ def frame_checksum(data: object) -> str:
 class Dataset:
     """Dataset is the central object; `.data` holds the payload and all
     container access (items, iteration, length, truthiness, attributes) is
-    delegated to it so wrapped data stays usable as-is."""
+    delegated to it so wrapped data stays usable as-is.
+
+    `.hermes_dataset` is the Rust-backed `HermesDataset`: Python talks to
+    Hermes, Hermes talks to Arrow. The payload below is the legacy Polars
+    path and is not how the Dataset API is meant to grow."""
 
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -302,3 +307,44 @@ class Dataset:
         self.data = data
         self.record("load", input_ref=ref)
         return self.data
+
+    # --- Dataset API -----------------------------------------------------
+    # Placeholders only. Each one will be served by the Rust representation
+    # behind `hermes_dataset`, never by Polars.
+
+    @property
+    def hermes_dataset(self) -> Any:
+        """The Rust `HermesDataset` this Dataset delegates to."""
+        handle = self.__dict__.get("_hermes_dataset")
+        if handle is None:
+            handle = _rust.data.HermesDataset()
+            self.__dict__["_hermes_dataset"] = handle
+        return handle
+
+    def shape(self) -> Any:
+        """Rows and columns of the dataset."""
+        raise NotImplementedError
+
+    def columns(self) -> Any:
+        """Column names, in order."""
+        raise NotImplementedError
+
+    def column(self, name: str) -> Any:
+        """One column by name."""
+        raise NotImplementedError
+
+    def select(self, *columns: str) -> "Dataset":
+        """Project a subset of columns."""
+        raise NotImplementedError
+
+    def filter(self, *predicates: Any) -> "Dataset":
+        """Keep rows matching the predicates."""
+        raise NotImplementedError
+
+    def head(self, n: int = 5) -> "Dataset":
+        """First n rows."""
+        raise NotImplementedError
+
+    def slice(self, offset: int, length: int) -> "Dataset":
+        """Rows [offset, offset + length)."""
+        raise NotImplementedError

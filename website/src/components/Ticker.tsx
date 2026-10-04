@@ -1,11 +1,5 @@
 import { TICKER } from "@/lib/constants";
 
-/**
- * Infinite marquee of the shipped connector packages.
- *
- * The list is rendered twice and the track is translated -50%, which loops
- * seamlessly because the two halves are identical. Pauses on hover.
- */
 export function Ticker() {
   return (
     <div className="ticker border-y border-hairline bg-panel">

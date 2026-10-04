@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s · Hermes",
   },
   description:
-    "Hermes is a data infrastructure SDK for acquiring, normalizing, validating and serving structured and unstructured data — from 10 built-in connectors, through one canonical schema.",
+    "Hermes is a data infrastructure SDK for acquiring, normalizing, validating and serving structured and unstructured data, from 10 built-in connectors through one canonical schema.",
 };
 
 export default function RootLayout({

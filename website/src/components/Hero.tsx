@@ -19,8 +19,7 @@ export function Hero() {
       const mm = gsap.matchMedia();
 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        // Entrance. `from` tween states, so the markup itself stays visible and
-        // a reduced-motion visitor gets the hero already settled.
+        // `from` tween states, so the markup stays visible without JS.
         gsap
           .timeline({ defaults: { ease: "power3.out" } })
           .from("[data-hero='eyebrow']", { opacity: 0, y: 12, duration: 0.5 })
@@ -33,7 +32,6 @@ export function Hero() {
           )
           .from("[data-hero='panel']", { opacity: 0, y: 20, duration: 0.6 }, "-=0.45");
 
-        // Parallax: the texture and grid drift slower than the page scrolls.
         gsap.to("[data-hero='texture']", {
           yPercent: 16,
           ease: "none",
@@ -92,7 +90,7 @@ export function Hero() {
             className="mt-7 max-w-xl text-base leading-relaxed text-gray-bright sm:text-lg"
           >
             Hermes acquires, normalizes, validates and serves structured and unstructured
-            data through one interface — financial feeds, government portals and files, all
+            data through one interface. Financial feeds, government portals and files, all
             speaking the same canonical schema.
           </p>
 
