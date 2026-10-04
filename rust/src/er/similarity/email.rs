@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use crate::er::similarity::score::SimilarityScore;
 
 pub enum EmailAlgo {
@@ -8,20 +10,18 @@ pub enum EmailAlgo {
 }
 
 pub struct EmailSimilarity {
-    similarity: SimilarityScore
+    pub similarity: SimilarityScore,
 }
 
-pub fn email_similarity(a: String, b:String, algo: EmailAlgo) -> EmailSimilarity {
-    let (user_a, domain_a) = a.split_once("@").unwrap();
-    let (user_b, domain_b) = b.split_once("@").unwrap();
-
+pub fn email_similarity(a: String, b:String, algo: EmailAlgo) -> Result<EmailSimilarity, Box<dyn Error>> {
+    let (user_a, domain_a) = a.split_once('@').ok_or("left value is not an email address")?;
+    let (user_b, domain_b) = b.split_once('@').ok_or("right value is not an email address")?;
 
     let score = match algo {
         EmailAlgo::Combined => {
             let user_score = if user_a == user_b {1.0} else {0.0};
             let domain_score = if domain_a == domain_b {1.0} else {0.0};
-            let final_score = (user_score + domain_score) / 2.0;
-            final_score as f64
+            (user_score + domain_score) / 2.0
         },
         EmailAlgo::Domain => {
             if domain_a == domain_b {
@@ -36,7 +36,7 @@ pub fn email_similarity(a: String, b:String, algo: EmailAlgo) -> EmailSimilarity
             } else { 
                 0.0 
             }
-        },
+        }
         EmailAlgo::Exact => {
             if a == b {
                 1.0
@@ -50,5 +50,5 @@ pub fn email_similarity(a: String, b:String, algo: EmailAlgo) -> EmailSimilarity
         score: score,
         method: "email_similarity".to_string()
     };
-    EmailSimilarity { similarity: result }
+    Ok(EmailSimilarity { similarity: result })
 }

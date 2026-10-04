@@ -12,10 +12,16 @@ struct DamerauLevenshteinSimilarity {
     similarity: SimilarityScore,
 }
 
+/// `textdistance`'s normalized edit distance runs from 0.0 (identical) to 1.0
+/// (nothing in common); a similarity runs the other way.
+fn to_similarity(normalized_distance: f64) -> f64 {
+    1.0 - normalized_distance.clamp(0.0, 1.0)
+}
+
 impl LevenshteinSimilarity {
     pub fn levenshtein_similarity(a: String, b: String) -> Result<Self, Box<dyn Error>> {
                 
-        let matched_score = textdistance::nstr::levenshtein(&a, &b);
+        let matched_score = to_similarity(textdistance::nstr::levenshtein(&a, &b));
         
         let result = SimilarityScore{
             score: matched_score,
@@ -29,10 +35,10 @@ impl LevenshteinSimilarity {
 impl DamerauLevenshteinSimilarity {
     pub fn damerau_levenshtein_similarity(a: String, b: String) -> Result<Self, Box<dyn Error>> {
         
-        let matched_score = textdistance::nstr::damerau_levenshtein(&a, &b);
+        let matched_score = to_similarity(textdistance::nstr::damerau_levenshtein(&a, &b));
         
         let result = SimilarityScore{
-            score: matched_score as f64,
+            score: matched_score,
             method: "damerau_levenshtein_similarity".to_string()
         };
         

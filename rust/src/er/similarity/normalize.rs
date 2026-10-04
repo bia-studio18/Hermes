@@ -3,7 +3,8 @@ use phonelib;
 
 pub trait Normalizer {
     fn normalize(&self, value: &str) -> String;
-    fn phone_normalize(&self, value: &str) -> String;
+    /// `None` when the value is not a parseable phone number.
+    fn phone_normalize(&self, value: &str) -> Option<String>;
 }
 
 pub struct StringNormalizer;
@@ -16,9 +17,8 @@ impl Normalizer for StringNormalizer {
             .trim()
             .to_lowercase()
     }
-    fn phone_normalize(&self, value: &str) -> String {
-        let normalized = phonelib::normalize_phone_number(value).unwrap();
-        normalized
+    fn phone_normalize(&self, value: &str) -> Option<String> {
+        phonelib::normalize_phone_number(value)
     }
 
 }
