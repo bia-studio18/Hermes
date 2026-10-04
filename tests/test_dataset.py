@@ -1,7 +1,9 @@
 from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
+import hermes._rust as _rust
 import polars as pl
+import pytest
 
 import hermes as hr
 from hermes.connectors.world_bank import World_bank
@@ -178,3 +180,22 @@ class TestConnectorWrapsDataset:
         assert len(ds) == 2
         assert bool(ds)
         assert ds.lineage.last_operation().operation == "fetch"
+
+
+class TestRustDatasetHandle:
+    def test_dataset_holds_one_rust_handle(self):
+        ds = Dataset(name="demo")
+        handle = ds.hermes_dataset
+        assert isinstance(handle, _rust.data.HermesDataset)
+        assert handle.kind() == "InMemory"
+        assert ds.hermes_dataset is handle
+
+    def test_api_names_placeholder_without_data_and_pass_through_with_it(self):
+        with pytest.raises(NotImplementedError):
+            Dataset(name="demo").select("a")
+
+        ds = Dataset(name="demo", data=pl.DataFrame({"a": [1], "b": [2]}))
+        assert ds.columns == ["a", "b"]
+        assert ds.shape == (1, 2)
+        assert ds.select("a").columns == ["a"]
+        assert ds.head(1).height == 1

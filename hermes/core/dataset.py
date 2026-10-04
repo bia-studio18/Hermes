@@ -309,8 +309,9 @@ class Dataset:
         return self.data
 
     # --- Dataset API -----------------------------------------------------
-    # Placeholders only. Each one will be served by the Rust representation
-    # behind `hermes_dataset`, never by Polars.
+    # Placeholders. Each one will be served by the Rust representation behind
+    # `hermes_dataset`; until then a legacy Polars payload answers, exactly as
+    # the `__getattr__` fallback did before these names were claimed.
 
     @property
     def hermes_dataset(self) -> Any:
@@ -321,30 +322,37 @@ class Dataset:
             self.__dict__["_hermes_dataset"] = handle
         return handle
 
+    def _payload_attr(self, name: str) -> Any:
+        if self.data is None:
+            raise NotImplementedError(f"Dataset.{name} is not implemented yet")
+        return getattr(self.data, name)
+
+    @property
     def shape(self) -> Any:
         """Rows and columns of the dataset."""
-        raise NotImplementedError
+        return self._payload_attr("shape")
 
+    @property
     def columns(self) -> Any:
         """Column names, in order."""
-        raise NotImplementedError
+        return self._payload_attr("columns")
 
     def column(self, name: str) -> Any:
         """One column by name."""
-        raise NotImplementedError
+        return self._payload_attr("column")(name)
 
     def select(self, *columns: str) -> "Dataset":
         """Project a subset of columns."""
-        raise NotImplementedError
+        return self._payload_attr("select")(*columns)
 
     def filter(self, *predicates: Any) -> "Dataset":
         """Keep rows matching the predicates."""
-        raise NotImplementedError
+        return self._payload_attr("filter")(*predicates)
 
     def head(self, n: int = 5) -> "Dataset":
         """First n rows."""
-        raise NotImplementedError
+        return self._payload_attr("head")(n)
 
     def slice(self, offset: int, length: int) -> "Dataset":
         """Rows [offset, offset + length)."""
-        raise NotImplementedError
+        return self._payload_attr("slice")(offset, length)
