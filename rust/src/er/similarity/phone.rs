@@ -1,5 +1,3 @@
-use phonelib;
-
 use crate::er::similarity::score::SimilarityScore;
 
 /*
@@ -19,10 +17,10 @@ pub enum PhoneAlgo {
 }
 
 pub struct PhoneSimilarity {
-    similarity: SimilarityScore
+    pub similarity: SimilarityScore,
 }
 
-pub fn phone_similarity(a: String, b: String, algo: PhoneAlgo) -> PhoneSimilarity {
+pub fn phone_similarity(_a: String, _b: String, algo: PhoneAlgo) -> PhoneSimilarity {
     
     let score = match algo {
         PhoneAlgo::Edit => {
@@ -31,7 +29,7 @@ pub fn phone_similarity(a: String, b: String, algo: PhoneAlgo) -> PhoneSimilarit
         PhoneAlgo::Exact => {
             0.0
         },
-        PhoneAlgo::Suffix { digits } => {
+        PhoneAlgo::Suffix { digits: _ } => {
             0.0
         }
     };

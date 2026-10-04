@@ -37,7 +37,7 @@ impl JaroWinklerSimilarity {
         
         let result = SimilarityScore { 
             score: matched_score,
-            method: "jaro_similarity".to_string()
+            method: "jaro_winkler_similarity".to_string()
         };
         Ok(Self { similarity: result })
     }

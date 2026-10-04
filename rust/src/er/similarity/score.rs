@@ -1,5 +1,6 @@
 use std::io::{Error, ErrorKind};
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct SimilarityScore {
     pub score: f64, 
     pub method: String,

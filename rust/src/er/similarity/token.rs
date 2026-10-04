@@ -15,7 +15,7 @@ pub enum TokenAlgo {
 }
 
 pub struct TokenSimilarity {
-    similarity: SimilarityScore
+    pub similarity: SimilarityScore,
 }
 
 impl TokenSimilarity {

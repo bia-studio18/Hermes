@@ -15,6 +15,7 @@ fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(version, m)?)?;
     http::register(m)?;
     data::register(m)?;
+    er::register(m)?;
 
     let cli_mod = PyModule::new(m.py(), "cli")?;
     cli::register(&cli_mod)?;
