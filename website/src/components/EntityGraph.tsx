@@ -2,15 +2,6 @@
 
 import { useState } from "react";
 
-// Entity-relationship diagram: six labelled entity types radiating from a
-// central hub. Thin teal lines, low-opacity dots. Inline SVG.
-//
-// Hovering (or tab-focusing) a node isolates its edge, label and dot, which is
-// the whole interaction. The transitions are plain CSS on SVG presentation
-// attributes rather than a motion library: those attributes are read as the
-// element's start value by CSS but come back undefined to a JS animator, and
-// here there is nothing to coordinate — one boolean drives everything.
-
 const NODES = [
   { label: "Country", x: 30, y: 30 },
   { label: "Organization", x: 110, y: 14 },
@@ -83,9 +74,6 @@ export function EntityGraph() {
         </text>
       ))}
 
-      {/* Hit targets last so they sit above the artwork, and focusable so the
-          same isolation is reachable from the keyboard. The visible dot scales
-          inside its own box; the hit area does not. */}
       {NODES.map((n) => (
         <g
           key={`hit-${n.label}`}

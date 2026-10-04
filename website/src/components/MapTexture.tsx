@@ -1,7 +1,3 @@
-// Decorative world-map / node-grid texture for the hero background.
-// Sparse teal dots and thin connecting lines at low opacity — suggesting
-// global data acquisition. Built as inline SVG, no external images.
-
 type TextureNode = {
   x: number;
   y: number;
@@ -26,7 +22,6 @@ const NODES: TextureNode[] = [
   { x: 26, y: 82 },
 ];
 
-// Pairs of connected nodes → thin lines
 const LINES: [number, number][] = [
   [0, 1],
   [1, 2],
@@ -74,7 +69,6 @@ export function MapTexture() {
           fillOpacity="0.5"
         />
       ))}
-      {/* Sparse extra accent squares */}
       <rect x="6" y="40" width="1.2" height="1.2" fill="var(--color-teal)" fillOpacity="0.4" />
       <rect x="74" y="44" width="1.2" height="1.2" fill="var(--color-teal)" fillOpacity="0.4" />
       <rect x="40" y="8" width="1.2" height="1.2" fill="var(--color-teal)" fillOpacity="0.4" />

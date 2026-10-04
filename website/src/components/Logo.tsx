@@ -1,15 +1,7 @@
-// Hermes brand logo mark — the stylized "H" built from two overlapping
-// angular slab shapes (one off-white, one teal), forming a faceted two-tone mark.
-// Built bespoke as inline SVG — not a font character.
-
 type LogoMarkProps = {
   className?: string;
 };
 
-/**
- * Two overlapping parallelogram slabs forming the two uprights and the center
- * bar of an "H", like a folded metal ribbon. Left slab off-white, right slab teal.
- */
 export function LogoMark({ className }: LogoMarkProps) {
   return (
     <svg
@@ -19,12 +11,10 @@ export function LogoMark({ className }: LogoMarkProps) {
       aria-hidden="true"
       className={className}
     >
-      {/* Left slab — off-white, top leans left for the angular facet */}
       <path
         d="M8 6 H20 V18 H44 V26 H20 V38 H12 Z"
         fill="var(--color-offwhite)"
       />
-      {/* Right slab — teal, overlaps the center bar (folded ribbon seam) */}
       <path
         d="M48 6 H56 V38 H44 V26 H20 V18 H44 Z"
         fill="var(--color-teal)"
@@ -33,10 +23,6 @@ export function LogoMark({ className }: LogoMarkProps) {
   );
 }
 
-/**
- * Full horizontal lockup: mark on the left, "HERMES" wordmark to the right,
- * both vertically centered. Used in the header / nav.
- */
 export function LogoLockup({ className }: LogoMarkProps) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className ?? ""}`}>
@@ -48,10 +34,6 @@ export function LogoLockup({ className }: LogoMarkProps) {
   );
 }
 
-/**
- * Icon-only version of the mark inside a rounded-square tile.
- * Alternative "light" tile (teal mark on off-white) available via prop.
- */
 export function LogoIcon({
   className,
   variant = "dark",

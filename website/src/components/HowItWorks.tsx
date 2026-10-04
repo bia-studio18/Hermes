@@ -21,7 +21,6 @@ import { DATA_ROWS, PIPELINE } from "@/lib/constants";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Icon names travel as strings so lib/constants.ts stays free of components.
 const ICONS: Record<string, LucideIcon> = {
   database: Database,
   share: Share2,
@@ -75,9 +74,8 @@ export function HowItWorks() {
   const scroller = useRef<HTMLDivElement>(null);
   const fill = useRef<HTMLSpanElement>(null);
 
-  // Drives the stage index and the progress rule from scroll position.
-  // Registered regardless of motion preference: without it, the tall scroller
-  // would leave pinned visitors stuck on stage 1 with a lot of empty page.
+  // Not gated on motion preference: the tall scroller would leave anyone who
+  // skips the animation stuck on stage 1 with a lot of empty page below.
   useEffect(() => {
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia();
@@ -110,7 +108,7 @@ export function HowItWorks() {
           index="01"
           kicker="Platform"
           title="Seven stages. One interface."
-          lede="Every dataset moves through the same pipeline, whatever it started as. Scroll to walk the stages — each one is a single module with a single job."
+          lede="Every dataset moves through the same pipeline, whatever it started as. Scroll to walk the stages. Each one is a single module with a single job."
         />
       </div>
 

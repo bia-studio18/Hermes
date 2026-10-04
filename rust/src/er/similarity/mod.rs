@@ -8,3 +8,4 @@ mod jaro;
 mod token;
 mod numeric;
 mod email;
+mod phone;

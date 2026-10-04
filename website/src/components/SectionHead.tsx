@@ -3,11 +3,6 @@
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/constants";
 
-/**
- * The section header used down the page: a numbered index, a rule, a mono
- * kicker, then the title. One component so the numbering and spacing stay
- * consistent across every section.
- */
 export function SectionHead({
   index,
   kicker,

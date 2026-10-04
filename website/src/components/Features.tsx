@@ -29,7 +29,7 @@ const FEATURES: {
     icon: Network,
     title: "Entity resolution",
     description:
-      "Resolve companies, countries and securities across every identifier form they appear under — tickers, CIKs, ISINs, LEIs and names.",
+      "Resolve companies, countries and securities across every identifier form they appear under: tickers, CIKs, ISINs, LEIs and plain names.",
     facts: ["Canonical HRM identifiers", "Alias registry", "Cross-source matching"],
   },
   {

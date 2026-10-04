@@ -7,11 +7,6 @@ import { CODE_TABS } from "@/lib/constants";
 import { Code } from "@/components/Code";
 import { SectionHead } from "@/components/SectionHead";
 
-/**
- * The three ways into Hermes — library, entity resolution, CLI — behind one
- * tab row. Tab switching is a presence change, so this is framer's job; GSAP
- * handles the scroll-linked work elsewhere on the page.
- */
 export function CodeTabs() {
   const [active, setActive] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -27,7 +22,7 @@ export function CodeTabs() {
       clearTimeout(timer.current);
       timer.current = setTimeout(() => setCopied(false), 1600);
     } catch {
-      // clipboard blocked (insecure origin) — leave the button idle
+      // clipboard blocked on an insecure origin
     }
   };
 

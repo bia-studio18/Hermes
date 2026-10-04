@@ -43,20 +43,12 @@ export function DocsPreview() {
           index="04"
           kicker="Reference"
           title="Documented end to end."
-          lede="Ten connector guides, seven schema domains, the full Python API and every CLI command — with runnable examples."
+          lede="Ten connector guides, seven schema domains, the full Python API and every CLI command, with runnable examples."
         />
 
-        {/* Mockup of the docs site */}
-        <motion.div
-          {...fadeUp}
-          className="panel brackets overflow-hidden"
-        >
+        <motion.div {...fadeUp} className="panel brackets overflow-hidden">
           <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5">
             <span className="label text-gray-bright">docs.hermes-plt.xyz</span>
-            <span className="label flex items-center gap-2 text-gray">
-              <span className="h-1 w-1 rotate-45 bg-teal" aria-hidden="true" />
-              live docs
-            </span>
           </div>
 
           <div className="flex">
@@ -96,7 +88,7 @@ export function DocsPreview() {
               </h3>
               <p className="mt-3 max-w-lg text-sm leading-relaxed text-gray-bright">
                 Hermes provides a unified interface for acquiring, processing and serving
-                data — from financial feeds to geopolitical sources — with built-in
+                data, from financial feeds to geopolitical sources, with built-in
                 validation, normalization and provenance tracking.
               </p>
 
@@ -107,10 +99,6 @@ export function DocsPreview() {
                 <code className="whitespace-nowrap font-mono text-sm text-gray-bright">
                   pip install hermes-plt
                 </code>
-                <span
-                  className="ml-auto h-2 w-2 shrink-0 rounded-full border border-teal"
-                  aria-hidden="true"
-                />
               </div>
 
               <div className="mt-6 flex flex-wrap gap-2">
@@ -128,7 +116,6 @@ export function DocsPreview() {
           </div>
         </motion.div>
 
-        {/* Closing CTA */}
         <motion.div
           {...fadeUp}
           className="mx-auto mt-20 max-w-2xl text-center"

@@ -741,6 +741,7 @@ name = "hermes-rust"
 version = "0.1.0"
 dependencies = [
  "arrow",
+ "arrow-array",
  "chrono",
  "clap",
  "csv",
