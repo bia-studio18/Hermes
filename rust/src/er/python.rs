@@ -8,7 +8,7 @@ use chrono::NaiveDate;
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use pyo3::types::PyModule;
+use pyo3::types::{PyDict, PyModule};
 
 // Aliased: the pyfunction names below deliberately shadow the core ones.
 use crate::er::ingestion as ingest;
@@ -23,15 +23,7 @@ fn err(message: impl Into<String>) -> PyErr {
 /// Guesses how a source should be read: file extension first, then URL scheme.
 #[pyfunction]
 fn identify_source(source: &str) -> &'static str {
-    match ingest::identify_source(source) {
-        ingest::Source::CSV => "CSV",
-        ingest::Source::JSON => "JSON",
-        ingest::Source::PARQUET => "PARQUET",
-        ingest::Source::API => "API",
-        ingest::Source::DATABASE => "DATABASE",
-        ingest::Source::STREAMING => "STREAMING",
-        ingest::Source::UNKNOWN => "UNKNOWN",
-    }
+    ingest::identify_source(source).as_str()
 }
 
 /// NFC-normalizes, trims and lowercases a value.
@@ -137,6 +129,60 @@ fn numeric_similarity(a: f64, b: f64, algo: &str, min: Option<f64>, max: Option<
         .map_err(|e| err(e.to_string()))
 }
 
+/// The ER pipeline as Python sees it.
+///
+/// One class and one module-level function, deliberately: Python configures the
+/// pipeline with plain values (`link_threshold`, `review_threshold`, ...) and
+/// gets back counts, not the Rust type graph. Every internal type stays on this
+/// side of the boundary.
+#[pyclass(name = "Resolver")]
+pub struct PyResolver {
+    // Read by `resolve` once the pipeline is implemented; kept private so the
+    // Rust resolver never becomes a Python-visible type.
+    #[allow(dead_code)]
+    inner: crate::er::Resolver,
+}
+
+#[pymethods]
+impl PyResolver {
+    /// Resolver with automatic configuration. Thresholds default to 0.90 to
+    /// link and 0.60 to send to review.
+    #[new]
+    #[pyo3(signature = (link_threshold=None, review_threshold=None))]
+    fn new(link_threshold: Option<f64>, review_threshold: Option<f64>) -> PyResult<Self> {
+        let mut resolver = crate::er::Resolver::automatic();
+        if link_threshold.is_some() || review_threshold.is_some() {
+            let mut thresholds = *resolver.thresholds();
+            if let Some(link) = link_threshold {
+                thresholds.link = link;
+            }
+            if let Some(review) = review_threshold {
+                thresholds.review = review;
+            }
+            resolver = resolver.with_thresholds(thresholds);
+        }
+        Ok(Self { inner: resolver })
+    }
+
+    /// Resolves `data` and returns counts per decision, plus the queued
+    /// review items. `data` is a Hermes dataset handle or a source locator.
+    fn resolve<'py>(&self, _py: Python<'py>, _data: &Bound<'py, PyAny>) -> PyResult<Bound<'py, PyDict>> {
+        todo!()
+    }
+}
+
+/// Resolves `data` with the default configuration: the one-call entry point.
+#[pyfunction]
+#[pyo3(signature = (data, link_threshold=None, review_threshold=None))]
+fn resolve<'py>(
+    py: Python<'py>,
+    data: &Bound<'py, PyAny>,
+    link_threshold: Option<f64>,
+    review_threshold: Option<f64>,
+) -> PyResult<Bound<'py, PyDict>> {
+    PyResolver::new(link_threshold, review_threshold)?.resolve(py, data)
+}
+
 pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     let er = PyModule::new(m.py(), "er")?;
     er.add_function(wrap_pyfunction!(identify_source, &er)?)?;
@@ -150,6 +196,8 @@ pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     er.add_function(wrap_pyfunction!(date_similarity, &er)?)?;
     er.add_function(wrap_pyfunction!(email_similarity, &er)?)?;
     er.add_function(wrap_pyfunction!(numeric_similarity, &er)?)?;
+    er.add_class::<PyResolver>()?;
+    er.add_function(wrap_pyfunction!(resolve, &er)?)?;
     er.add("HermesErError", m.py().get_type::<HermesErError>())?;
     m.add_submodule(&er)?;
     Ok(())
