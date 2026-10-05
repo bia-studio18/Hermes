@@ -2,6 +2,7 @@ use chrono::{NaiveDate, Datelike};
 
 use crate::er::similarity::score::SimilarityScore;
 
+#[derive(Debug, Clone)]
 pub enum DateAlgo {
     Exact,
     DayDifference {

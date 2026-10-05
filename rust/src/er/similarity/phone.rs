@@ -8,6 +8,7 @@ use crate::er::similarity::score::SimilarityScore;
 | `phone_similarity()` | function | Compare two phone numbers |
  */
 
+#[derive(Debug, Clone)]
 pub enum PhoneAlgo {
     Exact,
     Suffix {

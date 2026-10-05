@@ -10,7 +10,6 @@ mod normalize;
 mod numeric;
 mod phone;
 mod score;
-mod string;
 mod token;
 
 pub use date::{date_similarity, DateAlgo, DateSimilarity};

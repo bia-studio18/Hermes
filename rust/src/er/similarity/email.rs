@@ -2,6 +2,7 @@ use std::error::Error;
 
 use crate::er::similarity::score::SimilarityScore;
 
+#[derive(Debug, Clone)]
 pub enum EmailAlgo {
     Exact,
     Username,

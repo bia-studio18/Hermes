@@ -2,6 +2,7 @@ use std::error::Error;
 
 use crate::er::similarity::score::SimilarityScore;
 
+#[derive(Debug, Clone)]
 pub enum NumericAlgo {
     /// Same value scores 1.0; anything a full unit or more apart scores 0.0.
     AbsoluteDifference,

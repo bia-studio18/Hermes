@@ -1,5 +1,10 @@
 ## Hermes Rust Ingestion Layer Functions
 
+> Superseded by the implemented layout in `ingestion/mod.rs`. There is no
+> `record.rs`/`RawRecord`: readers emit `data::RecordBatch`, the Hermes batch
+> type, so ingestion adds no record model of its own. Everything below is the
+> original plan.
+
 ```rust
 // Entry point
 ingest(source) -> Result<IngestedDataset>
